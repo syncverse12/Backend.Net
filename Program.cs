@@ -19,7 +19,7 @@ namespace Graduation_Project
             builder.Services.AddAutoMapper(typeof(Program));
 
             builder.Services.AddDbContext<DatabaseDbContext>(opts =>
-                    opts.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+                    opts.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
             builder.Services.AddIdentity<User, Role>()
                 .AddEntityFrameworkStores<DatabaseDbContext>();
