@@ -1,7 +1,8 @@
 
 using System.Text;
-using Graduation_Project.JwtFeatuers;
-using Graduation_Project.Models;
+using Graduation_Project.API.JwtFeatuers;
+using Graduation_Project.Domain.Models;
+using Graduation_Project.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

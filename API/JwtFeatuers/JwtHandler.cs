@@ -1,10 +1,10 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Graduation_Project.Models;
+using Graduation_Project.Domain.Models;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Graduation_Project.JwtFeatuers
+namespace Graduation_Project.API.JwtFeatuers
 {
     public class JwtHandler
     {

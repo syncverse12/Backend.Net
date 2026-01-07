@@ -1,9 +1,9 @@
 ﻿using System;
-using Graduation_Project.Models;
+using Graduation_Project.Domain.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace Graduation_Project
+namespace Graduation_Project.Infrastructure.Data
 {
     public class DatabaseDbContext : IdentityDbContext<User, Role, string>
     {

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace Graduation_Project.Models
+namespace Graduation_Project.Domain.Models
 {
     public class Role : IdentityRole
     {

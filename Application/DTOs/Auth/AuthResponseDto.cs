@@ -1,4 +1,4 @@
-﻿namespace Graduation_Project.DTOs
+﻿namespace Graduation_Project.Application.DTOs.Auth
 {
     public class AuthResponseDTO
     {

@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Antiforgery;
 
-namespace Graduation_Project.DTOs
+namespace Graduation_Project.Application.DTOs.Auth
 {
-    public class UserForRegisterationDTO
+    public class RegisterRequestDto
     {
         public string? FirstName { get; set; }
         public string? LastName { get; set; }

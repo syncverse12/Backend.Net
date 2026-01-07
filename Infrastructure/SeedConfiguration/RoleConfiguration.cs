@@ -1,8 +1,8 @@
-﻿using Graduation_Project.Models;
+﻿using Graduation_Project.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Graduation_Project.SeedConfiguration
+namespace Graduation_Project.Infrastructure.SeedConfiguration
 {
     public class RoleConfiguration : IEntityTypeConfiguration<Role>
     {

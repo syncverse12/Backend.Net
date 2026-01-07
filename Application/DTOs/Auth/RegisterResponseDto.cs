@@ -1,6 +1,6 @@
-﻿namespace Graduation_Project.DTOs
+﻿namespace Graduation_Project.Application.DTOs.Auth
 {
-    public class RegisterationResponseDTO
+    public class RegisterResponseDto
     {
         public bool IsSuccessfulRegisteration {  get; set; }
         public IEnumerable<string>? Errors { get; set; }

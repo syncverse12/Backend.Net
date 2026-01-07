@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Graduation_Project.SeedConfiguration
+namespace Graduation_Project.Infrastructure.SeedConfiguration
 {
     public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<string>>
     {

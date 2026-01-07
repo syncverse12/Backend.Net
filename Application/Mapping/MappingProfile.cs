@@ -1,14 +1,14 @@
 ﻿using AutoMapper;
-using Graduation_Project.DTOs;
-using Graduation_Project.Models;
+using Graduation_Project.Application.DTOs.Auth;
+using Graduation_Project.Domain.Models;
 
-namespace Graduation_Project
+namespace Graduation_Project.Application.Mapping
 {
     public class MappingProfile : Profile
     {
         public MappingProfile()
         {
-            CreateMap<UserForRegisterationDTO, User>()
+            CreateMap<RegisterRequestDto, User>()
                 .ForMember(u => u.UserName, opt => opt.MapFrom(src => src.Email));
         }
     }

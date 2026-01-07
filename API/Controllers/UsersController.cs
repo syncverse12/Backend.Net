@@ -1,15 +1,15 @@
 ﻿using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
 using AutoMapper;
-using Graduation_Project.DTOs;
-using Graduation_Project.JwtFeatuers;
-using Graduation_Project.Models;
+using Graduation_Project.API.JwtFeatuers;
+using Graduation_Project.Application.DTOs.Auth;
+using Graduation_Project.Domain.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 
-namespace Graduation_Project.Controllers
+namespace Graduation_Project.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -27,7 +27,7 @@ namespace Graduation_Project.Controllers
         }
 
         [HttpPost("Register")]
-        public async Task<IActionResult> RegisterUser(UserForRegisterationDTO userForRegisteration)
+        public async Task<IActionResult> RegisterUser(RegisterRequestDto userForRegisteration)
         {
             if (userForRegisteration is null)
                 return BadRequest();
@@ -39,13 +39,13 @@ namespace Graduation_Project.Controllers
             {
                 var errors = result.Errors.Select(e => e.Description);
 
-                return BadRequest(new RegisterationResponseDTO { Errors = errors });
+                return BadRequest(new RegisterResponseDto { Errors = errors });
             }
             return StatusCode(201);
         }
 
         [HttpPost("Log In")]
-        public async Task<IActionResult> Authenticate(UserForAuthenticationDTO userForAuthentication)
+        public async Task<IActionResult> Authenticate(LoginRequestDto userForAuthentication)
         {
             var user = await userManager.FindByNameAsync(userForAuthentication.Email!);
             if (user is null || !await userManager.CheckPasswordAsync(user, userForAuthentication.Password))
