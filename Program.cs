@@ -1,6 +1,7 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Graduation_Project.API.JwtFeatuers;
+using Graduation_Project.API.Middleware;
 using Graduation_Project.Application.Interfaces;
 using Graduation_Project.Application.Services;
 using Graduation_Project.Domain.Models;
@@ -54,8 +55,9 @@ builder.Services.AddControllers();
 
 // FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<IAuthService>();
 builder.Services.AddFluentValidationClientsideAdapters();
-builder.Services.AddValidatorsFromAssemblyContaining<IAuthService>(); // íÝÖá ÇáÅÔÇÑÉ áæÇÌåÉ Ýí ØÈÞÉ Application
+
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
@@ -96,6 +98,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseMiddleware<ExceptionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
