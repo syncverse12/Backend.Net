@@ -35,10 +35,11 @@ namespace Graduation_Project.Application.Services
                 return new AuthResponseDto
                 {
                     IsAuthenticated = false,
-                    Message = "Invalid Email or Password", 
-                    Errors = new List<string> { "Authentication failed due to incorrect credentials." }
+                    Errors = result.Errors.Select(e => e.Description)
                 };
             }
+
+            await _userManager.AddToRoleAsync(user, "Employee");
 
             var token = await _jwtHandler.CreateTokenAsync(user);
 
@@ -48,6 +49,7 @@ namespace Graduation_Project.Application.Services
                 Token = token
             };
         }
+
 
         public async Task<AuthResponseDto> LoginAsync(LoginRequestDto dto)
         {

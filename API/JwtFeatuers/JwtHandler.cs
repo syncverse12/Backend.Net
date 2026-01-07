@@ -9,23 +9,19 @@ namespace Graduation_Project.API.JwtFeatuers
 {
     public class JwtHandler
     {
-        private readonly IConfiguration _configuration;
-        private readonly IConfigurationSection _jwtSettings;
+        private readonly IConfiguration _config; 
         private readonly UserManager<User> _userManager;
 
-        public JwtHandler(
-            IConfiguration configuration,
-            UserManager<User> userManager)
+        public JwtHandler(IConfiguration config, UserManager<User> userManager)
         {
-            _configuration = configuration;
+            _config = config;
             _userManager = userManager;
-            _jwtSettings = configuration.GetSection("JwtSettings");
         }
 
         public async Task<string> CreateTokenAsync(User user)
         {
             var signingCredentials = GetSigningCredentials();
-            var claims = await GetClaimsAsync(user);
+            var claims = await GetClaims(user);
             var tokenOptions = GenerateTokenOptions(signingCredentials, claims);
 
             return new JwtSecurityTokenHandler().WriteToken(tokenOptions);
@@ -33,18 +29,20 @@ namespace Graduation_Project.API.JwtFeatuers
 
         private SigningCredentials GetSigningCredentials()
         {
-            var key = Encoding.UTF8.GetBytes(_jwtSettings["securityKey"]!);
+          
+            var jwtSettings = _config.GetSection("JwtSettings");
+            var key = Encoding.UTF8.GetBytes(jwtSettings["securityKey"]!);
             var secret = new SymmetricSecurityKey(key);
             return new SigningCredentials(secret, SecurityAlgorithms.HmacSha256);
         }
 
-        private async Task<List<Claim>> GetClaimsAsync(User user)
+        private async Task<List<Claim>> GetClaims(User user)
         {
             var claims = new List<Claim>
             {
+                new Claim(ClaimTypes.Name, user.UserName!),
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Email, user.Email!),
-                new Claim(ClaimTypes.Name, user.UserName!)
+                new Claim(ClaimTypes.Email, user.Email!) 
             };
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -56,16 +54,15 @@ namespace Graduation_Project.API.JwtFeatuers
             return claims;
         }
 
-        private JwtSecurityToken GenerateTokenOptions(
-            SigningCredentials signingCredentials,
-            List<Claim> claims)
+        private JwtSecurityToken GenerateTokenOptions(SigningCredentials signingCredentials, List<Claim> claims)
         {
+            var jwtSettings = _config.GetSection("JwtSettings"); 
+
             return new JwtSecurityToken(
-                issuer: _jwtSettings["validIssuer"],
-                audience: _jwtSettings["validAudience"],
+                issuer: jwtSettings["validIssuer"],
+                audience: jwtSettings["validAudience"],
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(
-                    Convert.ToDouble(_jwtSettings["expiryInMinutes"])),
+                expires: DateTime.Now.AddMinutes(Convert.ToDouble(jwtSettings["expiryInMinutes"])),
                 signingCredentials: signingCredentials
             );
         }
