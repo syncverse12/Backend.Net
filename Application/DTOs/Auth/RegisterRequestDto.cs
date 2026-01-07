@@ -7,13 +7,10 @@ namespace Graduation_Project.Application.DTOs.Auth
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
 
-        [Required]
         public string Email { get; set; } = null!;
 
-        [Required]
         public string Password { get; set; } = null!;
 
-        [Compare("Password")]
         public string ConfirmPassword { get; set; } = null!;
     }
 }

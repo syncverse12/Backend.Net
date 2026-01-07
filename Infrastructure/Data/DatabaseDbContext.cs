@@ -15,7 +15,7 @@ namespace Graduation_Project.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            builder.ApplyConfigurationsFromAssembly(typeof(Program).Assembly);
+            builder.ApplyConfigurationsFromAssembly(typeof(DatabaseDbContext).Assembly);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Graduation_Project.Application.DTOs.Auth;
 using Graduation_Project.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Graduation_Project.API.Controllers
@@ -27,6 +28,13 @@ namespace Graduation_Project.API.Controllers
         {
             var result = await _authService.LoginAsync(dto);
             return result.IsAuthenticated ? Ok(result) : Unauthorized(result);
+        }
+
+        [Authorize] 
+        [HttpGet("profile")]
+        public IActionResult Profile()
+        {
+            return Ok(new { message = "Authenticated User ", user = User.Identity?.Name });
         }
     }
 }

@@ -40,7 +40,7 @@ namespace Graduation_Project.Application.Services
                 };
             }
 
-            var token = _jwtHandler.CreateToken(user);
+            var token = await _jwtHandler.CreateTokenAsync(user);
 
             return new AuthResponseDto
             {
@@ -62,7 +62,7 @@ namespace Graduation_Project.Application.Services
                 };
             }
 
-            var token = _jwtHandler.CreateToken(user);
+            var token = await _jwtHandler.CreateTokenAsync(user);
 
             return new AuthResponseDto
             {
