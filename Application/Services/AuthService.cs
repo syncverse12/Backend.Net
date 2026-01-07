@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Graduation_Project.API.JwtFeatuers;
+using Graduation_Project.Application.Common;
 using Graduation_Project.Application.DTOs.Auth;
 using Graduation_Project.Application.Interfaces;
 using Graduation_Project.Domain.Models;
@@ -23,7 +24,7 @@ namespace Graduation_Project.Application.Services
             _mapper = mapper;
         }
 
-        public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto dto)
+        public async Task<Result<AuthResponseDto>> RegisterAsync(RegisterRequestDto dto)
         {
             var user = _mapper.Map<User>(dto);
             user.UserName = dto.Email;
@@ -32,45 +33,48 @@ namespace Graduation_Project.Application.Services
 
             if (!result.Succeeded)
             {
-                return new AuthResponseDto
-                {
-                    IsAuthenticated = false,
-                    Errors = result.Errors.Select(e => e.Description)
-                };
+                return Result<AuthResponseDto>.Failure(
+                    "Registration Failed",
+                    result.Errors.Select(e => e.Description).ToList()
+                );
             }
 
             await _userManager.AddToRoleAsync(user, "Employee");
 
             var token = await _jwtHandler.CreateTokenAsync(user);
 
-            return new AuthResponseDto
-            {
-                IsAuthenticated = true,
-                Token = token
-            };
+            return Result<AuthResponseDto>.Success(
+                new AuthResponseDto
+                {
+                    Token = token,
+                    IsAuthenticated = true 
+                },
+                "User Registered Successfully"
+            );
         }
 
-
-        public async Task<AuthResponseDto> LoginAsync(LoginRequestDto dto)
+        public async Task<Result<AuthResponseDto>> LoginAsync(LoginRequestDto dto)
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
 
             if (user == null || !await _userManager.CheckPasswordAsync(user, dto.Password))
             {
-                return new AuthResponseDto
-                {
-                    IsAuthenticated = false,
-                    Errors = new[] { "Invalid email or password" }
-                };
+                return Result<AuthResponseDto>.Failure(
+                    "Login Failed",
+                    new List<string> { "Invalid email or password" }
+                );
             }
 
             var token = await _jwtHandler.CreateTokenAsync(user);
 
-            return new AuthResponseDto
-            {
-                IsAuthenticated = true,
-                Token = token
-            };
+            return Result<AuthResponseDto>.Success(
+                new AuthResponseDto
+                {
+                    Token = token,
+                    IsAuthenticated = true 
+                },
+                "Login Successful"
+            );
         }
     }
 }

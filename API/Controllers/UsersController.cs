@@ -2,11 +2,12 @@
 using Graduation_Project.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Graduation_Project.API.Controllers
 {
     [ApiController]
-    [Route("api/auth")]
+    [Route("api/[controller]")] 
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -20,21 +21,30 @@ namespace Graduation_Project.API.Controllers
         public async Task<IActionResult> Register(RegisterRequestDto dto)
         {
             var result = await _authService.RegisterAsync(dto);
-            return result.IsAuthenticated ? Ok(result) : BadRequest(result);
+            return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequestDto dto)
         {
             var result = await _authService.LoginAsync(dto);
-            return result.IsAuthenticated ? Ok(result) : Unauthorized(result);
+            return result.IsSuccess ? Ok(result) : Unauthorized(result);
         }
 
-        [Authorize] 
+
+        [Authorize]
         [HttpGet("profile")]
-        public IActionResult Profile()
+        public IActionResult GetProfile()
         {
-            return Ok(new { message = "Authenticated User ", user = User.Identity?.Name });
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userName = User.Identity?.Name;
+
+            return Ok(new
+            {
+                Message = "This is a secured endpoint",
+                UserId = userId,
+                UserName = userName
+            });
         }
     }
 }
