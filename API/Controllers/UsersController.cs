@@ -1,59 +1,32 @@
-﻿using System.Reflection.Metadata.Ecma335;
-using System.Runtime.CompilerServices;
-using AutoMapper;
-using Graduation_Project.API.JwtFeatuers;
-using Graduation_Project.Application.DTOs.Auth;
-using Graduation_Project.Domain.Models;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
+﻿using Graduation_Project.Application.DTOs.Auth;
+using Graduation_Project.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 
 namespace Graduation_Project.API.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class UsersController : ControllerBase
+    [Route("api/auth")]
+    public class AuthController : ControllerBase
     {
-        private readonly UserManager<User> userManager;
-        private readonly IMapper mapper;
-        private readonly JwtHandler jwtHandler;
+        private readonly IAuthService _authService;
 
-        public UsersController(UserManager<User> userManager, IMapper mapper, JwtHandler jwtHandler)
+        public AuthController(IAuthService authService)
         {
-            this.userManager = userManager;
-            this.mapper = mapper;
-            this.jwtHandler = jwtHandler;
+            _authService = authService;
         }
 
-        [HttpPost("Register")]
-        public async Task<IActionResult> RegisterUser(RegisterRequestDto userForRegisteration)
+        [HttpPost("register")]
+        public async Task<IActionResult> Register(RegisterRequestDto dto)
         {
-            if (userForRegisteration is null)
-                return BadRequest();
-
-            var user = mapper.Map<User>(userForRegisteration);
-            var result = await userManager.CreateAsync(user, userForRegisteration.Password);
-
-            if (!result.Succeeded)
-            {
-                var errors = result.Errors.Select(e => e.Description);
-
-                return BadRequest(new RegisterResponseDto { Errors = errors });
-            }
-            return StatusCode(201);
+            var result = await _authService.RegisterAsync(dto);
+            return result.IsAuthenticated ? Ok(result) : BadRequest(result);
         }
 
-        [HttpPost("Log In")]
-        public async Task<IActionResult> Authenticate(LoginRequestDto userForAuthentication)
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(LoginRequestDto dto)
         {
-            var user = await userManager.FindByNameAsync(userForAuthentication.Email!);
-            if (user is null || !await userManager.CheckPasswordAsync(user, userForAuthentication.Password))
-                return Unauthorized(new AuthResponseDTO { ErrorMessage = "Invalid Authentication" });
-
-            var token = jwtHandler.CreateToken(user);
-
-            return Ok(new AuthResponseDTO { IsAuthSuccessful = true, Token = token });
+            var result = await _authService.LoginAsync(dto);
+            return result.IsAuthenticated ? Ok(result) : Unauthorized(result);
         }
     }
 }

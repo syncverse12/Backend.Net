@@ -24,8 +24,6 @@
   <ItemGroup>
     <Folder Include="API\Filters\" />
     <Folder Include="API\Middleware\" />
-    <Folder Include="Application\Interfaces\" />
-    <Folder Include="Application\Services\" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Antiforgery;
 
 namespace Graduation_Project.Application.DTOs.Auth
 {
@@ -7,12 +6,14 @@ namespace Graduation_Project.Application.DTOs.Auth
     {
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
-        [Required(ErrorMessage = "Email is required.")]
-        public string? Email { get; set; }
-        [Required(ErrorMessage = "Password is required.")]
-        public string? Password { get; set; }
-        [Compare("Password", ErrorMessage = "The Password and Confirmation Password Do not Match.")]
-        [Display(Name = "Confirm Password")]
-        public string? ConfirmPassword { get; set; }
+
+        [Required]
+        public string Email { get; set; } = null!;
+
+        [Required]
+        public string Password { get; set; } = null!;
+
+        [Compare("Password")]
+        public string ConfirmPassword { get; set; } = null!;
     }
 }

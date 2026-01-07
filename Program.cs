@@ -1,12 +1,14 @@
 
-using System.Text;
 using Graduation_Project.API.JwtFeatuers;
+using Graduation_Project.Application.Interfaces;
+using Graduation_Project.Application.Services;
 using Graduation_Project.Domain.Models;
 using Graduation_Project.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace Graduation_Project
 {
@@ -44,6 +46,9 @@ namespace Graduation_Project
                           .GetBytes(jwtSettings.GetSection("securityKey").Value))
                 };
             });
+
+            builder.Services.AddScoped<IAuthService, AuthService>();
+
 
             builder.Services.AddSingleton<JwtHandler>();
 
