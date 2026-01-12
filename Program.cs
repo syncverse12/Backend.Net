@@ -1,5 +1,6 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Graduation_Project.API.Extensions;
 using Graduation_Project.API.JwtFeatuers;
 using Graduation_Project.API.Middleware;
 using Graduation_Project.Application.Interfaces;
@@ -47,6 +48,9 @@ builder.Services.AddAuthentication(opt =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey))
     };
 });
+
+builder.Services.AddAuthorizationPolicies();
+
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<JwtHandler>();

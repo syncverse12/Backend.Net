@@ -8,6 +8,7 @@ namespace Graduation_Project.API.Controllers
     [Authorize(Roles = "Admin")]
     public class AdminController : ControllerBase
     {
+        [Authorize(Policy = "AdminOnly")]
         [HttpGet("dashboard")]
         public IActionResult Dashboard()
         {
