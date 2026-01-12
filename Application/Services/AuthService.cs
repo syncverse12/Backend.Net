@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Graduation_Project.API.JwtFeatuers;
-using Graduation_Project.Application.Common;
+using Graduation_Project.Application.Common.Results;
 using Graduation_Project.Application.DTOs.Auth;
 using Graduation_Project.Application.Interfaces;
 using Graduation_Project.Domain.Models;

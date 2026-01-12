@@ -54,6 +54,9 @@ builder.Services.AddAuthorizationPolicies();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<JwtHandler>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
 
 builder.Services.AddControllers();
 

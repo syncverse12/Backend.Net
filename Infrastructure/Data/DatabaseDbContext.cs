@@ -1,16 +1,54 @@
-﻿using Graduation_Project.Domain.Common;
+﻿using Graduation_Project.Application.Interfaces;
+using Graduation_Project.Domain.Common;
 using Graduation_Project.Domain.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System;
+using System.Linq.Expressions;
 
 namespace Graduation_Project.Infrastructure.Data
 {
     public class DatabaseDbContext : IdentityDbContext<User, Role, string>
     {
-        public DatabaseDbContext(DbContextOptions<DatabaseDbContext> options)
-        : base(options)
+        private readonly ICurrentUserService _currentUserService;
+
+        public DatabaseDbContext(
+            DbContextOptions<DatabaseDbContext> options,
+            ICurrentUserService currentUserService)
+            : base(options)
         {
+            _currentUserService = currentUserService;
+        }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            ApplyAuditInfo();
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+
+        public override int SaveChanges()
+        {
+            ApplyAuditInfo();
+            return base.SaveChanges();
+        }
+
+        private void ApplyAuditInfo()
+        {
+            foreach (var entry in ChangeTracker.Entries<BaseEntity>())
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        entry.Entity.CreatedAt = DateTime.UtcNow;
+                        entry.Entity.CreatedBy = _currentUserService.UserId;
+                        entry.Entity.IsDeleted = false;
+                        break;
+
+                    case EntityState.Modified:
+                        entry.Entity.UpdatedAt = DateTime.UtcNow;
+                        entry.Entity.UpdatedBy = _currentUserService.UserId;
+                        break;
+                }
+            }
         }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -21,11 +59,11 @@ namespace Graduation_Project.Infrastructure.Data
             {
                 if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
                 {
-                    var parameter = System.Linq.Expressions.Expression.Parameter(entityType.ClrType, "e");
+                    var parameter = Expression.Parameter(entityType.ClrType, "e");
                     var propertyMethodInfo = typeof(EF).GetMethod("Property")?.MakeGenericMethod(typeof(bool));
-                    var isDeletedProperty = System.Linq.Expressions.Expression.Call(null, propertyMethodInfo!, parameter, System.Linq.Expressions.Expression.Constant("IsDeleted"));
-                    var compareExpression = System.Linq.Expressions.Expression.MakeBinary(System.Linq.Expressions.ExpressionType.Equal, isDeletedProperty, System.Linq.Expressions.Expression.Constant(false));
-                    var lambda = System.Linq.Expressions.Expression.Lambda(compareExpression, parameter);
+                    var isDeletedProperty = Expression.Call(null, propertyMethodInfo!, parameter, Expression.Constant("IsDeleted"));
+                    var compareExpression = Expression.MakeBinary(ExpressionType.Equal, isDeletedProperty, Expression.Constant(false));
+                    var lambda = Expression.Lambda(compareExpression, parameter);
 
                     builder.Entity(entityType.ClrType).HasQueryFilter(lambda);
                 }
@@ -33,6 +71,5 @@ namespace Graduation_Project.Infrastructure.Data
 
             builder.ApplyConfigurationsFromAssembly(typeof(DatabaseDbContext).Assembly);
         }
-
     }
 }
