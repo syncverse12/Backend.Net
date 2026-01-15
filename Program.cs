@@ -4,9 +4,12 @@ using Graduation_Project.API.Extensions;
 using Graduation_Project.API.JwtFeatuers;
 using Graduation_Project.API.Middleware;
 using Graduation_Project.Application.Interfaces;
+using Graduation_Project.Application.Interfaces.Persistence;
 using Graduation_Project.Application.Services;
 using Graduation_Project.Domain.Models;
 using Graduation_Project.Infrastructure.Data;
+using Graduation_Project.Infrastructure.Persistence;
+using Graduation_Project.Infrastructure.Persistence.Repositories;
 using Graduation_Project.Infrastructure.SeedConfiguration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -56,6 +59,8 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<JwtHandler>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
 
 
 builder.Services.AddControllers();
