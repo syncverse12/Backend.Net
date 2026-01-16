@@ -7,7 +7,7 @@ namespace Graduation_Project.Application.Interfaces
     public interface ITaskService
     {
         Task<Result<TaskResponseDto>> CreateAsync(CreateTaskDto dto, string userId);
-        Task<Result<PagedResult<TaskResponseDto>>> GetMyTasksAsync(string userId, PaginationQuery query);
+        Task<Result<PagedResult<TaskResponseDto>>> GetMyTasksAsync(string userId, TaskQuery query);
         Task<Result<TaskResponseDto>> UpdateAsync(
             int taskId,
             UpdateTaskDto dto,

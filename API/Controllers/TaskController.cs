@@ -29,7 +29,7 @@ namespace Graduation_Project.API.Controllers
         }
 
         [HttpGet("my-tasks")]
-        public async Task<IActionResult> GetMyTasks([FromQuery] PaginationQuery query)
+        public async Task<IActionResult> GetMyTasks([FromQuery] TaskQuery query)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -37,7 +37,6 @@ namespace Graduation_Project.API.Controllers
                 return Unauthorized("User ID not found in token");
 
             var result = await _taskService.GetMyTasksAsync(userId, query);
-
             return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
 

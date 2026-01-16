@@ -18,11 +18,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // --- 1. Register Services ---
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies()); //  ⁄œÌ· »”Ìÿ ·÷„«‰ ⁄„· «·„«»—
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies()); 
 
 builder.Services.AddDbContext<DatabaseDbContext>(opts =>
         opts.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
@@ -67,7 +68,11 @@ builder.Services.AddScoped<IAuthorizationHandler, TaskOwnerHandler>();
 
 
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
 // FluentValidation
 builder.Services.AddFluentValidationAutoValidation();

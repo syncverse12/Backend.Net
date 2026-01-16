@@ -27,7 +27,6 @@ namespace Graduation_Project.Application.Services
                 Title = dto.Title,
                 Description = dto.Description,
                 UserId = userId,
-                // DueDate = dto.DueDate // تأكدي من وجودها في TaskItem Entity
             };
 
             await _unitOfWork.Repository<TaskItem>().AddAsync(task);
@@ -39,11 +38,27 @@ namespace Graduation_Project.Application.Services
             );
         }
 
-        public async Task<Result<PagedResult<TaskResponseDto>>> GetMyTasksAsync(string userId, PaginationQuery query)
+        public async Task<Result<PagedResult<TaskResponseDto>>> GetMyTasksAsync(string userId, TaskQuery query)
         {
             var tasksQuery = _unitOfWork.Repository<TaskItem>()
                 .Query()
                 .Where(t => t.UserId == userId);
+
+            if (query.IsCompleted.HasValue)
+                tasksQuery = tasksQuery.Where(t => t.IsCompleted == query.IsCompleted.Value);
+
+            if (query.IsDeleted.HasValue)
+                tasksQuery = tasksQuery.Where(t => t.IsDeleted == query.IsDeleted.Value);
+
+            if (!string.IsNullOrWhiteSpace(query.Search))
+                tasksQuery = tasksQuery.Where(t => t.Title.Contains(query.Search));
+
+            tasksQuery = query.SortBy switch
+            {
+                TaskSortBy.Oldest => tasksQuery.OrderBy(t => t.CreatedAt),
+                TaskSortBy.Title => tasksQuery.OrderBy(t => t.Title),
+                _ => tasksQuery.OrderByDescending(t => t.CreatedAt)
+            };
 
             var totalCount = await tasksQuery.CountAsync();
 
