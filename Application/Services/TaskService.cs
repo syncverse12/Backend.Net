@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
+using Graduation_Project.Application.Common.Pagination;
 using Graduation_Project.Application.Common.Results;
 using Graduation_Project.Application.DTOs.Tasks;
 using Graduation_Project.Application.Interfaces;
 using Graduation_Project.Application.Interfaces.Persistence;
 using Graduation_Project.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-
 
 namespace Graduation_Project.Application.Services
 {
@@ -26,7 +26,8 @@ namespace Graduation_Project.Application.Services
             {
                 Title = dto.Title,
                 Description = dto.Description,
-                UserId = userId
+                UserId = userId,
+                // DueDate = dto.DueDate // تأكدي من وجودها في TaskItem Entity
             };
 
             await _unitOfWork.Repository<TaskItem>().AddAsync(task);
@@ -38,39 +39,36 @@ namespace Graduation_Project.Application.Services
             );
         }
 
-        public async Task<Result<List<TaskResponseDto>>> GetMyTasksAsync(string userId)
+        public async Task<Result<PagedResult<TaskResponseDto>>> GetMyTasksAsync(string userId, PaginationQuery query)
         {
-            var tasks = await _unitOfWork.Repository<TaskItem>()
-                .FindAsync(t => t.UserId == userId);
+            var tasksQuery = _unitOfWork.Repository<TaskItem>()
+                .Query()
+                .Where(t => t.UserId == userId);
 
-            return Result<List<TaskResponseDto>>.Success(
-                _mapper.Map<List<TaskResponseDto>>(tasks),
-                "Tasks Retrieved"
-            );
+            var totalCount = await tasksQuery.CountAsync();
+
+            var tasks = await tasksQuery
+                .Skip((query.Page - 1) * query.PageSize)
+                .Take(query.PageSize)
+                .ToListAsync();
+
+            var dtos = _mapper.Map<List<TaskResponseDto>>(tasks);
+
+            return Result<PagedResult<TaskResponseDto>>.Success(new PagedResult<TaskResponseDto>
+            {
+                Items = dtos,
+                TotalCount = totalCount,
+                Page = query.Page,
+                PageSize = query.PageSize
+            });
         }
 
-        public async Task<Result<TaskResponseDto>> UpdateAsync(
-             int taskId,
-            UpdateTaskDto dto,
-            string userId)
+        public async Task<Result<TaskResponseDto>> UpdateAsync(int taskId, UpdateTaskDto dto, string userId)
         {
-            var task = await _unitOfWork.Repository<TaskItem>()
-                .GetByIdAsync(taskId);
+            var task = await _unitOfWork.Repository<TaskItem>().GetByIdAsync(taskId);
 
-            if (task == null)
-            {
-                return Result<TaskResponseDto>.Failure(
-                    "Task not found"
-                );
-            }
-
-            // Ownership Check
-            if (task.UserId != userId)
-            {
-                return Result<TaskResponseDto>.Failure(
-                    "You are not authorized to update this task"
-                );
-            }
+            if (task == null) return Result<TaskResponseDto>.Failure("Task not found");
+            if (task.UserId != userId) return Result<TaskResponseDto>.Failure("Unauthorized");
 
             task.Title = dto.Title;
             task.Description = dto.Description;
@@ -79,25 +77,16 @@ namespace Graduation_Project.Application.Services
             _unitOfWork.Repository<TaskItem>().Update(task);
             await _unitOfWork.SaveChangesAsync();
 
-            return Result<TaskResponseDto>.Success(
-                _mapper.Map<TaskResponseDto>(task),
-                "Task Updated Successfully"
-            );
+            return Result<TaskResponseDto>.Success(_mapper.Map<TaskResponseDto>(task), "Task Updated Successfully");
         }
 
         public async Task<Result<bool>> DeleteAsync(int taskId, string userId)
         {
-            var task = await _unitOfWork.Repository<TaskItem>()
-                .GetByIdAsync(taskId);
-
-            if (task == null)
-                return Result<bool>.Failure("Task not found");
-
-            if (task.UserId != userId)
-                return Result<bool>.Failure("You are not authorized to delete this task");
+            var task = await _unitOfWork.Repository<TaskItem>().GetByIdAsync(taskId);
+            if (task == null) return Result<bool>.Failure("Task not found");
+            if (task.UserId != userId) return Result<bool>.Failure("Unauthorized");
 
             task.IsDeleted = true;
-
             _unitOfWork.Repository<TaskItem>().Update(task);
             await _unitOfWork.SaveChangesAsync();
 
@@ -111,20 +100,14 @@ namespace Graduation_Project.Application.Services
                 .IgnoreQueryFilters()
                 .FirstOrDefaultAsync(t => t.Id.Equals(taskId));
 
-            if (task == null)
-                return Result<bool>.Failure("Task not found");
-
-            if (task.UserId != userId)
-                return Result<bool>.Failure("Unauthorized");
+            if (task == null) return Result<bool>.Failure("Task not found");
+            if (task.UserId != userId) return Result<bool>.Failure("Unauthorized");
 
             task.IsDeleted = false;
-
             _unitOfWork.Repository<TaskItem>().Update(task);
             await _unitOfWork.SaveChangesAsync();
 
             return Result<bool>.Success(true, "Task restored");
         }
-
-
     }
 }

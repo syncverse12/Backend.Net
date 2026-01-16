@@ -1,4 +1,5 @@
-﻿using Graduation_Project.Application.DTOs.Tasks;
+﻿using Graduation_Project.Application.Common.Pagination;
+using Graduation_Project.Application.DTOs.Tasks;
 using Graduation_Project.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,13 +28,17 @@ namespace Graduation_Project.API.Controllers
             return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
 
-        [HttpGet("my")]
-        public async Task<IActionResult> MyTasks()
+        [HttpGet("my-tasks")]
+        public async Task<IActionResult> GetMyTasks([FromQuery] PaginationQuery query)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var result = await _taskService.GetMyTasksAsync(userId);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            return Ok(result);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("User ID not found in token");
+
+            var result = await _taskService.GetMyTasksAsync(userId, query);
+
+            return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
 
         [HttpPut("{id:int}")]
