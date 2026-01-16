@@ -12,6 +12,7 @@ using Graduation_Project.Infrastructure.Persistence;
 using Graduation_Project.Infrastructure.Persistence.Repositories;
 using Graduation_Project.Infrastructure.SeedConfiguration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -61,6 +62,9 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<IAuthorizationHandler, TaskOwnerHandler>();
+
 
 
 builder.Services.AddControllers();

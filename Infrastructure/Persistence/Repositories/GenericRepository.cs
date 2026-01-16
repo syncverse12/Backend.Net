@@ -16,6 +16,11 @@ namespace Graduation_Project.Infrastructure.Persistence.Repositories
             _context = context;
             _dbSet = context.Set<T>();
         }
+        public IQueryable<T> Query()
+        {
+            return _dbSet.AsQueryable();
+        }
+
 
         public async Task<T?> GetByIdAsync(int id)
             => await _dbSet.FindAsync(id);
