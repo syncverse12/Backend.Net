@@ -266,6 +266,46 @@ namespace Graduation_Project.Application.Services
             return Result<bool>.Success(true, "Task rejected");
         }
 
+        public async Task<Result<ManagerTaskDashboardDto>> GetManagerDashboardAsync(string managerId)
+        {
+            var tasksQuery = _unitOfWork.Repository<TaskItem>()
+                .Query()
+                .IgnoreQueryFilters()
+                .Where(t => t.CreatedByUserId == managerId);
+
+            var tasks = await tasksQuery.ToListAsync();
+
+            var statusStats = new TaskStatusStatsDto
+            {
+                Total = tasks.Count(t => !t.IsDeleted),
+                Pending = tasks.Count(t => t.Status == TaskStatus.Pending),
+                InProgress = tasks.Count(t => t.Status == TaskStatus.InProgress),
+                Submitted = tasks.Count(t => t.Status == TaskStatus.Submitted),
+                Completed = tasks.Count(t => t.Status == TaskStatus.Completed),
+                Rejected = tasks.Count(t => t.Status == TaskStatus.Rejected)
+            };
+
+            var tasksPerEmployee = tasks
+                .Where(t => t.AssignedToUserId != null && !t.IsDeleted)
+                .GroupBy(t => new { t.AssignedToUserId, EmployeeName = (t.AssignedToUser.FirstName + " " + t.AssignedToUser.LastName).Trim() })
+                .Select(g => new EmployeeTaskStatsDto
+                {
+                    EmployeeId = g.Key.AssignedToUserId,
+                    EmployeeName = g.Key.EmployeeName,
+                    TasksCount = g.Count()
+                })
+                .ToList();
+
+            var dashboard = new ManagerTaskDashboardDto
+            {
+                StatusStats = statusStats,
+                TasksPerEmployee = tasksPerEmployee
+            };
+
+            return Result<ManagerTaskDashboardDto>.Success(dashboard);
+        }
+
+
 
 
     }

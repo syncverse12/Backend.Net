@@ -92,4 +92,20 @@ public class TasksController : ControllerBase
         var result = await _taskService.RejectTaskAsync(taskId, userId, comment);
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
+
+    // MANAGER DASHBOARD
+    [Authorize(Policy = "ManagerPolicy")]
+    [HttpGet("manager/dashboard")]
+    public async Task<IActionResult> GetManagerDashboard()
+    {
+        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+        var result = await _taskService.GetManagerDashboardAsync(managerId);
+
+        if (!result.IsSuccess)
+            return BadRequest(result);
+
+        return Ok(result);
+    }
+
 }

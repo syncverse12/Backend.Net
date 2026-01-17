@@ -7,6 +7,7 @@ namespace Graduation_Project.Application.DTOs.Tasks
         public string Id { get; set; } = null!;
         public string Title { get; set; } = null!;
         public string? Description { get; set; }
+        public TaskStatus Status { get; set; }
         public bool IsCompleted { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? DueDate { get; set; }

@@ -14,7 +14,8 @@ namespace Graduation_Project.Application.Mapping
                 .ForMember(dest => dest.AssignedToUserName,
                     opt => opt.MapFrom(src => src.AssignedToUser.UserName))
                 .ForMember(dest => dest.CreatedByUserName,
-                    opt => opt.MapFrom(src => src.CreatedByUser.UserName));
+                    opt => opt.MapFrom(src => src.CreatedByUser.UserName))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
         }
     }
 
