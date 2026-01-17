@@ -17,36 +17,39 @@ public class TasksController : ControllerBase
         _taskService = taskService;
     }
 
-    // CREATE
+    // CREATE TASK (Manager)
     [HttpPost]
+    [Authorize(Policy = "ManagerOnly")]
     public async Task<IActionResult> Create(CreateTaskDto dto)
     {
-
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var result = await _taskService.CreateAsync(dto, userId);
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
 
-    // GET
+    // GET MANAGER TASKS
     [HttpGet("manager/tasks")]
-    public async Task<IActionResult> GetMyTasks([FromQuery] TaskQuery query)
+    [Authorize(Policy = "ManagerOnly")]
+    public async Task<IActionResult> GetManagerTasks([FromQuery] TaskQuery query)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var result = await _taskService.GetManagerTasksAsync(userId, query);
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
 
-    // UPDATE
-    [HttpPut("{taskId}")] 
-    public async Task<IActionResult> Update(string taskId, UpdateTaskDto dto) 
+    // UPDATE TASK
+    [HttpPut("{taskId}")]
+    [Authorize(Policy = "ManagerOnly")]
+    public async Task<IActionResult> Update(string taskId, UpdateTaskDto dto)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var result = await _taskService.UpdateAsync(taskId, dto, userId);
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
 
-    // DELETE 
+    // DELETE TASK (Soft Delete)
     [HttpDelete("{id}")]
+    [Authorize(Policy = "ManagerOnly")]
     public async Task<IActionResult> Delete(string id)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -54,8 +57,9 @@ public class TasksController : ControllerBase
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
 
-    // RESTORE 
+    // RESTORE TASK
     [HttpPut("{id}/restore")]
+    [Authorize(Policy = "ManagerOnly")]
     public async Task<IActionResult> Restore(string id)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -64,8 +68,8 @@ public class TasksController : ControllerBase
     }
 
     // ADD DEPENDENCY
-    [Authorize(Policy = "ManagerPolicy")]
     [HttpPost("dependency")]
+    [Authorize(Policy = "ManagerOnly")]
     public async Task<IActionResult> AddDependency(AddTaskDependencyDto dto)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -74,8 +78,8 @@ public class TasksController : ControllerBase
     }
 
     // CONFIRM TASK
-    [Authorize(Policy = "ManagerPolicy")]
     [HttpPut("{taskId}/confirm")]
+    [Authorize(Policy = "ManagerOnly")]
     public async Task<IActionResult> Confirm(string taskId)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -84,8 +88,8 @@ public class TasksController : ControllerBase
     }
 
     // REJECT TASK
-    [Authorize(Policy = "ManagerPolicy")]
     [HttpPut("{taskId}/reject")]
+    [Authorize(Policy = "ManagerOnly")]
     public async Task<IActionResult> Reject(string taskId, [FromBody] string comment)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -94,18 +98,12 @@ public class TasksController : ControllerBase
     }
 
     // MANAGER DASHBOARD
-    [Authorize(Policy = "ManagerPolicy")]
     [HttpGet("manager/dashboard")]
+    [Authorize(Policy = "ManagerOnly")]
     public async Task<IActionResult> GetManagerDashboard()
     {
         var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-
         var result = await _taskService.GetManagerDashboardAsync(managerId);
-
-        if (!result.IsSuccess)
-            return BadRequest(result);
-
-        return Ok(result);
+        return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
-
 }

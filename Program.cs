@@ -1,7 +1,5 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using Graduation_Project.API.Authorization.Policies;
-using Graduation_Project.API.Extensions;
 using Graduation_Project.API.JwtFeatuers;
 using Graduation_Project.API.Middleware;
 using Graduation_Project.Application.Interfaces;
@@ -20,6 +18,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json.Serialization;
+using Graduation_Project.API.Authorization.Requirements;
+using Graduation_Project.API.Authorization.Handlers; 
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -65,8 +66,9 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<ITaskService, TaskService>();
-builder.Services.AddScoped<IAuthorizationHandler, TaskOwnerHandler>();
-
+builder.Services.AddScoped<IAuthorizationHandler, ManagerAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, TaskOwnerAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ReviewTaskAuthorizationHandler>();
 
 
 builder.Services.AddControllers()
@@ -77,15 +79,16 @@ builder.Services.AddControllers()
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy(Policies.Admin, policy =>
-        policy.RequireClaim("role", "Admin"));
+    options.AddPolicy("ManagerOnly", policy =>
+        policy.Requirements.Add(new ManagerRequirement()));
 
-    options.AddPolicy(Policies.Manager, policy =>
-        policy.RequireClaim("role", "Manager"));
-
-    options.AddPolicy(Policies.TaskOwner, policy =>
+    options.AddPolicy("TaskOwner", policy =>
         policy.Requirements.Add(new TaskOwnerRequirement()));
+
+    options.AddPolicy("ReviewTask", policy =>
+        policy.Requirements.Add(new ReviewTaskRequirement()));
 });
+
 
 
 // FluentValidation

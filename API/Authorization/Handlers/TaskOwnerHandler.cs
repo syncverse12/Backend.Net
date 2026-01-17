@@ -3,29 +3,21 @@ using Graduation_Project.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
-public class TaskOwnerHandler
-    : AuthorizationHandler<TaskOwnerRequirement, int>
+public class TaskOwnerAuthorizationHandler
+    : AuthorizationHandler<TaskOwnerRequirement, TaskItem>
 {
-    private readonly IUnitOfWork _unitOfWork;
-
-    public TaskOwnerHandler(IUnitOfWork unitOfWork)
-    {
-        _unitOfWork = unitOfWork;
-    }
-
-    protected override async Task HandleRequirementAsync(
+    protected override Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         TaskOwnerRequirement requirement,
-        int taskId)
+        TaskItem task)
     {
-        var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        var task = await _unitOfWork.Repository<TaskItem>()
-            .GetByIdAsync(taskId);
-
-        if (task == null) return;
+        var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         if (task.CreatedByUserId == userId)
+        {
             context.Succeed(requirement);
+        }
+
+        return Task.CompletedTask;
     }
 }
