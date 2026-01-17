@@ -1,4 +1,5 @@
-﻿using Graduation_Project.Application.Common.Pagination;
+﻿using Graduation_Project.API.Authorization.Policies;
+using Graduation_Project.Application.Common.Pagination;
 using Graduation_Project.Application.DTOs.Tasks;
 using Graduation_Project.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -19,6 +20,7 @@ namespace Graduation_Project.API.Controllers
             _taskService = taskService;
         }
 
+        //CREATE
         [HttpPost]
         public async Task<IActionResult> Create(CreateTaskDto dto)
         {
@@ -28,6 +30,7 @@ namespace Graduation_Project.API.Controllers
             return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
 
+        //GET
         [HttpGet("my-tasks")]
         public async Task<IActionResult> GetMyTasks([FromQuery] TaskQuery query)
         {
@@ -40,7 +43,9 @@ namespace Graduation_Project.API.Controllers
             return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
 
-        [HttpPut("{id:int}")]
+        //UPDATE
+        [Authorize(Policy = Policies.TaskOwner)]
+        [HttpPut("{taskId}")]
         public async Task<IActionResult> Update(int id, UpdateTaskDto dto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -50,6 +55,7 @@ namespace Graduation_Project.API.Controllers
             return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
 
+        //DELETE
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -60,6 +66,7 @@ namespace Graduation_Project.API.Controllers
             return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
 
+        //RESTORE
         [HttpPut("{id:int}/restore")]
         public async Task<IActionResult> Restore(int id)
         {

@@ -21,13 +21,15 @@ namespace Graduation_Project.Application.Services
             _mapper = mapper;
         }
 
+        //CREATE
         public async Task<Result<TaskResponseDto>> CreateAsync(CreateTaskDto dto, string userId)
         {
             var task = new TaskItem
             {
                 Title = dto.Title,
                 Description = dto.Description,
-                UserId = userId,
+                CreatedByUserId = userId,       
+                AssignedToUserId = dto.AssignedToUserId,
                 CategoryId = dto.CategoryId,
                 Priority = dto.Priority
             };
@@ -41,12 +43,15 @@ namespace Graduation_Project.Application.Services
             );
         }
 
+        //GET
         public async Task<Result<PagedResult<TaskResponseDto>>> GetMyTasksAsync(string userId, TaskQuery query)
         {
             var tasksQuery = _unitOfWork.Repository<TaskItem>()
                 .Query()
                 .Include(t => t.Category)
-                .Where(t => t.UserId == userId);
+                .Include(t => t.AssignedToUser) 
+                .Include(t => t.CreatedByUser)
+                .Where(t => t.AssignedToUserId == userId);
 
             if (query.IsCompleted.HasValue)
                 tasksQuery = tasksQuery.Where(t => t.IsCompleted == query.IsCompleted.Value);
@@ -87,12 +92,13 @@ namespace Graduation_Project.Application.Services
             });
         }
 
+        //UPDATE
         public async Task<Result<TaskResponseDto>> UpdateAsync(int taskId, UpdateTaskDto dto, string userId)
         {
             var task = await _unitOfWork.Repository<TaskItem>().GetByIdAsync(taskId);
 
             if (task == null) return Result<TaskResponseDto>.Failure("Task not found");
-            if (task.UserId != userId) return Result<TaskResponseDto>.Failure("Unauthorized");
+            if (task.CreatedByUserId != userId && task.AssignedToUserId != userId) return Result<TaskResponseDto>.Failure("Unauthorized");
 
             task.Title = dto.Title;
             task.Description = dto.Description;
@@ -107,11 +113,12 @@ namespace Graduation_Project.Application.Services
             return Result<TaskResponseDto>.Success(_mapper.Map<TaskResponseDto>(task), "Task Updated Successfully");
         }
 
+        //DELETE
         public async Task<Result<bool>> DeleteAsync(int taskId, string userId)
         {
             var task = await _unitOfWork.Repository<TaskItem>().GetByIdAsync(taskId);
             if (task == null) return Result<bool>.Failure("Task not found");
-            if (task.UserId != userId) return Result<bool>.Failure("Unauthorized");
+            if (task.CreatedByUserId != userId) return Result<bool>.Failure("Unauthorized");
 
             task.IsDeleted = true;
             _unitOfWork.Repository<TaskItem>().Update(task);
@@ -120,6 +127,7 @@ namespace Graduation_Project.Application.Services
             return Result<bool>.Success(true, "Task deleted successfully");
         }
 
+        //RESTORE
         public async Task<Result<bool>> RestoreAsync(int taskId, string userId)
         {
             var task = await _unitOfWork.Repository<TaskItem>()
@@ -128,7 +136,7 @@ namespace Graduation_Project.Application.Services
                 .FirstOrDefaultAsync(t => t.Id.Equals(taskId));
 
             if (task == null) return Result<bool>.Failure("Task not found");
-            if (task.UserId != userId) return Result<bool>.Failure("Unauthorized");
+            if (task.CreatedByUserId != userId) return Result<bool>.Failure("Unauthorized");
 
             task.IsDeleted = false;
             _unitOfWork.Repository<TaskItem>().Update(task);

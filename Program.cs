@@ -1,5 +1,6 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Graduation_Project.API.Authorization.Policies;
 using Graduation_Project.API.Extensions;
 using Graduation_Project.API.JwtFeatuers;
 using Graduation_Project.API.Middleware;
@@ -54,7 +55,7 @@ builder.Services.AddAuthentication(opt =>
     };
 });
 
-builder.Services.AddAuthorizationPolicies();
+//builder.Services.AddAuthorizationPolicies();
 
 
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -73,6 +74,19 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(Policies.Admin, policy =>
+        policy.RequireClaim("role", "Admin"));
+
+    options.AddPolicy(Policies.Manager, policy =>
+        policy.RequireClaim("role", "Manager"));
+
+    options.AddPolicy(Policies.TaskOwner, policy =>
+        policy.Requirements.Add(new TaskOwnerRequirement()));
+});
+
 
 // FluentValidation
 builder.Services.AddFluentValidationAutoValidation();

@@ -12,5 +12,7 @@ namespace Graduation_Project.Application.DTOs.Tasks
         public DateTime? DueDate { get; set; }
         public TaskPriority Priority { get; set; }
         public string? CategoryName { get; set; }
+        public string AssignedToUserName { get; set; } = null!;
+        public string CreatedByUserName { get; set; } = null!;
     }
 }
