@@ -22,7 +22,10 @@ namespace Graduation_Project.Application.Mapping
         {
             public TaskMappingProfile()
             {
-                CreateMap<TaskItem, TaskResponseDto>();
+                CreateMap<TaskItem, TaskResponseDto>()
+                     .ForMember(dest => dest.CategoryName,
+                     opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : null));
+
             }
         }
 

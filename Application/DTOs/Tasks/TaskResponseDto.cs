@@ -1,4 +1,6 @@
-﻿namespace Graduation_Project.Application.DTOs.Tasks
+﻿using Graduation_Project.Domain.Enums;
+
+namespace Graduation_Project.Application.DTOs.Tasks
 {
     public class TaskResponseDto
     {
@@ -8,5 +10,7 @@
         public bool IsCompleted { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? DueDate { get; set; }
+        public TaskPriority Priority { get; set; }
+        public string? CategoryName { get; set; }
     }
 }

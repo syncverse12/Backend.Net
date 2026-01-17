@@ -5,6 +5,7 @@ using Graduation_Project.Application.DTOs.Tasks;
 using Graduation_Project.Application.Interfaces;
 using Graduation_Project.Application.Interfaces.Persistence;
 using Graduation_Project.Domain.Entities;
+using Graduation_Project.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Graduation_Project.Application.Services
@@ -27,7 +28,8 @@ namespace Graduation_Project.Application.Services
                 Title = dto.Title,
                 Description = dto.Description,
                 UserId = userId,
-                CategoryId = dto.CategoryId
+                CategoryId = dto.CategoryId,
+                Priority = dto.Priority
             };
             
             await _unitOfWork.Repository<TaskItem>().AddAsync(task);
@@ -52,6 +54,10 @@ namespace Graduation_Project.Application.Services
             if (query.IsDeleted.HasValue)
                 tasksQuery = tasksQuery.Where(t => t.IsDeleted == query.IsDeleted.Value);
 
+            if (query.Priority.HasValue)
+                tasksQuery = tasksQuery.Where(t => t.Priority == query.Priority.Value);
+
+
             if (!string.IsNullOrWhiteSpace(query.Search))
                 tasksQuery = tasksQuery.Where(t => t.Title.Contains(query.Search));
 
@@ -59,7 +65,8 @@ namespace Graduation_Project.Application.Services
             {
             TaskSortBy.Oldest => tasksQuery.OrderBy(t => t.CreatedAt),
             TaskSortBy.Title  => tasksQuery.OrderBy(t => t.Title),
-    _                 => tasksQuery.OrderByDescending(t => t.CreatedAt)
+            TaskSortBy.Priority => tasksQuery.OrderByDescending(t => t.Priority),
+            _ => tasksQuery.OrderByDescending(t => t.CreatedAt),
             };
 
             var totalCount = await tasksQuery.CountAsync();
@@ -91,6 +98,8 @@ namespace Graduation_Project.Application.Services
             task.Description = dto.Description;
             task.IsCompleted = dto.IsCompleted;
             task.CategoryId = dto.CategoryId;
+            task.Priority = dto.Priority;
+
 
             _unitOfWork.Repository<TaskItem>().Update(task);
             await _unitOfWork.SaveChangesAsync();

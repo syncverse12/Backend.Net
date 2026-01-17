@@ -1,4 +1,5 @@
 ﻿using Graduation_Project.Domain.Common;
+using Graduation_Project.Domain.Enums;
 
 namespace Graduation_Project.Domain.Entities
 {
@@ -13,6 +14,7 @@ namespace Graduation_Project.Domain.Entities
         public DateTime? DueDate { get; set; }
         public int? CategoryId { get; set; }
         public Category? Category { get; set; }
+        public TaskPriority Priority { get; set; } = TaskPriority.Medium;
 
     }
 }
