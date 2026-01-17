@@ -1,29 +1,33 @@
 ﻿using Graduation_Project.Domain.Common;
+using Graduation_Project.Domain.Entities;
 using Graduation_Project.Domain.Enums;
 using Graduation_Project.Domain.Models;
 
-namespace Graduation_Project.Domain.Entities
+public class TaskItem : BaseEntity
 {
-    public class TaskItem : BaseEntity
-    {
-        public string Title { get; set; } = null!;
-        public string? Description { get; set; }
+    public string Title { get; set; } = null!;
+    public string? Description { get; set; }
 
-        public bool IsCompleted { get; set; } = false;
+    public TaskStatus Status { get; set; }
 
-        public string CreatedByUserId { get; set; } = null!;
-        public User CreatedByUser { get; set; } = null!;
+    public string CreatedByUserId { get; set; } = null!;
+    public User CreatedByUser { get; set; } = null!;
 
-        public string AssignedToUserId { get; set; } = null!;
-        public User AssignedToUser { get; set; } = null!;
-        public DateTime? DueDate { get; set; }
-        public string? CategoryId { get; set; }
-        public Category? Category { get; set; }
-        public TaskPriority Priority { get; set; } = TaskPriority.Medium;
+    public string AssignedToUserId { get; set; } = null!;
+    public User AssignedToUser { get; set; } = null!;
 
-        public virtual ICollection<TaskDependency> Dependencies { get; set; } = new List<TaskDependency>();
-        public virtual ICollection<TaskDependency> DependentTasks { get; set; } = new List<TaskDependency>();
+    public DateTime? DueDate { get; set; }
 
+    public string? CategoryId { get; set; }
+    public Category? Category { get; set; }
+    public virtual ICollection<TaskDependency> Dependencies { get; set; } = new List<TaskDependency>();
+    public virtual ICollection<TaskDependency> DependentTasks { get; set; } = new List<TaskDependency>();
 
-    }
+    public TaskPriority Priority { get; set; }
+
+    public DateTime? ReviewedAt { get; set; }
+    public string? ReviewedByUserId { get; set; }
+    public User? ReviewedByUser { get; set; }
+
+    public string? ReviewComment { get; set; }
 }

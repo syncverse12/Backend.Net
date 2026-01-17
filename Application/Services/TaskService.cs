@@ -7,6 +7,7 @@ using Graduation_Project.Application.Interfaces.Persistence;
 using Graduation_Project.Domain.Entities;
 using Graduation_Project.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace Graduation_Project.Application.Services
 {
@@ -22,18 +23,25 @@ namespace Graduation_Project.Application.Services
         }
 
         //CREATE
-        public async Task<Result<TaskResponseDto>> CreateAsync(CreateTaskDto dto, string userId)
+        public async Task<Result<TaskResponseDto>> CreateAsync(
+            CreateTaskDto dto,
+            string managerId)
         {
+
+            if (dto.AssignedToUserId == managerId)
+                return Result<TaskResponseDto>.Failure("Manager cannot assign task to himself");
+
             var task = new TaskItem
             {
                 Title = dto.Title,
                 Description = dto.Description,
-                CreatedByUserId = userId,       
+                Status = TaskStatus.Pending,
+                CreatedByUserId = managerId,
                 AssignedToUserId = dto.AssignedToUserId,
-                CategoryId = dto.CategoryId?.ToString(), 
+                CategoryId = dto.CategoryId?.ToString(),
                 Priority = dto.Priority
             };
-            
+
             await _unitOfWork.Repository<TaskItem>().AddAsync(task);
             await _unitOfWork.SaveChangesAsync();
 
@@ -43,35 +51,38 @@ namespace Graduation_Project.Application.Services
             );
         }
 
+
         //GET
-        public async Task<Result<PagedResult<TaskResponseDto>>> GetMyTasksAsync(string userId, TaskQuery query)
+        public async Task<Result<PagedResult<TaskResponseDto>>> GetManagerTasksAsync(
+              string managerId,
+              TaskQuery query)
         {
             var tasksQuery = _unitOfWork.Repository<TaskItem>()
                 .Query()
                 .Include(t => t.Category)
-                .Include(t => t.AssignedToUser) 
+                .Include(t => t.AssignedToUser)
                 .Include(t => t.CreatedByUser)
-                .Where(t => t.AssignedToUserId == userId);
+                .Where(t => t.CreatedByUserId == managerId);
 
-            if (query.IsCompleted.HasValue)
-                tasksQuery = tasksQuery.Where(t => t.IsCompleted == query.IsCompleted.Value);
-
-            if (query.IsDeleted.HasValue)
-                tasksQuery = tasksQuery.Where(t => t.IsDeleted == query.IsDeleted.Value);
+            // Filters
+            if (query.Status.HasValue)
+                tasksQuery = tasksQuery.Where(t => t.Status == query.Status.Value);
 
             if (query.Priority.HasValue)
                 tasksQuery = tasksQuery.Where(t => t.Priority == query.Priority.Value);
 
+            if (query.IsDeleted.HasValue)
+                tasksQuery = tasksQuery.Where(t => t.IsDeleted == query.IsDeleted.Value);
 
             if (!string.IsNullOrWhiteSpace(query.Search))
                 tasksQuery = tasksQuery.Where(t => t.Title.Contains(query.Search));
 
             tasksQuery = query.SortBy switch
             {
-            TaskSortBy.Oldest => tasksQuery.OrderBy(t => t.CreatedAt),
-            TaskSortBy.Title  => tasksQuery.OrderBy(t => t.Title),
-            TaskSortBy.Priority => tasksQuery.OrderByDescending(t => t.Priority),
-            _ => tasksQuery.OrderByDescending(t => t.CreatedAt),
+                TaskSortBy.Oldest => tasksQuery.OrderBy(t => t.CreatedAt),
+                TaskSortBy.Title => tasksQuery.OrderBy(t => t.Title),
+                TaskSortBy.Priority => tasksQuery.OrderByDescending(t => t.Priority),
+                _ => tasksQuery.OrderByDescending(t => t.CreatedAt),
             };
 
             var totalCount = await tasksQuery.CountAsync();
@@ -81,58 +92,52 @@ namespace Graduation_Project.Application.Services
                 .Take(query.PageSize)
                 .ToListAsync();
 
-            var dtos = _mapper.Map<List<TaskResponseDto>>(tasks);
-
-            return Result<PagedResult<TaskResponseDto>>.Success(new PagedResult<TaskResponseDto>
-            {
-                Items = dtos,
-                TotalCount = totalCount,
-                Page = query.Page,
-                PageSize = query.PageSize
-            });
+            return Result<PagedResult<TaskResponseDto>>.Success(
+                new PagedResult<TaskResponseDto>
+                {
+                    Items = _mapper.Map<List<TaskResponseDto>>(tasks),
+                    TotalCount = totalCount,
+                    Page = query.Page,
+                    PageSize = query.PageSize
+                });
         }
 
+
         //UPDATE
-        public async Task<Result<TaskResponseDto>> UpdateAsync(string taskId, UpdateTaskDto dto, string userId)
+        public async Task<Result<TaskResponseDto>> UpdateAsync(
+              string taskId,
+              UpdateTaskDto dto,
+              string managerId)
         {
-            var task = await _unitOfWork.Repository<TaskItem>().GetByIdAsync(taskId);
+            var task = await _unitOfWork.Repository<TaskItem>()
+                .GetByIdAsync(taskId);
 
-            if (task == null) return Result<TaskResponseDto>.Failure("Task not found");
-            if (task.CreatedByUserId != userId && task.AssignedToUserId != userId) return Result<TaskResponseDto>.Failure("Unauthorized");
+            if (task == null)
+                return Result<TaskResponseDto>.Failure("Task not found");
 
-            if (dto.IsCompleted && !task.IsCompleted)
+            if (task.Status == TaskStatus.Submitted)
             {
-                var hasIncompleteDependencies = await _unitOfWork.Repository<TaskDependency>()
-                    .Query()
-                    .Include(d => d.DependsOnTask)
-                    .AnyAsync(d =>
-                        d.TaskId == task.Id &&
-                        !d.DependsOnTask.IsCompleted
-                    );
-
-                if (hasIncompleteDependencies)
-                {
-                    return Result<TaskResponseDto>.Failure(
-                        "Cannot complete this task. Some dependent tasks are not completed yet."
-                    );
-                }
+                return Result<TaskResponseDto>.Failure("Task is submitted and cannot be modified. Please Review (Accept/Reject) first.");
             }
 
+            if (task.CreatedByUserId != managerId)
+                return Result<TaskResponseDto>.Failure("Unauthorized");
 
             task.Title = dto.Title;
             task.Description = dto.Description;
-            task.IsCompleted = dto.IsCompleted;
-            task.CategoryId = dto.CategoryId;
             task.Priority = dto.Priority;
-            
-
-
+            task.CategoryId = dto.CategoryId;
+            task.AssignedToUserId = dto.AssignedToUserId;
 
             _unitOfWork.Repository<TaskItem>().Update(task);
             await _unitOfWork.SaveChangesAsync();
 
-            return Result<TaskResponseDto>.Success(_mapper.Map<TaskResponseDto>(task), "Task Updated Successfully");
+            return Result<TaskResponseDto>.Success(
+                _mapper.Map<TaskResponseDto>(task),
+                "Task updated successfully"
+            );
         }
+
 
         //DELETE
         public async Task<Result<bool>> DeleteAsync(string taskId, string userId)
@@ -206,6 +211,62 @@ namespace Graduation_Project.Application.Services
 
             return Result<bool>.Success(true, "Dependency added");
         }
+
+        public async Task<Result<bool>> ConfirmTaskAsync(
+            string taskId,
+            string managerId)
+        {
+            var task = await _unitOfWork.Repository<TaskItem>()
+                .GetByIdAsync(taskId);
+
+            if (task == null)
+                return Result<bool>.Failure("Task not found");
+
+            if (task.CreatedByUserId != managerId)
+                return Result<bool>.Failure("Unauthorized");
+
+            if (task.Status != TaskStatus.Submitted)
+                return Result<bool>.Failure("Task is not ready for confirmation");
+
+            task.Status = TaskStatus.Completed;
+            task.ReviewedAt = DateTime.UtcNow;
+            task.ReviewedByUserId = managerId;
+
+            _unitOfWork.Repository<TaskItem>().Update(task);
+            await _unitOfWork.SaveChangesAsync();
+
+            return Result<bool>.Success(true, "Task confirmed as completed");
+        }
+
+        public async Task<Result<bool>> RejectTaskAsync(
+            string taskId,
+            string managerId,
+            string comment)
+        {
+            var task = await _unitOfWork.Repository<TaskItem>()
+                .GetByIdAsync(taskId);
+
+            if (task == null)
+                return Result<bool>.Failure("Task not found");
+
+            if (task.CreatedByUserId != managerId)
+                return Result<bool>.Failure("Unauthorized");
+
+            if (task.Status != TaskStatus.Submitted)
+                return Result<bool>.Failure("Task is not submitted yet");
+
+            task.Status = TaskStatus.Rejected;
+            task.ReviewComment = comment;
+            task.ReviewedAt = DateTime.UtcNow;
+            task.ReviewedByUserId = managerId;
+
+            _unitOfWork.Repository<TaskItem>().Update(task);
+            await _unitOfWork.SaveChangesAsync();
+
+            return Result<bool>.Success(true, "Task rejected");
+        }
+
+
 
     }
 }

@@ -13,5 +13,6 @@ namespace Graduation_Project.Application.DTOs.Tasks
         public bool IsCompleted { get; set; }
         public string? CategoryId { get; set; }
         public TaskPriority Priority { get; set; }
+        public string AssignedToUserId { get; set; } = null!;
     }
 }
