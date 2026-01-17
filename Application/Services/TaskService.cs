@@ -27,8 +27,9 @@ namespace Graduation_Project.Application.Services
                 Title = dto.Title,
                 Description = dto.Description,
                 UserId = userId,
+                CategoryId = dto.CategoryId
             };
-
+            
             await _unitOfWork.Repository<TaskItem>().AddAsync(task);
             await _unitOfWork.SaveChangesAsync();
 
@@ -42,6 +43,7 @@ namespace Graduation_Project.Application.Services
         {
             var tasksQuery = _unitOfWork.Repository<TaskItem>()
                 .Query()
+                .Include(t => t.Category)
                 .Where(t => t.UserId == userId);
 
             if (query.IsCompleted.HasValue)
@@ -55,9 +57,9 @@ namespace Graduation_Project.Application.Services
 
             tasksQuery = query.SortBy switch
             {
-                TaskSortBy.Oldest => tasksQuery.OrderBy(t => t.CreatedAt),
-                TaskSortBy.Title => tasksQuery.OrderBy(t => t.Title),
-                _ => tasksQuery.OrderByDescending(t => t.CreatedAt)
+            TaskSortBy.Oldest => tasksQuery.OrderBy(t => t.CreatedAt),
+            TaskSortBy.Title  => tasksQuery.OrderBy(t => t.Title),
+    _                 => tasksQuery.OrderByDescending(t => t.CreatedAt)
             };
 
             var totalCount = await tasksQuery.CountAsync();
@@ -88,6 +90,7 @@ namespace Graduation_Project.Application.Services
             task.Title = dto.Title;
             task.Description = dto.Description;
             task.IsCompleted = dto.IsCompleted;
+            task.CategoryId = dto.CategoryId;
 
             _unitOfWork.Repository<TaskItem>().Update(task);
             await _unitOfWork.SaveChangesAsync();

@@ -4,6 +4,7 @@ namespace Graduation_Project.Application.DTOs.Tasks
 {
     public class UpdateTaskDto
     {
+        public int? CategoryId { get; set; }
         [Required]
         public string Title { get; set; } = null!;
 

@@ -11,5 +11,8 @@ namespace Graduation_Project.Domain.Entities
 
         public string UserId { get; set; } = null!;
         public DateTime? DueDate { get; set; }
+        public int? CategoryId { get; set; }
+        public Category? Category { get; set; }
+
     }
 }
