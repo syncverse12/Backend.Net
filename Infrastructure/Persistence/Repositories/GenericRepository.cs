@@ -22,7 +22,7 @@ namespace Graduation_Project.Infrastructure.Persistence.Repositories
         }
 
 
-        public async Task<T?> GetByIdAsync(int id)
+        public async Task<T?> GetByIdAsync(object id)
             => await _dbSet.FindAsync(id);
 
         public async Task<IEnumerable<T>> GetAllAsync()

@@ -46,7 +46,7 @@ namespace Graduation_Project.API.Controllers
         //UPDATE
         [Authorize(Policy = Policies.TaskOwner)]
         [HttpPut("{taskId}")]
-        public async Task<IActionResult> Update(int id, UpdateTaskDto dto)
+        public async Task<IActionResult> Update(string id, UpdateTaskDto dto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
@@ -57,7 +57,7 @@ namespace Graduation_Project.API.Controllers
 
         //DELETE
         [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(string id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
@@ -68,7 +68,7 @@ namespace Graduation_Project.API.Controllers
 
         //RESTORE
         [HttpPut("{id:int}/restore")]
-        public async Task<IActionResult> Restore(int id)
+        public async Task<IActionResult> Restore(string id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
@@ -77,6 +77,16 @@ namespace Graduation_Project.API.Controllers
             return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
 
+        //ADD DEPENDENCY
+        [Authorize(Policy = "ManagerPolicy")]
+        [HttpPost("dependency")]
+        public async Task<IActionResult> AddDependency(AddTaskDependencyDto dto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var result = await _taskService.AddDependencyAsync(dto, userId);
+
+            return result.IsSuccess ? Ok(result) : BadRequest(result);
+        }
 
     }
 }

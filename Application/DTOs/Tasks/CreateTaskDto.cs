@@ -9,7 +9,7 @@ namespace Graduation_Project.Application.DTOs.Tasks
         public string Title { get; set; } = null!;
 
         public string? Description { get; set; }
-        public int? CategoryId { get; set; }
+        public string? CategoryId { get; set; }
         public TaskPriority Priority { get; set; }
         public string AssignedToUserId { get; set; } = null!;
     }

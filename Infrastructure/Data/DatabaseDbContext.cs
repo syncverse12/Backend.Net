@@ -1,5 +1,6 @@
 ﻿using Graduation_Project.Application.Interfaces;
 using Graduation_Project.Domain.Common;
+using Graduation_Project.Domain.Entities;
 using Graduation_Project.Domain.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -68,6 +69,18 @@ namespace Graduation_Project.Infrastructure.Data
                     builder.Entity(entityType.ClrType).HasQueryFilter(lambda);
                 }
             }
+            builder.Entity<TaskDependency>()
+                .HasOne(td => td.Task)
+                .WithMany(t => t.Dependencies)
+                .HasForeignKey(td => td.TaskId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<TaskDependency>()
+                .HasOne(td => td.DependsOnTask)
+                .WithMany(t => t.DependentTasks)
+                .HasForeignKey(td => td.DependsOnTaskId)
+                .OnDelete(DeleteBehavior.Restrict);
+
 
             builder.ApplyConfigurationsFromAssembly(typeof(DatabaseDbContext).Assembly);
         }

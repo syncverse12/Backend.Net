@@ -17,9 +17,13 @@ namespace Graduation_Project.Domain.Entities
         public string AssignedToUserId { get; set; } = null!;
         public User AssignedToUser { get; set; } = null!;
         public DateTime? DueDate { get; set; }
-        public int? CategoryId { get; set; }
+        public string? CategoryId { get; set; }
         public Category? Category { get; set; }
         public TaskPriority Priority { get; set; } = TaskPriority.Medium;
+
+        public virtual ICollection<TaskDependency> Dependencies { get; set; } = new List<TaskDependency>();
+        public virtual ICollection<TaskDependency> DependentTasks { get; set; } = new List<TaskDependency>();
+
 
     }
 }

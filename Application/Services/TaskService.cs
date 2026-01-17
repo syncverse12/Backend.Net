@@ -30,7 +30,7 @@ namespace Graduation_Project.Application.Services
                 Description = dto.Description,
                 CreatedByUserId = userId,       
                 AssignedToUserId = dto.AssignedToUserId,
-                CategoryId = dto.CategoryId,
+                CategoryId = dto.CategoryId?.ToString(), 
                 Priority = dto.Priority
             };
             
@@ -93,18 +93,39 @@ namespace Graduation_Project.Application.Services
         }
 
         //UPDATE
-        public async Task<Result<TaskResponseDto>> UpdateAsync(int taskId, UpdateTaskDto dto, string userId)
+        public async Task<Result<TaskResponseDto>> UpdateAsync(string taskId, UpdateTaskDto dto, string userId)
         {
             var task = await _unitOfWork.Repository<TaskItem>().GetByIdAsync(taskId);
 
             if (task == null) return Result<TaskResponseDto>.Failure("Task not found");
             if (task.CreatedByUserId != userId && task.AssignedToUserId != userId) return Result<TaskResponseDto>.Failure("Unauthorized");
 
+            if (dto.IsCompleted && !task.IsCompleted)
+            {
+                var hasIncompleteDependencies = await _unitOfWork.Repository<TaskDependency>()
+                    .Query()
+                    .Include(d => d.DependsOnTask)
+                    .AnyAsync(d =>
+                        d.TaskId == task.Id &&
+                        !d.DependsOnTask.IsCompleted
+                    );
+
+                if (hasIncompleteDependencies)
+                {
+                    return Result<TaskResponseDto>.Failure(
+                        "Cannot complete this task. Some dependent tasks are not completed yet."
+                    );
+                }
+            }
+
+
             task.Title = dto.Title;
             task.Description = dto.Description;
             task.IsCompleted = dto.IsCompleted;
             task.CategoryId = dto.CategoryId;
             task.Priority = dto.Priority;
+            
+
 
 
             _unitOfWork.Repository<TaskItem>().Update(task);
@@ -114,7 +135,7 @@ namespace Graduation_Project.Application.Services
         }
 
         //DELETE
-        public async Task<Result<bool>> DeleteAsync(int taskId, string userId)
+        public async Task<Result<bool>> DeleteAsync(string taskId, string userId)
         {
             var task = await _unitOfWork.Repository<TaskItem>().GetByIdAsync(taskId);
             if (task == null) return Result<bool>.Failure("Task not found");
@@ -128,7 +149,7 @@ namespace Graduation_Project.Application.Services
         }
 
         //RESTORE
-        public async Task<Result<bool>> RestoreAsync(int taskId, string userId)
+        public async Task<Result<bool>> RestoreAsync(string taskId, string userId)
         {
             var task = await _unitOfWork.Repository<TaskItem>()
                 .Query()
@@ -144,5 +165,47 @@ namespace Graduation_Project.Application.Services
 
             return Result<bool>.Success(true, "Task restored");
         }
+
+        // ADD DEPENDENCY
+        public async Task<Result<bool>> AddDependencyAsync(
+              AddTaskDependencyDto dto,
+              string userId)
+        {
+            if (dto.TaskId == dto.DependsOnTaskId)
+                return Result<bool>.Failure("Task cannot depend on itself");
+
+            var task = await _unitOfWork.Repository<TaskItem>().GetByIdAsync(dto.TaskId);
+            var dependsOnTask = await _unitOfWork.Repository<TaskItem>().GetByIdAsync(dto.DependsOnTaskId);
+
+            if (task == null || dependsOnTask == null)
+                return Result<bool>.Failure("Task not found");
+
+
+            if (task.CreatedByUserId != userId)
+                return Result<bool>.Failure("Unauthorized");
+
+            // Avoid repeation
+            var exists = await _unitOfWork.Repository<TaskDependency>()
+                .FindAsync(d =>
+                    d.TaskId == dto.TaskId &&
+                    d.DependsOnTaskId == dto.DependsOnTaskId);
+
+            if (exists.Any())
+                return Result<bool>.Failure("Dependency already exists");
+
+            var dependency = new TaskDependency
+            {
+                TaskId = dto.TaskId,
+                DependsOnTaskId = dto.DependsOnTaskId
+            };
+
+            await _unitOfWork.Repository<TaskDependency>()
+                .AddAsync(dependency);
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return Result<bool>.Success(true, "Dependency added");
+        }
+
     }
 }
