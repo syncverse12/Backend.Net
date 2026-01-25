@@ -87,6 +87,8 @@ builder.Services.AddAuthorization(options =>
 
     options.AddPolicy("ReviewTask", policy =>
         policy.Requirements.Add(new ReviewTaskRequirement()));
+    options.AddPolicy("EmployeeOnly", policy =>
+        policy.RequireRole("Employee"));
 });
 
 
