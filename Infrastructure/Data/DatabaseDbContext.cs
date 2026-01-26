@@ -28,6 +28,7 @@ namespace Graduation_Project.Infrastructure.Data
         }
         public DbSet<TaskEmployee> TaskEmployees => Set<TaskEmployee>();
         public DbSet<TimeLog> TimeLogs => Set<TimeLog>();
+        public DbSet<Project> Projects => Set<Project>();
         public override int SaveChanges()
         {
             ApplyAuditInfo();

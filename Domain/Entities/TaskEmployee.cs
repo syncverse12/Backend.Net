@@ -14,14 +14,13 @@ namespace Synverse.Domain.Entities
         public TaskPriority Priority { get; set; }
         public TaskStatus Status { get; set; }
 
-        public DateTime CreatedAt { get; set; }
         public DateTime? Deadline { get; set; }
 
         public int ProgressPercentage { get; set; }
 
         // Relations
-        public Guid AssignedUserId { get; set; }
-        public Guid ProjectId { get; set; }
+        public string? AssignedUserId { get; set; }
+        public string? ProjectId { get; set; }
 
         // Navigation Properties
         public User AssignedUser { get; set; } = null!;

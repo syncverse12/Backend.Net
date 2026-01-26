@@ -4,7 +4,7 @@ using Synverse.Domain.Entities;
 
 namespace Graduation_Project.Infrastructure.SeedConfiguration
 {
-    public class TaskConfiguration : IEntityTypeConfiguration<TaskEmployee>
+    public class TaskEmployeeConfiguration : IEntityTypeConfiguration<TaskEmployee>
     {
         public void Configure(EntityTypeBuilder<TaskEmployee> builder)
         {
@@ -32,7 +32,8 @@ namespace Graduation_Project.Infrastructure.SeedConfiguration
 
             builder.HasOne(x => x.Project)
                    .WithMany(p => p.Tasks)
-                   .HasForeignKey(x => x.ProjectId);
+                   .HasForeignKey(x => x.ProjectId)
+                   .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasMany(x => x.TimeLogs)
                    .WithOne(x => x.Task)

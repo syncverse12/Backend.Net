@@ -5,8 +5,8 @@ namespace Synverse.Domain.Entities
 {
     public class TimeLog : BaseEntity
     {
-        public Guid TaskId { get; set; }
-        public Guid UserId { get; set; }
+        public string? TaskId { get; set; }
+        public string? UserId { get; set; }
 
         public DateTime StartTime { get; set; }
         public DateTime? EndTime { get; set; } 
