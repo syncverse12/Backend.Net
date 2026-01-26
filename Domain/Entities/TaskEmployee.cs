@@ -6,7 +6,7 @@ using Graduation_Project.Domain.Entities;
 
 namespace Synverse.Domain.Entities
 {
-    public class Task : BaseEntity
+    public class TaskEmployee : BaseEntity
     {
         public string TaskTitle { get; set; } = null!;
         public string? Description { get; set; }

@@ -4,6 +4,7 @@ using Graduation_Project.Domain.Entities;
 using Graduation_Project.Domain.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Synverse.Domain.Entities;
 using System.Linq.Expressions;
 
 namespace Graduation_Project.Infrastructure.Data
@@ -25,7 +26,8 @@ namespace Graduation_Project.Infrastructure.Data
             ApplyAuditInfo();
             return await base.SaveChangesAsync(cancellationToken);
         }
-
+        public DbSet<TaskEmployee> TaskEmployees => Set<TaskEmployee>();
+        public DbSet<TimeLog> TimeLogs => Set<TimeLog>();
         public override int SaveChanges()
         {
             ApplyAuditInfo();

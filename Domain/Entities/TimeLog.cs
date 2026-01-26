@@ -15,7 +15,7 @@ namespace Synverse.Domain.Entities
         public bool IsManual { get; set; }
 
         // Navigation
-        public Task Task { get; set; } = null!;
+        public TaskEmployee Task { get; set; } = null!;
         public User User { get; set; } = null!;
     }
 }
