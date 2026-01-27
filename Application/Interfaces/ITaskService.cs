@@ -15,10 +15,6 @@ namespace Graduation_Project.Application.Interfaces
         Task<Result<bool>> ConfirmTaskAsync(string taskId, string managerId);
         Task<Result<bool>> RejectTaskAsync(string taskId, string managerId, string comment);
         Task<Result<ManagerTaskDashboardDto>> GetManagerDashboardAsync(string managerId);
-        Task<Result<PagedResult<TaskResponseDto>>> GetMyTasksAsync(string employeeId,TaskQuery query);
-        Task<Result<bool>> StartTaskAsync(string taskId,string employeeId);
-        Task<Result<bool>> SubmitTaskAsync(string taskId,string employeeId);
-
-
+        
     }
 }
