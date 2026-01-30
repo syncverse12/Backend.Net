@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
 using Graduation_Project.Application.Common.Results;
 using Graduation_Project.Application.DTOs.Category;
-using Graduation_Project.Application.Interfaces;
 using Graduation_Project.Application.Interfaces.Persistence;
+using Graduation_Project.Application.Interfaces.Task.Manager;
 using Graduation_Project.Domain.Entities;
 
-namespace Graduation_Project.Application.Services
+namespace Graduation_Project.Application.Services.Task.Manager
 {
     public class CategoryTaskService : ICategoryTaskService
     {

@@ -1,4 +1,4 @@
-﻿using Graduation_Project.Application.Interfaces;
+﻿using Graduation_Project.Application.Interfaces.Task.Manager;
 using Graduation_Project.Domain.Common;
 using Graduation_Project.Domain.Entities;
 using Graduation_Project.Domain.Models;

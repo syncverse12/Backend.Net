@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
 using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Tasks;
 using Graduation_Project.Application.Interfaces.Persistence;
 using Graduation_Project.Application.Interfaces.Task.Employee;
-using Graduation_Project.Application.Interfaces;
 using Graduation_Project.Application.Common.Models;
 using Microsoft.EntityFrameworkCore;
+using Graduation_Project.Application.DTOs.Tasks.Manager;
+using Graduation_Project.Application.Interfaces.Task.Manager;
 
 namespace Graduation_Project.Application.Services.Task.Employee
 {

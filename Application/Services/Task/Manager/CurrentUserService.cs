@@ -1,4 +1,4 @@
-﻿using Graduation_Project.Application.Interfaces;
+﻿using Graduation_Project.Application.Interfaces.Task.Manager;
 
 public class CurrentUserService : ICurrentUserService
 {

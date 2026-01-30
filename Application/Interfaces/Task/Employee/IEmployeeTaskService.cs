@@ -1,6 +1,6 @@
 ﻿using Graduation_Project.Application.Common.Models;
 using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Tasks;
+using Graduation_Project.Application.DTOs.Tasks.Manager;
 
 namespace Graduation_Project.Application.Interfaces.Task.Employee
 {

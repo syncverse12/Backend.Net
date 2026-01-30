@@ -1,15 +1,15 @@
 ﻿using AutoMapper;
 using Graduation_Project.Application.Common.Pagination;
 using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Tasks;
-using Graduation_Project.Application.Interfaces;
+using Graduation_Project.Application.DTOs.Tasks.Manager;
 using Graduation_Project.Application.Interfaces.Persistence;
+using Graduation_Project.Application.Interfaces.Task.Manager;
 using Graduation_Project.Domain.Entities;
 using Graduation_Project.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 
-namespace Graduation_Project.Application.Services
+namespace Graduation_Project.Application.Services.Task.Manager
 {
     public class TaskService : ITaskService
     {

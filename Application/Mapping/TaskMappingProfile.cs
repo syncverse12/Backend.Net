@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Graduation_Project.Application.DTOs.Tasks;
+using Graduation_Project.Application.DTOs.Tasks.Manager;
 using Graduation_Project.Domain.Entities;
 
 namespace Graduation_Project.Application.Mapping

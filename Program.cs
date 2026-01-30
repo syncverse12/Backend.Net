@@ -1,10 +1,14 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Graduation_Project.API.Authorization.Handlers;
+using Graduation_Project.API.Authorization.Requirements;
 using Graduation_Project.API.JwtFeatuers;
 using Graduation_Project.API.Middleware;
 using Graduation_Project.Application.Interfaces;
 using Graduation_Project.Application.Interfaces.Persistence;
+using Graduation_Project.Application.Interfaces.Task.Manager;
 using Graduation_Project.Application.Services;
+using Graduation_Project.Application.Services.Task.Manager;
 using Graduation_Project.Domain.Models;
 using Graduation_Project.Infrastructure.Data;
 using Graduation_Project.Infrastructure.Persistence;
@@ -18,8 +22,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json.Serialization;
-using Graduation_Project.API.Authorization.Requirements;
-using Graduation_Project.API.Authorization.Handlers; 
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -66,6 +68,7 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<IWorkspaceService, WorkspaceService>();
 builder.Services.AddScoped<IAuthorizationHandler, ManagerAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TaskOwnerAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ReviewTaskAuthorizationHandler>();

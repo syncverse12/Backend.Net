@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Graduation_Project.Application.DTOs.Tasks
+namespace Graduation_Project.Application.DTOs.Tasks.Manager
 {
     public class AddTaskDependencyDto
     {

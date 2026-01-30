@@ -1,5 +1,5 @@
 ﻿using Graduation_Project.Application.DTOs.Auth;
-using Graduation_Project.Application.Interfaces;
+using Graduation_Project.Application.Interfaces.Task.Manager;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
