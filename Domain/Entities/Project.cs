@@ -5,14 +5,21 @@ namespace Graduation_Project.Domain.Entities
 {
     public class Project : BaseEntity
     {
-        public string Name { get; set; } = default!;
-        public string? Description { get; set; }
+            public string Name { get; set; } = null!;
+            public string Description { get; set; } = null!;
 
-        public decimal Budget { get; set; }
-        //public ProjectStatus Status { get; set; }
+            public string WorkspaceId { get; set; } = null!;
+            public Workspace Workspace { get; set; } = null!;
 
-        public ICollection<TaskEmployee> Tasks { get; set; }
-            = new List<TaskEmployee>();
+            public DateTime StartDate { get; set; }
+            public DateTime EndDate { get; set; }
+
+            public decimal? Budget { get; set; }
+
+            //public ICollection<TeamMember> TeamMembers { get; set; } = new List<TeamMember>();
+
+           public ICollection<TaskItem> Tasks { get; set; } = new List<TaskItem>();
     }
-
 }
+
+   
