@@ -1,0 +1,43 @@
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
+
+[Authorize(Policy = "EmployeeOnly")]
+[ApiController]
+[Route("api/employee/tasks")]
+public class EmployeeTasksController : ControllerBase
+{
+    private readonly IEmployeeTasksService _employeeTaskService;
+
+    public EmployeeTasksController(IEmployeeTasksService employeeTaskService)
+    {
+        _employeeTaskService = employeeTaskService;
+    }
+
+    [HttpGet("my")]
+    public async Task<IActionResult> GetMyTasks([FromQuery] TaskQuery query)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var result = await _employeeTaskService.GetMyTasksAsync(userId, query);
+        return result.IsSuccess ? Ok(result) : BadRequest(result);
+    }
+
+    [HttpPut("{taskId}/start")]
+    [Authorize(Policy = "TaskOwner")]
+    public async Task<IActionResult> StartTask(string taskId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var result = await _employeeTaskService.StartTaskAsync(taskId, userId);
+        return result.IsSuccess ? Ok(result) : BadRequest(result);
+    }
+
+    [HttpPut("{taskId}/submit")]
+    [Authorize(Policy = "TaskOwner")]
+    public async Task<IActionResult> SubmitTask(string taskId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var result = await _employeeTaskService.SubmitTaskAsync(taskId, userId);
+        return result.IsSuccess ? Ok(result) : BadRequest(result);
+    }
+}

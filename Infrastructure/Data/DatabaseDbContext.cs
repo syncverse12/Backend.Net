@@ -29,6 +29,8 @@ namespace Graduation_Project.Infrastructure.Data
         public DbSet<TaskEmployee> TaskEmployees => Set<TaskEmployee>();
         public DbSet<TimeLog> TimeLogs => Set<TimeLog>();
         public DbSet<Project> Projects => Set<Project>();
+        public DbSet<Workspace> Workspaces { get; set; }
+
         public override int SaveChanges()
         {
             ApplyAuditInfo();
@@ -72,38 +74,6 @@ namespace Graduation_Project.Infrastructure.Data
                     builder.Entity(entityType.ClrType).HasQueryFilter(lambda);
                 }
             }
-            builder.Entity<TaskDependency>()
-                   .HasOne(td => td.Task)
-                   .WithMany(t => t.Dependencies)
-                   .HasForeignKey(td => td.TaskId)
-                   .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<TaskDependency>()
-                .HasOne(td => td.DependsOnTask)
-                .WithMany(t => t.DependentTasks)
-                .HasForeignKey(td => td.DependsOnTaskId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-       
-            builder.Entity<TaskItem>(entity =>
-            {
-                entity.HasOne(t => t.CreatedByUser)
-                    .WithMany()
-                    .HasForeignKey(t => t.CreatedByUserId)
-                    .OnDelete(DeleteBehavior.Restrict); 
-
-                entity.HasOne(t => t.AssignedToUser)
-                    .WithMany()
-                    .HasForeignKey(t => t.AssignedToUserId)
-                    .OnDelete(DeleteBehavior.Restrict); 
-
-                entity.HasOne(t => t.ReviewedByUser)
-                    .WithMany()
-                    .HasForeignKey(t => t.ReviewedByUserId)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-
-
             builder.ApplyConfigurationsFromAssembly(typeof(DatabaseDbContext).Assembly);
         }
     }

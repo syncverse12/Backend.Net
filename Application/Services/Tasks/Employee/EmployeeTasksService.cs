@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
 using Graduation_Project.Application.Common.Results;
 using Graduation_Project.Application.Interfaces.Persistence;
-using Graduation_Project.Application.Interfaces.Task.Employee;
 using Graduation_Project.Application.Common.Models;
 using Microsoft.EntityFrameworkCore;
 using Graduation_Project.Application.DTOs.Tasks.Manager;
 using Graduation_Project.Application.Interfaces.Task.Manager;
+using System.Threading.Tasks;
 
 namespace Graduation_Project.Application.Services.Task.Employee
 {
@@ -25,9 +25,9 @@ namespace Graduation_Project.Application.Services.Task.Employee
             _mapper = mapper;
         }
 
-        public async Task<Result<PagedResult<TaskResponseDto>>> GetMyTasksAsync(TaskQuery query)
+        public async Task<Result<PagedResult<TaskResponseDto>>> GetMyTasksAsync(string userId, TaskQuery query)
         {
-            var employeeId = _currentUser.UserId;
+            var employeeId = string.IsNullOrEmpty(userId) ? _currentUser.UserId : userId;
 
             var tasksQuery = _unitOfWork.Repository<TaskItem>()
                 .Query()
@@ -56,9 +56,9 @@ namespace Graduation_Project.Application.Services.Task.Employee
                 });
         }
 
-        public async Task<Result<bool>> StartTaskAsync(string taskId)
+        public async Task<Result<bool>> StartTaskAsync(string taskId, string userId)
         {
-            var employeeId = _currentUser.UserId;
+            var employeeId = string.IsNullOrEmpty(userId) ? _currentUser.UserId : userId;
 
             var task = await _unitOfWork.Repository<TaskItem>()
                 .GetByIdAsync(taskId);
@@ -80,9 +80,9 @@ namespace Graduation_Project.Application.Services.Task.Employee
             return Result<bool>.Success(true, "Task started");
         }
 
-        public async Task<Result<bool>> SubmitTaskAsync(string taskId)
+        public async Task<Result<bool>> SubmitTaskAsync(string taskId, string userId)
         {
-            var employeeId = _currentUser.UserId;
+            var employeeId = string.IsNullOrEmpty(userId) ? _currentUser.UserId : userId;
 
             var task = await _unitOfWork.Repository<TaskItem>()
                 .GetByIdAsync(taskId);

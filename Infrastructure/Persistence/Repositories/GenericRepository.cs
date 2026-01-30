@@ -1,38 +1,37 @@
-﻿using Graduation_Project.Application.Interfaces.Persistence;
-using Graduation_Project.Domain.Common;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using Graduation_Project.Application.Interfaces.Persistence;
 using Graduation_Project.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 
 namespace Graduation_Project.Infrastructure.Persistence.Repositories
 {
-    public class GenericRepository<T> : IRepository<T> where T : BaseEntity
+    public class GenericRepository<T> : IRepository<T> where T : class
     {
-        protected readonly DatabaseDbContext _context;
-        protected readonly DbSet<T> _dbSet;
+        private readonly DatabaseDbContext _context;
+        private readonly DbSet<T> _dbSet;
 
         public GenericRepository(DatabaseDbContext context)
         {
             _context = context;
-            _dbSet = context.Set<T>();
+            _dbSet = _context.Set<T>();
         }
+
+        public async Task AddAsync(T entity)
+        {
+            await _dbSet.AddAsync(entity);
+        }
+
+        public async Task<T?> GetByIdAsync(object id)
+        {
+            var found = await _dbSet.FindAsync(id);
+            return found?.Entity ?? (T?)found;
+        }
+
         public IQueryable<T> Query()
         {
             return _dbSet.AsQueryable();
         }
-
-
-        public async Task<T?> GetByIdAsync(object id)
-            => await _dbSet.FindAsync(id);
-
-        public async Task<IEnumerable<T>> GetAllAsync()
-            => await _dbSet.ToListAsync();
-
-        public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
-            => await _dbSet.Where(predicate).ToListAsync();
-
-        public async Task AddAsync(T entity)
-            => await _dbSet.AddAsync(entity);
 
         public void Update(T entity)
         {
@@ -41,8 +40,7 @@ namespace Graduation_Project.Infrastructure.Persistence.Repositories
 
         public void Delete(T entity)
         {
-            entity.IsDeleted = true;
-            _dbSet.Update(entity);
+            _dbSet.Remove(entity);
         }
     }
 }
