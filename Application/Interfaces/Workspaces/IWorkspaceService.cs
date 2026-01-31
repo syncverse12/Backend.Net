@@ -8,5 +8,6 @@ namespace Graduation_Project.Application.Interfaces
         Task<Result<WorkspaceResponseDto>> CreateAsync(CreateWorkspaceDto dto, string managerId);
         Task<Result<WorkspaceResponseDto>> UpdateAsync(string workspaceId, UpdateWorkspaceDto dto, string managerId);
         Task<Result<WorkspaceResponseDto>> GetByIdAsync(string workspaceId, string managerId);
+        Task<Result<bool>> DeleteAsync(string workspaceId, string managerId);
     }
 }

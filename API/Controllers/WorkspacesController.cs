@@ -39,4 +39,12 @@ public class WorkspacesController : ControllerBase
         var result = await _workspaceService.GetByIdAsync(id, managerId);
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(string id)
+    {
+        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var result = await _workspaceService.DeleteAsync(id, managerId);
+        return result.IsSuccess ? Ok(result) : BadRequest(result);
+    }
 }

@@ -68,5 +68,24 @@ namespace Graduation_Project.Application.Services
 
             return Result<WorkspaceResponseDto>.Success(_mapper.Map<WorkspaceResponseDto>(workspace));
         }
+
+        // DELETE
+        public async Task<Result<bool>> DeleteAsync(string workspaceId, string managerId)
+        {
+            var workspace = await _unitOfWork.Repository<Workspace>().GetByIdAsync(workspaceId);
+
+            if (workspace == null)
+                return Result<bool>.Failure("Workspace not found");
+
+            if (workspace.CreatedByUserId != managerId)
+                return Result<bool>.Failure("Unauthorized to delete this workspace");
+
+            workspace.IsDeleted = true; 
+
+            _unitOfWork.Repository<Workspace>().Update(workspace);
+            await _unitOfWork.SaveChangesAsync();
+
+            return Result<bool>.Success(true, "Workspace deleted successfully");
+        }
     }
 }
