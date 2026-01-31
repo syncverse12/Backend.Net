@@ -31,7 +31,7 @@ namespace Graduation_Project.Infrastructure.SeedConfiguration
                    .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(x => x.Project)
-                   .WithMany(p => p.Tasks)
+                   .WithMany(p => p.Tasks) 
                    .HasForeignKey(x => x.ProjectId)
                    .OnDelete(DeleteBehavior.Restrict);
 

@@ -24,8 +24,7 @@ namespace Graduation_Project.Infrastructure.Persistence.Repositories
 
         public async Task<T?> GetByIdAsync(object id)
         {
-            var found = await _dbSet.FindAsync(id);
-            return found?.Entity ?? (T?)found;
+            return await _dbSet.FindAsync(id);
         }
 
         public IQueryable<T> Query()

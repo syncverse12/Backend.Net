@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Graduation_Project.Application.Common.Results;
 using Graduation_Project.Application.DTOs.Category;
 using Graduation_Project.Application.Interfaces.Persistence;
@@ -38,12 +39,15 @@ namespace Graduation_Project.Application.Services.Task.Manager
         public async Task<Result<List<CategoryResponseDto>>> GetMyCategoriesAsync(string userId)
         {
             var categories = await _unitOfWork.Repository<Category>()
-                .FindAsync(c => c.UserId == userId);
+                .Query()
+                .Where(c => c.UserId == userId && !c.IsDeleted)
+                .ToListAsync();
 
             return Result<List<CategoryResponseDto>>.Success(
                 _mapper.Map<List<CategoryResponseDto>>(categories)
             );
         }
+
         public async Task<Result<bool>> DeleteAsync(int categoryId, string userId)
         {
             var category = await _unitOfWork.Repository<Category>()

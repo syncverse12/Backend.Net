@@ -191,12 +191,14 @@ namespace Graduation_Project.Application.Services.Task.Manager
 
             // Avoid repeation
             var exists = await _unitOfWork.Repository<TaskDependency>()
-                .FindAsync(d =>
-                    d.TaskId == dto.TaskId &&
-                    d.DependsOnTaskId == dto.DependsOnTaskId);
+                        .Query()
+                        .AnyAsync(d =>
+                            d.TaskId == dto.TaskId &&
+                            d.DependsOnTaskId == dto.DependsOnTaskId);
 
-            if (exists.Any())
+            if (exists)
                 return Result<bool>.Failure("Dependency already exists");
+
 
             var dependency = new TaskDependency
             {

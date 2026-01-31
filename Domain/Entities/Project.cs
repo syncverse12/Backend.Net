@@ -16,9 +16,10 @@ namespace Graduation_Project.Domain.Entities
 
             public decimal? Budget { get; set; }
 
-            //public ICollection<TeamMember> TeamMembers { get; set; } = new List<TeamMember>();
+        //public ICollection<TeamMember> TeamMembers { get; set; } = new List<TeamMember>();
 
-           public ICollection<TaskItem> Tasks { get; set; } = new List<TaskItem>();
+           public ICollection<TaskEmployee> Tasks { get; set; } = new List<TaskEmployee>();
+
     }
 }
 
