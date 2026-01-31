@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Graduation_Project.Application.Interfaces.Tasks.Employee;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -8,9 +9,9 @@ using System.Security.Claims;
 [Route("api/employee/tasks")]
 public class EmployeeTasksController : ControllerBase
 {
-    private readonly IEmployeeTasksService _employeeTaskService;
+    private readonly IEmployeeTaskService _employeeTaskService;
 
-    public EmployeeTasksController(IEmployeeTasksService employeeTaskService)
+    public EmployeeTasksController(IEmployeeTaskService employeeTaskService)
     {
         _employeeTaskService = employeeTaskService;
     }

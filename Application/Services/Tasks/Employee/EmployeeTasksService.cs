@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Graduation_Project.Application.DTOs.Tasks.Manager;
 using Graduation_Project.Application.Interfaces.Task.Manager;
 using System.Threading.Tasks;
+using Graduation_Project.Application.Interfaces.Tasks.Employee;
 
 namespace Graduation_Project.Application.Services.Task.Employee
 {
