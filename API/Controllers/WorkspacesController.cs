@@ -1,5 +1,6 @@
 ﻿using Graduation_Project.Application.DTOs.Workspaces;
 using Graduation_Project.Application.Interfaces;
+using Graduation_Project.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -16,6 +17,7 @@ public class WorkspacesController : ControllerBase
         _workspaceService = workspaceService;
     }
 
+    // CREATE
     [HttpPost]
     public async Task<IActionResult> Create(CreateWorkspaceDto dto)
     {
@@ -24,6 +26,7 @@ public class WorkspacesController : ControllerBase
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
 
+    // UPDATE
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, UpdateWorkspaceDto dto)
     {
@@ -32,6 +35,7 @@ public class WorkspacesController : ControllerBase
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
 
+    // GET BY ID
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(string id)
     {
@@ -40,11 +44,29 @@ public class WorkspacesController : ControllerBase
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
 
+    // GET ALL
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var result = await _workspaceService.GetAllAsync(managerId);
+        return result.IsSuccess ? Ok(result) : BadRequest(result);
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)
     {
         var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var result = await _workspaceService.DeleteAsync(id, managerId);
+        return result.IsSuccess ? Ok(result) : BadRequest(result);
+    }
+
+    // RESTORE
+    [HttpPut("{id}/restore")]
+    public async Task<IActionResult> Restore(string id)
+    {
+        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var result = await _workspaceService.RestoreAsync(id, managerId);
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
 }

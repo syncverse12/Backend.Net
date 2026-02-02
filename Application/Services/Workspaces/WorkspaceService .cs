@@ -4,88 +4,140 @@ using Graduation_Project.Application.DTOs.Workspaces;
 using Graduation_Project.Application.Interfaces;
 using Graduation_Project.Application.Interfaces.Persistence;
 using Graduation_Project.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore; 
+using System.Linq;
 
-namespace Graduation_Project.Application.Services
+public class WorkspaceService : IWorkspaceService
 {
-    public class WorkspaceService : IWorkspaceService
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+
+    public WorkspaceService(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+    }
 
-        public WorkspaceService(IUnitOfWork unitOfWork, IMapper mapper)
+    // CREATE
+    public async Task<Result<WorkspaceResponseDto>> CreateAsync(CreateWorkspaceDto dto, string managerId)
+    {
+        var exists = await _unitOfWork.Repository<Workspace>()
+            .Query() 
+            .AnyAsync(w => w.Name == dto.Name && w.CreatedByUserId == managerId);
+
+        if (exists)
+            return Result<WorkspaceResponseDto>.Failure("Workspace name already exists");
+
+        var workspace = new Workspace
         {
-            _unitOfWork = unitOfWork;
-            _mapper = mapper;
-        }
+            Name = dto.Name,
+            Description = dto.Description,
+            CreatedByUserId = managerId
+        };
 
-        // CREATE
-        public async Task<Result<WorkspaceResponseDto>> CreateAsync(CreateWorkspaceDto dto, string managerId)
-        {
-            var workspace = new Workspace
-            {
-                Name = dto.Name,
-                Description = dto.Description,
-                CreatedByUserId = managerId
-            };
+        await _unitOfWork.Repository<Workspace>().AddAsync(workspace);
+        await _unitOfWork.SaveChangesAsync();
 
-            await _unitOfWork.Repository<Workspace>().AddAsync(workspace);
-            await _unitOfWork.SaveChangesAsync();
+        return Result<WorkspaceResponseDto>.Success(
+            _mapper.Map<WorkspaceResponseDto>(workspace),
+            "Workspace created successfully"
+        );
+    }
 
-            return Result<WorkspaceResponseDto>.Success(_mapper.Map<WorkspaceResponseDto>(workspace), "Workspace created successfully");
-        }
+    // UPDATE
+    public async Task<Result<WorkspaceResponseDto>> UpdateAsync(string workspaceId, UpdateWorkspaceDto dto, string managerId)
+    {
+        var workspace = await _unitOfWork.Repository<Workspace>()
+            .Query()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(w => w.Id == workspaceId);
 
-        // UPDATE
-        public async Task<Result<WorkspaceResponseDto>> UpdateAsync(string workspaceId, UpdateWorkspaceDto dto, string managerId)
-        {
-            var workspace = await _unitOfWork.Repository<Workspace>().GetByIdAsync(workspaceId);
+        if (workspace == null)
+            return Result<WorkspaceResponseDto>.Failure("Workspace not found");
 
-            if (workspace == null)
-                return Result<WorkspaceResponseDto>.Failure("Workspace not found");
+        if (workspace.CreatedByUserId != managerId)
+            return Result<WorkspaceResponseDto>.Failure("Unauthorized");
 
-            if (workspace.CreatedByUserId != managerId)
-                return Result<WorkspaceResponseDto>.Failure("Unauthorized");
+        workspace.Name = dto.Name;
+        workspace.Description = dto.Description;
 
-            workspace.Name = dto.Name;
-            workspace.Description = dto.Description;
+        _unitOfWork.Repository<Workspace>().Update(workspace);
+        await _unitOfWork.SaveChangesAsync();
 
-            _unitOfWork.Repository<Workspace>().Update(workspace);
-            await _unitOfWork.SaveChangesAsync();
+        return Result<WorkspaceResponseDto>.Success(
+            _mapper.Map<WorkspaceResponseDto>(workspace),
+            "Workspace updated successfully"
+        );
+    }
 
-            return Result<WorkspaceResponseDto>.Success(_mapper.Map<WorkspaceResponseDto>(workspace), "Workspace updated successfully");
-        }
+    // GET BY ID
+    public async Task<Result<WorkspaceResponseDto>> GetByIdAsync(string workspaceId, string managerId)
+    {
+        var workspace = await _unitOfWork.Repository<Workspace>()
+            .Query()
+            .Include(w => w.CreatedByUser)
+            .FirstOrDefaultAsync(w => w.Id == workspaceId && w.CreatedByUserId == managerId);
 
-        // GET DETAILS
-        public async Task<Result<WorkspaceResponseDto>> GetByIdAsync(string workspaceId, string managerId)
-        {
-            var workspace = await _unitOfWork.Repository<Workspace>()
-                .Query()
-                .Include(w => w.CreatedByUser)
-                .FirstOrDefaultAsync(w => w.Id == workspaceId && w.CreatedByUserId == managerId);
+        if (workspace == null)
+            return Result<WorkspaceResponseDto>.Failure("Workspace not found");
 
-            if (workspace == null)
-                return Result<WorkspaceResponseDto>.Failure("Workspace not found");
+        return Result<WorkspaceResponseDto>.Success(_mapper.Map<WorkspaceResponseDto>(workspace));
+    }
 
-            return Result<WorkspaceResponseDto>.Success(_mapper.Map<WorkspaceResponseDto>(workspace));
-        }
+    // GET ALL
+    public async Task<Result<List<WorkspaceResponseDto>>> GetAllAsync(string managerId)
+    {
+        var workspaces = await _unitOfWork.Repository<Workspace>()
+            .Query()
+            .Where(w => w.CreatedByUserId == managerId)
+            .ToListAsync();
 
-        // DELETE
-        public async Task<Result<bool>> DeleteAsync(string workspaceId, string managerId)
-        {
-            var workspace = await _unitOfWork.Repository<Workspace>().GetByIdAsync(workspaceId);
+        return Result<List<WorkspaceResponseDto>>.Success(
+            _mapper.Map<List<WorkspaceResponseDto>>(workspaces)
+        );
+    }
 
-            if (workspace == null)
-                return Result<bool>.Failure("Workspace not found");
+    // DELETE
+    public async Task<Result<bool>> DeleteAsync(string workspaceId, string managerId)
+    {
+        var workspace = await _unitOfWork.Repository<Workspace>()
+            .Query()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(w => w.Id == workspaceId);
 
-            if (workspace.CreatedByUserId != managerId)
-                return Result<bool>.Failure("Unauthorized to delete this workspace");
+        if (workspace == null)
+            return Result<bool>.Failure("Workspace not found");
 
-            workspace.IsDeleted = true; 
+        if (workspace.CreatedByUserId != managerId)
+            return Result<bool>.Failure("Unauthorized");
 
-            _unitOfWork.Repository<Workspace>().Update(workspace);
-            await _unitOfWork.SaveChangesAsync();
+        workspace.IsDeleted = true;
 
-            return Result<bool>.Success(true, "Workspace deleted successfully");
-        }
+        _unitOfWork.Repository<Workspace>().Update(workspace);
+        await _unitOfWork.SaveChangesAsync();
+
+        return Result<bool>.Success(true, "Workspace deleted successfully");
+    }
+
+    // RESTORE
+    public async Task<Result<bool>> RestoreAsync(string workspaceId, string managerId)
+    {
+        var workspace = await _unitOfWork.Repository<Workspace>()
+            .Query()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(w => w.Id == workspaceId);
+
+        if (workspace == null)
+            return Result<bool>.Failure("Workspace not found");
+
+        if (workspace.CreatedByUserId != managerId)
+            return Result<bool>.Failure("Unauthorized");
+
+        workspace.IsDeleted = false;
+
+        _unitOfWork.Repository<Workspace>().Update(workspace);
+        await _unitOfWork.SaveChangesAsync();
+
+        return Result<bool>.Success(true, "Workspace restored successfully");
     }
 }
