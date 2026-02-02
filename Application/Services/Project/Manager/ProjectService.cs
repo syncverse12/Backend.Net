@@ -18,9 +18,12 @@ public class ProjectService : IProjectService
     }
 
     public async Task<Result<ProjectResponseDto>> CreateAsync(
-        CreateProjectDto dto,
-        string managerId)
+    CreateProjectDto dto,
+    string managerId)
     {
+        if (dto.EndDate < dto.StartDate)
+            return Result<ProjectResponseDto>.Failure("Invalid project timeline");
+
         var workspace = await _unitOfWork.Repository<Workspace>()
             .GetByIdAsync(dto.WorkspaceId);
 
@@ -28,6 +31,7 @@ public class ProjectService : IProjectService
             return Result<ProjectResponseDto>.Failure("Workspace not found or unauthorized");
 
         var project = _mapper.Map<Project>(dto);
+        project.CreatedByUserId = managerId;
 
         await _unitOfWork.Repository<Project>().AddAsync(project);
         await _unitOfWork.SaveChangesAsync();
@@ -37,17 +41,22 @@ public class ProjectService : IProjectService
             "Project created successfully");
     }
 
+
     public async Task<Result<ProjectResponseDto>> UpdateAsync(
-        string projectId,
-        UpdateProjectDto dto,
-        string managerId)
+    string projectId,
+    UpdateProjectDto dto,
+    string managerId)
     {
+        if (dto.EndDate < dto.StartDate)
+            return Result<ProjectResponseDto>.Failure("Invalid project timeline");
+
         var project = await _unitOfWork.Repository<Project>()
             .Query()
+            .IgnoreQueryFilters()
             .Include(p => p.Workspace)
             .FirstOrDefaultAsync(p => p.Id == projectId);
 
-        if (project == null)
+        if (project == null || project.IsDeleted)
             return Result<ProjectResponseDto>.Failure("Project not found");
 
         if (project.Workspace.CreatedByUserId != managerId)
