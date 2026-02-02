@@ -1,8 +1,9 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-using Graduation_Project.Application.Interfaces.Persistence;
+﻿using Graduation_Project.Application.Interfaces.Persistence;
 using Graduation_Project.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace Graduation_Project.Infrastructure.Persistence.Repositories
 {
@@ -40,6 +41,11 @@ namespace Graduation_Project.Infrastructure.Persistence.Repositories
         public void Delete(T entity)
         {
             _dbSet.Remove(entity);
+        }
+
+        public async Task<T?> FindAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _dbSet.FirstOrDefaultAsync(predicate);
         }
     }
 }

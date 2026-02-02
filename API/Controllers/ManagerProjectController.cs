@@ -1,6 +1,6 @@
 ﻿using Graduation_Project.Application.DTOs.Project;
 using Graduation_Project.Application.Interfaces;
-using Graduation_Project.Domain.Models;
+using Graduation_Project.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;

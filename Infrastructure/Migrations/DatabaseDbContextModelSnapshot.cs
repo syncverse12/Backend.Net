@@ -60,7 +60,7 @@ namespace Graduation_Project.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<decimal>("Budget")
+                    b.Property<decimal?>("Budget")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -70,7 +70,11 @@ namespace Graduation_Project.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -79,18 +83,60 @@ namespace Graduation_Project.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("WorkspaceId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("WorkspaceId");
 
                     b.ToTable("Projects");
                 });
 
             modelBuilder.Entity("Graduation_Project.Domain.Entities.TaskDependency", b =>
+                {
+                    b.Property<string>("TaskId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("DependsOnTaskId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("TaskId", "DependsOnTaskId");
+
+                    b.HasIndex("DependsOnTaskId");
+
+                    b.ToTable("TaskDependencies", (string)null);
+                });
+
+            modelBuilder.Entity("Graduation_Project.Domain.Entities.Workspace", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -101,16 +147,22 @@ namespace Graduation_Project.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DependsOnTaskId")
+                    b.Property<string>("CreatedByUserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<string>("TaskId")
+                    b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -120,11 +172,9 @@ namespace Graduation_Project.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DependsOnTaskId");
+                    b.HasIndex("CreatedByUserId");
 
-                    b.HasIndex("TaskId");
-
-                    b.ToTable("TaskDependency");
+                    b.ToTable("Workspaces", (string)null);
                 });
 
             modelBuilder.Entity("Graduation_Project.Domain.Models.Role", b =>
@@ -484,7 +534,8 @@ namespace Graduation_Project.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime2");
@@ -509,7 +560,8 @@ namespace Graduation_Project.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -527,7 +579,18 @@ namespace Graduation_Project.Migrations
 
                     b.HasIndex("ReviewedByUserId");
 
-                    b.ToTable("TaskItem");
+                    b.ToTable("Tasks", (string)null);
+                });
+
+            modelBuilder.Entity("Graduation_Project.Domain.Entities.Project", b =>
+                {
+                    b.HasOne("Graduation_Project.Domain.Entities.Workspace", "Workspace")
+                        .WithMany()
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Workspace");
                 });
 
             modelBuilder.Entity("Graduation_Project.Domain.Entities.TaskDependency", b =>
@@ -547,6 +610,17 @@ namespace Graduation_Project.Migrations
                     b.Navigation("DependsOnTask");
 
                     b.Navigation("Task");
+                });
+
+            modelBuilder.Entity("Graduation_Project.Domain.Entities.Workspace", b =>
+                {
+                    b.HasOne("Graduation_Project.Domain.Models.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

@@ -15,7 +15,7 @@ namespace Graduation_Project.Infrastructure.Persistence
             _context = context;
         }
 
-        public IRepository<T> Repository<T>() where T : BaseEntity
+        public IRepository<T> Repository<T>() where T : class
         {
             var type = typeof(T);
 

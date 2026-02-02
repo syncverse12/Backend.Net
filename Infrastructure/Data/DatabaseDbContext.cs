@@ -1,7 +1,6 @@
 ﻿using Graduation_Project.Application.Interfaces.Task.Manager;
 using Graduation_Project.Domain.Common;
 using Graduation_Project.Domain.Entities;
-using Graduation_Project.Domain.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Synverse.Domain.Entities;

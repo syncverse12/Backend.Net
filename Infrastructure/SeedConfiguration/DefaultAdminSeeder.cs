@@ -1,4 +1,4 @@
-﻿using Graduation_Project.Domain.Models;
+﻿using Graduation_Project.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using System.Threading.Tasks;
 

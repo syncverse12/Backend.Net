@@ -1,4 +1,4 @@
-﻿using Graduation_Project.Domain.Models;
+﻿using Graduation_Project.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

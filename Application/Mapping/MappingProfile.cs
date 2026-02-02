@@ -1,8 +1,7 @@
 ﻿using AutoMapper;
 using Graduation_Project.Application.DTOs.Auth;
-using Graduation_Project.Application.DTOs.Tasks;
 using Graduation_Project.Domain.Entities;
-using Graduation_Project.Domain.Models;
+
 
 namespace Graduation_Project.Application.Mapping
 {

@@ -1,7 +1,7 @@
 ﻿using Graduation_Project.Domain.Common;
 using Graduation_Project.Domain.Enums;
-using Graduation_Project.Domain.Models;
 using Graduation_Project.Domain.Entities;
+
 
 namespace Synverse.Domain.Entities
 {

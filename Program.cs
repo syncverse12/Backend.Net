@@ -9,7 +9,7 @@ using Graduation_Project.Application.Interfaces.Persistence;
 using Graduation_Project.Application.Interfaces.Task.Manager;
 using Graduation_Project.Application.Services;
 using Graduation_Project.Application.Services.Task.Manager;
-using Graduation_Project.Domain.Models;
+using Graduation_Project.Domain.Entities;
 using Graduation_Project.Infrastructure.Data;
 using Graduation_Project.Infrastructure.Persistence;
 using Graduation_Project.Infrastructure.Persistence.Repositories;
@@ -70,6 +70,8 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IWorkspaceService, WorkspaceService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
+builder.Services.AddScoped<IInvitationService, MockInvitationService>();
+
 builder.Services.AddScoped<IAuthorizationHandler, ManagerAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TaskOwnerAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ReviewTaskAuthorizationHandler>();

@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace Graduation_Project.Application.Interfaces.Persistence
@@ -10,5 +11,6 @@ namespace Graduation_Project.Application.Interfaces.Persistence
         IQueryable<T> Query();
         void Update(T entity);
         void Delete(T entity);
+        Task<T?> FindAsync(Expression<Func<T, bool>> predicate);
     }
 }
