@@ -23,4 +23,16 @@ public class TeamController : ControllerBase
         var result = await _teamService.InviteMemberAsync(dto, managerId);
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
+
+    [HttpGet("{projectId}/members")]
+    public async Task<IActionResult> GetTeamMembers(string projectId)
+    {
+        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+        var result = await _teamService
+            .GetProjectTeamMembersAsync(projectId, managerId);
+
+        return result.IsSuccess ? Ok(result) : BadRequest(result);
+    }
+
 }

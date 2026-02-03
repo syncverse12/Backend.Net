@@ -1,0 +1,10 @@
+﻿using Graduation_Project.Domain.Enums;
+
+public class TeamMemberResponseDto
+{
+    public string TeamMemberId { get; set; } = null!;
+    public string UserId { get; set; } = null!;
+    public string UserEmail { get; set; } = null!;
+    public TeamRole Role { get; set; }
+    public bool IsActive { get; set; }
+}

@@ -2,6 +2,7 @@
 using Graduation_Project.Application.Interfaces;
 using Graduation_Project.Application.Interfaces.Persistence;
 using Graduation_Project.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 
 namespace Graduation_Project.Application.Services
@@ -19,11 +20,40 @@ namespace Graduation_Project.Application.Services
             _invitationService = invitationService;
         }
 
-        public async System.Threading.Tasks.Task<Result<bool>> InviteMemberAsync(
+        public async Task<Result<List<TeamMemberResponseDto>>> GetProjectTeamMembersAsync(string projectId,string managerId)
+        {
+            var project = await _unitOfWork.Repository<Project>()
+                .GetByIdAsync(projectId);
+
+            if (project == null)
+                return Result<List<TeamMemberResponseDto>>.Failure("Project not found");
+
+            if (project.CreatedByUserId != managerId)
+                return Result<List<TeamMemberResponseDto>>.Failure("Unauthorized");
+
+            var members = await _unitOfWork.Repository<TeamMember>()
+                 .Query() 
+                 .Include(m => m.User) 
+                 .Where(m => m.ProjectId == projectId)
+                 .ToListAsync();
+
+            var result = members.Select(m => new TeamMemberResponseDto
+            {
+                TeamMemberId = m.Id,
+                UserId = m.UserId,
+                UserEmail = m.User?.Email ?? "N/A", 
+                Role = m.Role,
+                IsActive = m.IsActive
+            }).ToList();
+
+            return Result<List<TeamMemberResponseDto>>.Success(result);
+        }
+
+
+        public async Task<Result<bool>> InviteMemberAsync(
             InviteTeamMemberDto dto,
             string managerId)
         {
-            // 1. التأكد من وجود المشروع وصلاحية المدير
             var project = await _unitOfWork.Repository<Project>()
                 .GetByIdAsync(dto.ProjectId);
 
@@ -33,26 +63,22 @@ namespace Graduation_Project.Application.Services
             if (project.CreatedByUserId != managerId)
                 return Result<bool>.Failure("Unauthorized");
 
-            // 2. البحث عن المستخدم (الآن يرجع كائن واحد User? وليس List)
             var user = await _unitOfWork.Repository<User>()
                 .FindAsync(u => u.Email == dto.UserEmail);
 
-            // 3. التصحيح: نتحقق إذا كان null (بدلاً من Any)
             if (user == null)
                 return Result<bool>.Failure("User not found");
 
-            // 4. فحص إذا كان العضو مضافاً بالفعل للفريق (منع التكرار)
             var isAlreadyMember = await _unitOfWork.Repository<TeamMember>()
                 .FindAsync(m => m.ProjectId == dto.ProjectId && m.UserId == user.Id);
 
             if (isAlreadyMember != null)
                 return Result<bool>.Failure("User is already a member of this project");
 
-            // 5. إنشاء سجل العضو الجديد
             var member = new TeamMember
             {
                 ProjectId = dto.ProjectId,
-                UserId = user.Id, // 👈 التصحيح: نستخدم user.Id مباشرة (بدون First)
+                UserId = user.Id, 
                 Role = dto.Role,
                 IsActive = false
             };
@@ -60,7 +86,6 @@ namespace Graduation_Project.Application.Services
             await _unitOfWork.Repository<TeamMember>().AddAsync(member);
             await _unitOfWork.SaveChangesAsync();
 
-            // 6. إرسال الدعوة (الـ Mock أو الحقيقية لاحقاً)
             await _invitationService.SendInvitationAsync(
                 dto.UserEmail,
                 project.Name);

@@ -4,8 +4,13 @@ namespace Graduation_Project.Application.Interfaces
 {
     public interface ITeamService
     {
-        System.Threading.Tasks.Task<Result<bool>> InviteMemberAsync(
+        Task<Result<bool>> InviteMemberAsync(
             InviteTeamMemberDto dto,
             string managerId);
+
+        Task<Result<List<TeamMemberResponseDto>>> GetProjectTeamMembersAsync(
+            string projectId,
+            string managerId);
+
     }
 }
