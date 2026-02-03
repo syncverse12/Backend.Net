@@ -92,5 +92,51 @@ namespace Graduation_Project.Application.Services
 
             return Result<bool>.Success(true, "Invitation sent successfully");
         }
+
+        public async Task<Result<bool>> UpdateMemberRoleAsync(
+            UpdateTeamMemberRoleDto dto,
+            string managerId)
+        {
+            var member = await _unitOfWork.Repository<TeamMember>()
+                .Query()
+                .Include(m => m.Project)
+                .FirstOrDefaultAsync(m => m.Id == dto.TeamMemberId);
+
+            if (member == null)
+                return Result<bool>.Failure("Team member not found");
+
+            if (member.Project.CreatedByUserId != managerId)
+                return Result<bool>.Failure("Unauthorized");
+
+            member.Role = dto.Role;
+
+            _unitOfWork.Repository<TeamMember>().Update(member);
+            await _unitOfWork.SaveChangesAsync();
+
+            return Result<bool>.Success(true, "Role updated successfully");
+        }
+
+        public async Task<Result<bool>> RemoveMemberAsync(
+             RemoveTeamMemberDto dto,
+             string managerId)
+        {
+            var member = await _unitOfWork.Repository<TeamMember>()
+                .Query()
+                .Include(m => m.Project)
+                .FirstOrDefaultAsync(m => m.Id == dto.TeamMemberId);
+
+            if (member == null)
+                return Result<bool>.Failure("Team member not found");
+
+            if (member.Project.CreatedByUserId != managerId)
+                return Result<bool>.Failure("Unauthorized");
+
+            _unitOfWork.Repository<TeamMember>().Delete(member);
+            await _unitOfWork.SaveChangesAsync();
+
+            return Result<bool>.Success(true, "Team member removed successfully");
+        }
+
+
     }
 }

@@ -12,5 +12,15 @@ namespace Graduation_Project.Application.Interfaces
             string projectId,
             string managerId);
 
+        Task<Result<bool>> UpdateMemberRoleAsync(
+            UpdateTeamMemberRoleDto dto,
+            string managerId);
+
+        Task<Result<bool>> RemoveMemberAsync(
+            RemoveTeamMemberDto dto,
+            string managerId);
+
+
+
     }
 }

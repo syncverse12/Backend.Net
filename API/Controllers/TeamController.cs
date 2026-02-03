@@ -35,4 +35,26 @@ public class TeamController : ControllerBase
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
 
+    [HttpPut("role")]
+    public async Task<IActionResult> UpdateRole(UpdateTeamMemberRoleDto dto)
+    {
+        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+        var result = await _teamService.UpdateMemberRoleAsync(dto, managerId);
+
+        return result.IsSuccess ? Ok(result) : BadRequest(result);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Remove(string id)
+    {
+        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+        var result = await _teamService.RemoveMemberAsync(
+            new RemoveTeamMemberDto { TeamMemberId = id },
+            managerId);
+
+        return result.IsSuccess ? Ok(result) : BadRequest(result);
+    }
+
 }
