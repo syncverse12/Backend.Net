@@ -71,4 +71,44 @@ public class ProjectService : IProjectService
             _mapper.Map<ProjectResponseDto>(project),
             "Project updated successfully");
     }
+
+    public async Task<Result<ProjectResponseDto>> GetByIdAsync(
+    string projectId,
+    string managerId)
+    {
+        var project = await _unitOfWork.Repository<Project>()
+            .Query()
+            .Include(p => p.Workspace)
+            .FirstOrDefaultAsync(p => p.Id == projectId);
+
+        if (project == null)
+            return Result<ProjectResponseDto>.Failure("Project not found");
+
+        if (project.Workspace.CreatedByUserId != managerId)
+            return Result<ProjectResponseDto>.Failure("Unauthorized");
+
+        return Result<ProjectResponseDto>.Success(
+            _mapper.Map<ProjectResponseDto>(project));
+    }
+
+    public async Task<Result<List<ProjectResponseDto>>> GetByWorkspaceAsync(
+    string workspaceId,
+    string managerId)
+    {
+        var workspace = await _unitOfWork.Repository<Workspace>()
+            .GetByIdAsync(workspaceId);
+
+        if (workspace == null || workspace.CreatedByUserId != managerId)
+            return Result<List<ProjectResponseDto>>.Failure("Workspace not found or unauthorized");
+
+        var projects = await _unitOfWork.Repository<Project>()
+            .Query()
+            .Where(p => p.WorkspaceId == workspaceId)
+            .ToListAsync();
+
+        return Result<List<ProjectResponseDto>>.Success(
+            _mapper.Map<List<ProjectResponseDto>>(projects));
+    }
+
+
 }

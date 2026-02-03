@@ -32,4 +32,23 @@ public class ProjectsController : ControllerBase
         var result = await _projectService.UpdateAsync(id, dto, managerId);
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
+
+    [HttpGet("{id}")]
+    [Authorize(Policy = "ManagerOnly")]
+    public async Task<IActionResult> GetById(string id)
+    {
+        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var result = await _projectService.GetByIdAsync(id, managerId);
+        return result.IsSuccess ? Ok(result) : BadRequest(result);
+    }
+
+    [HttpGet("workspace/{workspaceId}")]
+    [Authorize(Policy = "ManagerOnly")]
+    public async Task<IActionResult> GetByWorkspace(string workspaceId)
+    {
+        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var result = await _projectService.GetByWorkspaceAsync(workspaceId, managerId);
+        return result.IsSuccess ? Ok(result) : BadRequest(result);
+    }
+
 }

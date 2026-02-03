@@ -8,5 +8,9 @@ namespace Graduation_Project.Application.Interfaces
       Task<Result<ProjectResponseDto>> CreateAsync(CreateProjectDto dto,string managerId);
 
       Task<Result<ProjectResponseDto>> UpdateAsync(string projectId,UpdateProjectDto dto,string managerId);
+
+      Task<Result<ProjectResponseDto>> GetByIdAsync(string projectId, string managerId);
+
+      Task<Result<List<ProjectResponseDto>>> GetByWorkspaceAsync(string workspaceId, string managerId);
     }
 }
