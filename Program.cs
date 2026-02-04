@@ -71,6 +71,8 @@ builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IWorkspaceService, WorkspaceService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IInvitationService, MockInvitationService>();
+builder.Services.AddScoped<IMilestoneService, MilestoneService>();
+
 
 builder.Services.AddScoped<IAuthorizationHandler, ManagerAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TaskOwnerAuthorizationHandler>();
