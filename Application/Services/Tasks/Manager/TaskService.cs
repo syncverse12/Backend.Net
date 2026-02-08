@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Graduation_Project.Application.Common.Pagination;
 using Graduation_Project.Application.Common.Results;
+using Graduation_Project.Application.DTOs.Tasks;
 using Graduation_Project.Application.DTOs.Tasks.Manager;
 using Graduation_Project.Application.Interfaces.Persistence;
 using Graduation_Project.Application.Interfaces.Task.Manager;
@@ -39,7 +40,9 @@ namespace Graduation_Project.Application.Services.Task.Manager
                 CreatedByUserId = managerId,
                 AssignedToUserId = dto.AssignedToUserId,
                 CategoryId = dto.CategoryId?.ToString(),
-                Priority = dto.Priority
+                Priority = dto.Priority,
+                ProjectId = dto.ProjectId,   
+                MilestoneId = dto.MilestoneId
             };
 
             await _unitOfWork.Repository<TaskItem>().AddAsync(task);
@@ -288,8 +291,12 @@ namespace Graduation_Project.Application.Services.Task.Manager
             };
 
             var tasksPerEmployee = tasks
-                .Where(t => t.AssignedToUserId != null && !t.IsDeleted)
-                .GroupBy(t => new { t.AssignedToUserId, EmployeeName = (t.AssignedToUser.FirstName + " " + t.AssignedToUser.LastName).Trim() })
+                .Where(t => !t.IsDeleted && !string.IsNullOrEmpty(t.AssignedToUserId))
+                .GroupBy(t => new
+                {
+                    t.AssignedToUserId,
+                    EmployeeName = ((t.AssignedToUser?.FirstName ?? string.Empty) + " " + (t.AssignedToUser?.LastName ?? string.Empty)).Trim()
+                })
                 .Select(g => new EmployeeTaskStatsDto
                 {
                     EmployeeId = g.Key.AssignedToUserId,
@@ -306,5 +313,66 @@ namespace Graduation_Project.Application.Services.Task.Manager
 
             return Result<ManagerTaskDashboardDto>.Success(dashboard);
         }
+
+        public async Task<Result<List<TaskResponseDto>>> FilterTasksAsync(TaskFilterDto filter,string managerId)
+        {
+            var query = _unitOfWork.Repository<TaskItem>()
+                .Query()
+                .Include(t => t.Project)
+                .Include(t => t.Milestone)
+                .AsQueryable();
+
+            query = query.Where(t => t.Project != null && t.Project.CreatedByUserId == managerId);
+
+            if (!string.IsNullOrEmpty(filter.ProjectId))
+                query = query.Where(t => t.ProjectId == filter.ProjectId);
+
+            if (!string.IsNullOrEmpty(filter.MilestoneId))
+                query = query.Where(t => t.MilestoneId == filter.MilestoneId);
+
+            if (filter.Status.HasValue)
+                query = query.Where(t => t.Status == filter.Status);
+
+            if (!string.IsNullOrEmpty(filter.AssignedUserId))
+                query = query.Where(t => t.AssignedToUserId == filter.AssignedUserId);
+
+            if (filter.FromDate.HasValue)
+                query = query.Where(t => t.CreatedAt >= filter.FromDate.Value);
+
+            if (filter.ToDate.HasValue)
+                query = query.Where(t => t.DueDate != null && t.DueDate <= filter.ToDate.Value);
+
+            var tasks = await query.ToListAsync();
+
+            return Result<List<TaskResponseDto>>
+                .Success(_mapper.Map<List<TaskResponseDto>>(tasks));
+        }
+
+        public async Task<Result<TaskDashboardDto>> GetDashboardAsync(
+    string projectId,
+    string managerId)
+        {
+            var tasks = await _unitOfWork.Repository<TaskItem>()
+                .Query()
+                .Include(t => t.Project)
+                .Where(t =>
+                    t.ProjectId == projectId &&
+                    t.Project != null && t.Project.CreatedByUserId == managerId)
+                .ToListAsync();
+
+            var dashboard = new TaskDashboardDto
+            {
+                TotalTasks = tasks.Count,
+                CompletedTasks = tasks.Count(t => t.Status == TaskStatus.Completed),
+                InProgressTasks = tasks.Count(t => t.Status == TaskStatus.InProgress),
+                OverdueTasks = tasks.Count(t =>
+                    t.DueDate.HasValue &&
+                    t.DueDate.Value < DateTime.UtcNow &&
+                    t.Status != TaskStatus.Completed)
+            };
+
+            return Result<TaskDashboardDto>.Success(dashboard);
+        }
+
     }
 }

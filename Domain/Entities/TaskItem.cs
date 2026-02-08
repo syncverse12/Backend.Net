@@ -30,4 +30,9 @@ public class TaskItem : BaseEntity
     public User? ReviewedByUser { get; set; }
 
     public string? ReviewComment { get; set; }
+    public string? ProjectId { get; set; }
+    public Project? Project { get; set; }
+
+    public string? MilestoneId { get; set; }
+    public Milestone? Milestone { get; set; }
 }

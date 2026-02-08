@@ -1,4 +1,5 @@
-﻿using Graduation_Project.Application.DTOs.Tasks.Manager;
+﻿using Graduation_Project.Application.DTOs.Tasks;
+using Graduation_Project.Application.DTOs.Tasks.Manager;
 using Graduation_Project.Application.Interfaces.Task.Manager;
 using Graduation_Project.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -106,34 +107,21 @@ public class TasksController : ControllerBase
         var result = await _taskService.GetManagerDashboardAsync(managerId);
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
-    //// GET MY TASKS (Employee) 
-    //[HttpGet("my")]
-    //[Authorize(Policy = "EmployeeOnly")]
-    //public async Task<IActionResult> GetMyTasks([FromQuery] TaskQuery query)
-    //{
-    //    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-    //    var result = await _taskService.GetMyTasksAsync(userId, query);
-    //    return result.IsSuccess ? Ok(result) : BadRequest(result);
-    //}
-    //// START TASK (Employee)
-    //[HttpPut("{taskId}/start")]
-    //[Authorize(Policy = "EmployeeOnly")]
-    //[Authorize(Policy = "TaskOwner")]
-    //public async Task<IActionResult> StartTask(string taskId)
-    //{
-    //    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-    //    var result = await _taskService.StartTaskAsync(taskId, userId);
-    //    return result.IsSuccess ? Ok(result) : BadRequest(result);
-    //}
-    //// SUBMIT TASK (Employee)
-    //[HttpPut("{taskId}/submit")]
-    //[Authorize(Policy = "EmployeeOnly")]
-    //[Authorize(Policy = "TaskOwner")]
-    //public async Task<IActionResult> SubmitTask(string taskId)
-    //{
-    //    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-    //    var result = await _taskService.SubmitTaskAsync(taskId, userId);
-    //    return result.IsSuccess ? Ok(result) : BadRequest(result);
-    //}
+
+    [HttpPost("filter")]
+    public async Task<IActionResult> Filter(TaskFilterDto filter)
+    {
+        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var result = await _taskService.FilterTasksAsync(filter, managerId);
+        return result.IsSuccess ? Ok(result) : BadRequest(result);
+    }
+
+    [HttpGet("dashboard/{projectId}")]
+    public async Task<IActionResult> Dashboard(string projectId)
+    {
+        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var result = await _taskService.GetDashboardAsync(projectId, managerId);
+        return result.IsSuccess ? Ok(result) : BadRequest(result);
+    }
 
 }

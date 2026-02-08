@@ -22,6 +22,11 @@ public class MilestoneService : IMilestoneService
         if (project == null || project.CreatedByUserId != managerId)
             return Result<MilestoneResponseDto>.Failure("Project not found or unauthorized");
 
+        if (dto.StartDate < project.StartDate || dto.EndDate > project.EndDate)
+        {
+            return Result<MilestoneResponseDto>.Failure("Milestone dates must be within project start and end dates");
+        }
+
         var milestone = _mapper.Map<Milestone>(dto);
 
         await _unitOfWork.Repository<Milestone>().AddAsync(milestone);

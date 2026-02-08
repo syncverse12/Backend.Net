@@ -1,5 +1,6 @@
 ﻿using Graduation_Project.Application.Common.Pagination;
 using Graduation_Project.Application.Common.Results;
+using Graduation_Project.Application.DTOs.Tasks;
 using Graduation_Project.Application.DTOs.Tasks.Manager;
 
 namespace Graduation_Project.Application.Interfaces.Task.Manager
@@ -15,6 +16,8 @@ namespace Graduation_Project.Application.Interfaces.Task.Manager
         Task<Result<bool>> ConfirmTaskAsync(string taskId, string managerId);
         Task<Result<bool>> RejectTaskAsync(string taskId, string managerId, string comment);
         Task<Result<ManagerTaskDashboardDto>> GetManagerDashboardAsync(string managerId);
-        
+        Task<Result<List<TaskResponseDto>>> FilterTasksAsync(TaskFilterDto filter, string managerId);
+        Task<Result<TaskDashboardDto>> GetDashboardAsync(string projectId, string managerId);
+
     }
 }

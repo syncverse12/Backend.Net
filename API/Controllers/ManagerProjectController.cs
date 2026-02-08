@@ -51,4 +51,22 @@ public class ProjectsController : ControllerBase
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
 
+    // DELETE PROJECT (Soft Delete)
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(string id)
+    {
+        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var result = await _projectService.DeleteProjectAsync(id, managerId); 
+        return result.IsSuccess ? Ok(result) : BadRequest(result);
+    }
+
+    // RESTORE PROJECT
+    [HttpPut("{id}/restore")]
+    public async Task<IActionResult> Restore(string id)
+    {
+        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var result = await _projectService.RestoreProjectAsync(id, managerId); 
+        return result.IsSuccess ? Ok(result) : BadRequest(result);
+    }
+
 }

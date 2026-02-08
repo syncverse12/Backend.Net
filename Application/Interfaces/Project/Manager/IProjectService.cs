@@ -12,5 +12,11 @@ namespace Graduation_Project.Application.Interfaces
       Task<Result<ProjectResponseDto>> GetByIdAsync(string projectId, string managerId);
 
       Task<Result<List<ProjectResponseDto>>> GetByWorkspaceAsync(string workspaceId, string managerId);
+
+        Task<Result<bool>> DeleteProjectAsync(string projectId, string managerId);
+        Task<Result<bool>> RestoreProjectAsync(string projectId, string managerId);
+
+
+
     }
 }

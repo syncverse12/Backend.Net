@@ -12,5 +12,7 @@ namespace Graduation_Project.Application.DTOs.Tasks.Manager
         public string? CategoryId { get; set; }
         public TaskPriority Priority { get; set; }
         public string AssignedToUserId { get; set; } = null!;
+        public string ProjectId { get; set; } = null!;
+        public string MilestoneId { get; set; } = null!;
     }
 }

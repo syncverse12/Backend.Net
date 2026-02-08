@@ -77,6 +77,8 @@ builder.Services.AddScoped<IMilestoneService, MilestoneService>();
 builder.Services.AddScoped<IAuthorizationHandler, ManagerAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TaskOwnerAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ReviewTaskAuthorizationHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, ManagerAuthorizationHandler>();
+
 
 
 builder.Services.AddControllers()

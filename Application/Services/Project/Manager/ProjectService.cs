@@ -109,6 +109,63 @@ public class ProjectService : IProjectService
         return Result<List<ProjectResponseDto>>.Success(
             _mapper.Map<List<ProjectResponseDto>>(projects));
     }
+    public async Task<Result<bool>> DeleteProjectAsync(string projectId, string managerId)
+    {
+        var project = await _unitOfWork.Repository<Project>()
+            .Query()
+            .Include(p => p.Milestones) 
+            .Include(p => p.Taskitem)      
+            .FirstOrDefaultAsync(p => p.Id == projectId);
 
+        if (project == null) return Result<bool>.Failure("Project not found");
+        if (project.CreatedByUserId != managerId) return Result<bool>.Failure("Unauthorized");
+
+        project.IsDeleted = true;
+
+
+        foreach (var milestone in project.Milestones)
+        {
+            milestone.IsDeleted = true;
+        }
+
+        foreach (var task in project.Taskitem)
+        {
+            task.IsDeleted = true;
+        }
+
+        _unitOfWork.Repository<Project>().Update(project);
+        await _unitOfWork.SaveChangesAsync();
+
+        return Result<bool>.Success(true, "Project and all its components deleted successfully");
+    }
+
+    public async Task<Result<bool>> RestoreProjectAsync(string projectId, string managerId)
+    {
+        var project = await _unitOfWork.Repository<Project>()
+            .Query()
+            .IgnoreQueryFilters()
+            .Include(p => p.Milestones) 
+            .Include(p => p.Taskitem)
+            .FirstOrDefaultAsync(p => p.Id == projectId);
+
+        if (project == null)
+            return Result<bool>.Failure("Project not found");
+
+        if (project.CreatedByUserId != managerId)
+            return Result<bool>.Failure("Unauthorized to restore this project");
+
+        if (!project.IsDeleted)
+            return Result<bool>.Failure("Project is already active");
+
+        project.IsDeleted = false;
+
+        foreach (var m in project.Milestones) m.IsDeleted = false;
+        foreach (var t in project.Taskitem) t.IsDeleted = false;
+
+        _unitOfWork.Repository<Project>().Update(project);
+        await _unitOfWork.SaveChangesAsync();
+
+        return Result<bool>.Success(true, "Project restored successfully");
+    }
 
 }
