@@ -48,7 +48,7 @@ namespace Graduation_Project.Application.Services.Task.Manager
             );
         }
 
-        public async Task<Result<bool>> DeleteAsync(int categoryId, string userId)
+        public async Task<Result<bool>> DeleteAsync(string categoryId, string userId)
         {
             var category = await _unitOfWork.Repository<Category>()
                 .GetByIdAsync(categoryId);

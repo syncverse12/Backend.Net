@@ -32,7 +32,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(string id)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         return Ok(await _categoryService.DeleteAsync(id, userId));
