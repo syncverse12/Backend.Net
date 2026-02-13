@@ -24,32 +24,49 @@ namespace Graduation_Project.Application.Services.Task.Manager
         }
 
         //CREATE
-        public async Task<Result<TaskResponseDto>> CreateAsync(
-            CreateTaskDto dto,
-            string managerId)
+        public async Task<Result<TaskResponseDto>> CreateAsync(CreateTaskDto dto, string managerId)
         {
-
             if (dto.AssignedToUserId == managerId)
                 return Result<TaskResponseDto>.Failure("Manager cannot assign task to himself");
+
+            var milestone = await _unitOfWork.Repository<Milestone>().GetByIdAsync(dto.MilestoneId);
+            if (milestone == null) return Result<TaskResponseDto>.Failure("Milestone not found");
+
+            if (dto.DueDate.HasValue)
+            {
+                if (dto.DueDate.Value < milestone.StartDate || dto.DueDate.Value > milestone.EndDate)
+                {
+                    return Result<TaskResponseDto>.Failure($"Task Due Date must be between {milestone.StartDate:yyyy-MM-dd} and {milestone.EndDate:yyyy-MM-dd}");
+                }
+            }
 
             var task = new TaskItem
             {
                 Title = dto.Title,
                 Description = dto.Description,
-                Status = TaskStatus.Pending,
+                Status = TaskStatus.Pending, 
                 CreatedByUserId = managerId,
                 AssignedToUserId = dto.AssignedToUserId,
                 CategoryId = dto.CategoryId?.ToString(),
                 Priority = dto.Priority,
-                ProjectId = dto.ProjectId,   
-                MilestoneId = dto.MilestoneId
+                ProjectId = dto.ProjectId,
+                MilestoneId = dto.MilestoneId,
+                DueDate = dto.DueDate,
+                CreatedAt = DateTime.UtcNow
             };
 
             await _unitOfWork.Repository<TaskItem>().AddAsync(task);
             await _unitOfWork.SaveChangesAsync();
 
+            var taskWithDetails = await _unitOfWork.Repository<TaskItem>()
+                .Query()
+                .Include(t => t.Category)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.CreatedByUser)
+                .FirstOrDefaultAsync(t => t.Id == task.Id);
+
             return Result<TaskResponseDto>.Success(
-                _mapper.Map<TaskResponseDto>(task),
+                _mapper.Map<TaskResponseDto>(taskWithDetails),
                 "Task Created Successfully"
             );
         }
@@ -113,7 +130,9 @@ namespace Graduation_Project.Application.Services.Task.Manager
               string managerId)
         {
             var task = await _unitOfWork.Repository<TaskItem>()
-                .GetByIdAsync(taskId);
+                .Query()
+                .Include(t => t.Milestone) 
+                .FirstOrDefaultAsync(t => t.Id == taskId);
 
             if (task == null)
                 return Result<TaskResponseDto>.Failure("Task not found");
@@ -126,19 +145,36 @@ namespace Graduation_Project.Application.Services.Task.Manager
             if (task.CreatedByUserId != managerId)
                 return Result<TaskResponseDto>.Failure("Unauthorized");
 
+            if (dto.DueDate.HasValue && task.Milestone != null)
+            {
+                if (dto.DueDate.Value < task.Milestone.StartDate || dto.DueDate.Value > task.Milestone.EndDate)
+                {
+                    return Result<TaskResponseDto>.Failure("New Due Date is outside Milestone bounds.");
+                }
+            }
+
             task.Title = dto.Title;
             task.Description = dto.Description;
             task.Priority = dto.Priority;
             task.CategoryId = dto.CategoryId;
             task.AssignedToUserId = dto.AssignedToUserId;
+            task.DueDate = dto.DueDate;
+            task.Status = dto.Status;
 
             _unitOfWork.Repository<TaskItem>().Update(task);
             await _unitOfWork.SaveChangesAsync();
 
+            var updatedTask = await _unitOfWork.Repository<TaskItem>()
+                  .Query()
+                  .Include(t => t.Category)
+                  .Include(t => t.AssignedToUser)
+                  .Include(t => t.CreatedByUser)
+                  .FirstOrDefaultAsync(t => t.Id == taskId);
+
             return Result<TaskResponseDto>.Success(
-                _mapper.Map<TaskResponseDto>(task),
+                _mapper.Map<TaskResponseDto>(updatedTask), 
                 "Task updated successfully"
-            );
+);
         }
 
 
@@ -192,7 +228,7 @@ namespace Graduation_Project.Application.Services.Task.Manager
             if (task.CreatedByUserId != userId)
                 return Result<bool>.Failure("Unauthorized");
 
-            // Avoid repeation
+            // AVOID repeation
             var exists = await _unitOfWork.Repository<TaskDependency>()
                         .Query()
                         .AnyAsync(d =>
@@ -217,12 +253,12 @@ namespace Graduation_Project.Application.Services.Task.Manager
             return Result<bool>.Success(true, "Dependency added");
         }
 
-        public async Task<Result<bool>> ConfirmTaskAsync(
-            string taskId,
-            string managerId)
+        //CONFIRMATION
+        public async Task<Result<bool>> ConfirmTaskAsync(string taskId, string managerId)
         {
             var task = await _unitOfWork.Repository<TaskItem>()
-                .GetByIdAsync(taskId);
+                .Query()
+                .FirstOrDefaultAsync(t => t.Id == taskId);
 
             if (task == null)
                 return Result<bool>.Failure("Task not found");
@@ -231,8 +267,9 @@ namespace Graduation_Project.Application.Services.Task.Manager
                 return Result<bool>.Failure("Unauthorized");
 
             if (task.Status != TaskStatus.Submitted)
-                return Result<bool>.Failure("Task is not ready for confirmation");
-
+            {
+                return Result<bool>.Failure("Task is not ready for confirmation. It must be submitted first.");
+            }
             task.Status = TaskStatus.Completed;
             task.ReviewedAt = DateTime.UtcNow;
             task.ReviewedByUserId = managerId;
@@ -243,6 +280,7 @@ namespace Graduation_Project.Application.Services.Task.Manager
             return Result<bool>.Success(true, "Task confirmed as completed");
         }
 
+        //Rejection
         public async Task<Result<bool>> RejectTaskAsync(
             string taskId,
             string managerId,
@@ -271,6 +309,7 @@ namespace Graduation_Project.Application.Services.Task.Manager
             return Result<bool>.Success(true, "Task rejected");
         }
 
+        // ManagerDashboard
         public async Task<Result<ManagerTaskDashboardDto>> GetManagerDashboardAsync(string managerId)
         {
             var tasksQuery = _unitOfWork.Repository<TaskItem>()
@@ -314,6 +353,7 @@ namespace Graduation_Project.Application.Services.Task.Manager
             return Result<ManagerTaskDashboardDto>.Success(dashboard);
         }
 
+        //FilterTasks
         public async Task<Result<List<TaskResponseDto>>> FilterTasksAsync(TaskFilterDto filter,string managerId)
         {
             var query = _unitOfWork.Repository<TaskItem>()
@@ -348,9 +388,10 @@ namespace Graduation_Project.Application.Services.Task.Manager
                 .Success(_mapper.Map<List<TaskResponseDto>>(tasks));
         }
 
+        //Dashboard
         public async Task<Result<TaskDashboardDto>> GetDashboardAsync(
-    string projectId,
-    string managerId)
+                string projectId,
+                string managerId)
         {
             var tasks = await _unitOfWork.Repository<TaskItem>()
                 .Query()

@@ -14,5 +14,6 @@ namespace Graduation_Project.Application.DTOs.Tasks.Manager
         public string AssignedToUserId { get; set; } = null!;
         public string ProjectId { get; set; } = null!;
         public string MilestoneId { get; set; } = null!;
+        public DateTime? DueDate { get; set; }
     }
 }
