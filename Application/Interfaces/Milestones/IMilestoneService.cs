@@ -8,4 +8,5 @@ public interface IMilestoneService
     Task<Result<bool>> DeleteAsync(string milestoneId, string managerId);
     Task<Result<MilestoneResponseDto>> GetByIdAsync(string milestoneId, string managerId);
     Task<Result<List<MilestoneResponseDto>>> GetProjectMilestonesAsync(string projectId, string managerId);
+    Task<Result<bool>> RestoreMilestoneAsync(string milestoneId, string managerId);
 }

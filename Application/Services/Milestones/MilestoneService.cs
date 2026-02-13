@@ -102,4 +102,30 @@ public class MilestoneService : IMilestoneService
 
         return Result<List<MilestoneResponseDto>>.Success(_mapper.Map<List<MilestoneResponseDto>>(milestones));
     }
+
+    public async Task<Result<bool>> RestoreMilestoneAsync(string milestoneId, string managerId)
+    {
+        var milestone = await _unitOfWork.Repository<Milestone>()
+            .Query()
+            .IgnoreQueryFilters() 
+            .Include(m => m.Project) 
+            .Include(m => m.Tasks)   
+            .FirstOrDefaultAsync(m => m.Id == milestoneId);
+
+        if (milestone == null) return Result<bool>.Failure("Milestone not found");
+
+        if (milestone.Project.IsDeleted)
+            return Result<bool>.Failure("Cannot restore milestone because the parent project is deleted. Restore the project first.");
+
+        milestone.IsDeleted = false;
+        foreach (var task in milestone.Tasks)
+        {
+            task.IsDeleted = false;
+        }
+
+        _unitOfWork.Repository<Milestone>().Update(milestone);
+        await _unitOfWork.SaveChangesAsync();
+
+        return Result<bool>.Success(true, "Milestone and its tasks restored successfully");
+    }
 }

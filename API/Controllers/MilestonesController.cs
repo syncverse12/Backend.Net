@@ -55,4 +55,12 @@ public class MilestonesController : ControllerBase
         var result = await _milestoneService.GetProjectMilestonesAsync(projectId, managerId);
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
+
+    [HttpPut("{id}/restore")]
+    public async Task<IActionResult> Restore(string id)
+    {
+        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var result = await _milestoneService.RestoreMilestoneAsync(id, managerId);
+        return result.IsSuccess ? Ok(result) : BadRequest(result);
+    }
 }
