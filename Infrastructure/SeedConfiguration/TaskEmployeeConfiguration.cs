@@ -34,10 +34,6 @@ namespace Graduation_Project.Infrastructure.SeedConfiguration
                    .WithMany(p => p.Tasks) 
                    .HasForeignKey(x => x.ProjectId)
                    .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasMany(x => x.TimeLogs)
-                   .WithOne(x => x.Task)
-                   .HasForeignKey(x => x.TaskId);
         }
     }
 

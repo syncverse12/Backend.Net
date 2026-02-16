@@ -42,4 +42,5 @@ public class TaskItem : BaseEntity
     public Milestone? Milestone { get; set; }
 
     public ICollection<TaskComment> Comments { get; set; } = new List<TaskComment>();
+    public ICollection<TimeLog> TimeLogs { get; set; } = new List<TimeLog>();
 }

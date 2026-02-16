@@ -8,9 +8,11 @@ using Graduation_Project.Application.Interfaces;
 using Graduation_Project.Application.Interfaces.Persistence;
 using Graduation_Project.Application.Interfaces.Task.Manager;
 using Graduation_Project.Application.Interfaces.Tasks.Comments;
+using Graduation_Project.Application.Interfaces.Tasks.TimeTracking;
 using Graduation_Project.Application.Services;
 using Graduation_Project.Application.Services.Task.Manager;
 using Graduation_Project.Application.Services.Tasks.Comments;
+using Graduation_Project.Application.Services.Tasks.TimeTracking;
 using Graduation_Project.Domain.Entities;
 using Graduation_Project.Infrastructure.Data;
 using Graduation_Project.Infrastructure.Persistence;
@@ -76,6 +78,7 @@ builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IInvitationService, MockInvitationService>();
 builder.Services.AddScoped<IMilestoneService, MilestoneService>();
 builder.Services.AddScoped<ITaskCommentService, TaskCommentService>();
+builder.Services.AddScoped<ITimeLogService, TimeLogService>();
 
 
 builder.Services.AddScoped<IAuthorizationHandler, ManagerAuthorizationHandler>();
