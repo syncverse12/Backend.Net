@@ -26,6 +26,10 @@ namespace Graduation_Project.Application.DTOs.Tasks.Employee
         public string? ReviewComment { get; set; }
         public DateTime? ReviewedAt { get; set; }
 
+        public string? SubmissionLink { get; set; }
+        public string? SubmissionNotes { get; set; }
+        public DateTime? SubmittedAt { get; set; }
+
         public string CreatedByName { get; set; } = null!;
         public string AssignedToName { get; set; } = null!;
     }

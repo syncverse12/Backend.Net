@@ -1,4 +1,5 @@
-﻿using Graduation_Project.Application.Interfaces.Tasks.Employee;
+﻿using Graduation_Project.Application.DTOs.Tasks.Employee;
+using Graduation_Project.Application.Interfaces.Tasks.Employee;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -44,10 +45,10 @@ public class EmployeeTasksController : ControllerBase
 
     [HttpPut("{taskId}/submit")]
     [Authorize(Policy = "TaskOwner")]
-    public async Task<IActionResult> SubmitTask(string taskId)
+    public async Task<IActionResult> SubmitTask(string taskId, [FromBody] SubmitTaskDto submitDto)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var result = await _employeeTaskService.SubmitTaskAsync(taskId, userId);
+        var result = await _employeeTaskService.SubmitTaskAsync(taskId, userId, submitDto);
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
 }

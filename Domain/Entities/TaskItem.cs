@@ -30,6 +30,11 @@ public class TaskItem : BaseEntity
     public User? ReviewedByUser { get; set; }
 
     public string? ReviewComment { get; set; }
+
+    public string? SubmissionLink { get; set; }
+    public string? SubmissionNotes { get; set; }
+    public DateTime? SubmittedAt { get; set; }
+
     public string? ProjectId { get; set; }
     public Project? Project { get; set; }
 

@@ -95,6 +95,9 @@ namespace Graduation_Project.Application.Services.Task.Employee
                 CategoryId = task.CategoryId,
                 ReviewComment = task.ReviewComment,
                 ReviewedAt = task.ReviewedAt,
+                SubmissionLink = task.SubmissionLink,
+                SubmissionNotes = task.SubmissionNotes,
+                SubmittedAt = task.SubmittedAt,
                 CreatedByName = task.CreatedByUser?.UserName ?? "Unknown",
                 AssignedToName = task.AssignedToUser?.UserName ?? "Unknown"
             };
@@ -126,7 +129,7 @@ namespace Graduation_Project.Application.Services.Task.Employee
             return Result<bool>.Success(true, "Task started");
         }
 
-        public async Task<Result<bool>> SubmitTaskAsync(string taskId, string userId)
+        public async Task<Result<bool>> SubmitTaskAsync(string taskId, string userId, SubmitTaskDto submitDto)
         {
             var employeeId = string.IsNullOrEmpty(userId) ? _currentUser.UserId : userId;
 
@@ -143,6 +146,9 @@ namespace Graduation_Project.Application.Services.Task.Employee
                 return Result<bool>.Failure("Task must be in progress");
 
             task.Status = TaskStatus.Submitted;
+            task.SubmissionLink = submitDto.SubmissionLink;
+            task.SubmissionNotes = submitDto.SubmissionNotes;
+            task.SubmittedAt = DateTime.UtcNow;
 
             _unitOfWork.Repository<TaskItem>().Update(task);
             await _unitOfWork.SaveChangesAsync();

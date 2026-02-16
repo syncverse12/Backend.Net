@@ -11,7 +11,7 @@ namespace Graduation_Project.Application.Interfaces.Tasks.Employee
         Task<Result<PagedResult<TaskResponseDto>>> GetMyTasksAsync(string userid, TaskQuery query);
         Task<Result<EmployeeTaskDetailsDto>> GetTaskDetailsAsync(string taskId, string userId);
         Task<Result<bool>> StartTaskAsync(string userid, string taskId);
-        Task<Result<bool>> SubmitTaskAsync(string userid, string taskId);
+        Task<Result<bool>> SubmitTaskAsync(string taskId, string userId, SubmitTaskDto submitDto);
     }
 
 }
