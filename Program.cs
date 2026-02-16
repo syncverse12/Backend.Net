@@ -2,6 +2,7 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Graduation_Project.API.Authorization.Handlers;
 using Graduation_Project.API.Authorization.Requirements;
+using Graduation_Project.API.Hubs;
 using Graduation_Project.API.JwtFeatuers;
 using Graduation_Project.API.Middleware;
 using Graduation_Project.Application.Interfaces;
@@ -89,7 +90,8 @@ builder.Services.AddScoped<IAuthorizationHandler, TaskOwnerAuthorizationHandler>
 builder.Services.AddScoped<IAuthorizationHandler, ReviewTaskAuthorizationHandler>();
 builder.Services.AddSingleton<IAuthorizationHandler, ManagerAuthorizationHandler>();
 
-
+// SignalR
+builder.Services.AddSignalR();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -162,6 +164,7 @@ app.UseMiddleware<ExceptionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 // --- 3. Database Seeding ---
 using (var scope = app.Services.CreateScope())

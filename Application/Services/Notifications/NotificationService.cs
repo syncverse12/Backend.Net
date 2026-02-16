@@ -4,6 +4,7 @@ using Graduation_Project.Application.Interfaces.Notifications;
 using Graduation_Project.Application.Interfaces.Persistence;
 using Graduation_Project.Domain.Entities;
 using Graduation_Project.Domain.Enums;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Graduation_Project.Application.Services.Notifications
@@ -11,10 +12,12 @@ namespace Graduation_Project.Application.Services.Notifications
     public class NotificationService : INotificationService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IHubContext<API.Hubs.NotificationHub> _hubContext;
 
-        public NotificationService(IUnitOfWork unitOfWork)
+        public NotificationService(IUnitOfWork unitOfWork, IHubContext<API.Hubs.NotificationHub> hubContext)
         {
             _unitOfWork = unitOfWork;
+            _hubContext = hubContext;
         }
 
         public async Task<Result<NotificationResponseDto>> CreateNotificationAsync(CreateNotificationDto dto)
@@ -52,6 +55,9 @@ namespace Graduation_Project.Application.Services.Notifications
                 ReadAt = notification.ReadAt,
                 CreatedAt = notification.CreatedAt
             };
+
+            // Send real-time notification via SignalR
+            await _hubContext.Clients.Group(dto.UserId).SendAsync("ReceiveNotification", response);
 
             return Result<NotificationResponseDto>.Success(response);
         }
@@ -115,6 +121,9 @@ namespace Graduation_Project.Application.Services.Notifications
 
             _unitOfWork.Repository<Notification>().Update(notification);
             await _unitOfWork.SaveChangesAsync();
+
+            // Send real-time update via SignalR
+            await _hubContext.Clients.Group(userId).SendAsync("NotificationMarkedAsRead", notificationId);
 
             return Result<bool>.Success(true, "Notification marked as read");
         }
