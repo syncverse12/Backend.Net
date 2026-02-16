@@ -7,6 +7,7 @@ using Graduation_Project.Application.DTOs.Tasks.Manager;
 using Graduation_Project.Application.Interfaces.Task.Manager;
 using System.Threading.Tasks;
 using Graduation_Project.Application.Interfaces.Tasks.Employee;
+using Graduation_Project.Application.DTOs.Tasks.Employee;
 
 namespace Graduation_Project.Application.Services.Task.Employee
 {
@@ -55,6 +56,50 @@ namespace Graduation_Project.Application.Services.Task.Employee
                     PageNumber = query.Page,
                     PageSize = query.PageSize
                 });
+        }
+
+        public async Task<Result<EmployeeTaskDetailsDto>> GetTaskDetailsAsync(string taskId, string userId)
+        {
+            var employeeId = string.IsNullOrEmpty(userId) ? _currentUser.UserId : userId;
+
+            var task = await _unitOfWork.Repository<TaskItem>()
+                .Query()
+                .Include(t => t.Project)
+                .Include(t => t.Milestone)
+                .Include(t => t.Category)
+                .Include(t => t.CreatedByUser)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.ReviewedByUser)
+                .FirstOrDefaultAsync(t => t.Id == taskId && !t.IsDeleted);
+
+            if (task == null)
+                return Result<EmployeeTaskDetailsDto>.Failure("Task not found");
+
+            if (task.AssignedToUserId != employeeId)
+                return Result<EmployeeTaskDetailsDto>.Failure("Unauthorized: You don't have access to this task");
+
+            var details = new EmployeeTaskDetailsDto
+            {
+                TaskId = task.Id,
+                TaskTitle = task.Title,
+                Description = task.Description,
+                Status = task.Status,
+                Priority = task.Priority,
+                DueDate = task.DueDate,
+                CreatedAt = task.CreatedAt,
+                ProjectName = task.Project?.Name,
+                ProjectId = task.ProjectId,
+                MilestoneName = task.Milestone?.Name,
+                MilestoneId = task.MilestoneId,
+                CategoryName = task.Category?.Name,
+                CategoryId = task.CategoryId,
+                ReviewComment = task.ReviewComment,
+                ReviewedAt = task.ReviewedAt,
+                CreatedByName = task.CreatedByUser?.UserName ?? "Unknown",
+                AssignedToName = task.AssignedToUser?.UserName ?? "Unknown"
+            };
+
+            return Result<EmployeeTaskDetailsDto>.Success(details);
         }
 
         public async Task<Result<bool>> StartTaskAsync(string taskId, string userId)

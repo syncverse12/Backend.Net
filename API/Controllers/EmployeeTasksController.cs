@@ -24,6 +24,15 @@ public class EmployeeTasksController : ControllerBase
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
 
+    [HttpGet("{taskId}")]
+    [Authorize(Policy = "TaskOwner")]
+    public async Task<IActionResult> GetTaskDetails(string taskId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var result = await _employeeTaskService.GetTaskDetailsAsync(taskId, userId);
+        return result.IsSuccess ? Ok(result) : BadRequest(result);
+    }
+
     [HttpPut("{taskId}/start")]
     [Authorize(Policy = "TaskOwner")]
     public async Task<IActionResult> StartTask(string taskId)
