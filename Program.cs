@@ -7,8 +7,10 @@ using Graduation_Project.API.Middleware;
 using Graduation_Project.Application.Interfaces;
 using Graduation_Project.Application.Interfaces.Persistence;
 using Graduation_Project.Application.Interfaces.Task.Manager;
+using Graduation_Project.Application.Interfaces.Tasks.Comments;
 using Graduation_Project.Application.Services;
 using Graduation_Project.Application.Services.Task.Manager;
+using Graduation_Project.Application.Services.Tasks.Comments;
 using Graduation_Project.Domain.Entities;
 using Graduation_Project.Infrastructure.Data;
 using Graduation_Project.Infrastructure.Persistence;
@@ -27,7 +29,7 @@ using System.Text.Json.Serialization;
 var builder = WebApplication.CreateBuilder(args);
 
 // --- 1. Register Services ---
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies()); 
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddDbContext<DatabaseDbContext>(opts =>
         opts.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
@@ -73,6 +75,7 @@ builder.Services.AddScoped<IWorkspaceService, WorkspaceService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IInvitationService, MockInvitationService>();
 builder.Services.AddScoped<IMilestoneService, MilestoneService>();
+builder.Services.AddScoped<ITaskCommentService, TaskCommentService>();
 
 
 builder.Services.AddScoped<IAuthorizationHandler, ManagerAuthorizationHandler>();

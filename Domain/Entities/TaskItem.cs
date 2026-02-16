@@ -40,4 +40,6 @@ public class TaskItem : BaseEntity
 
     public string? MilestoneId { get; set; }
     public Milestone? Milestone { get; set; }
+
+    public ICollection<TaskComment> Comments { get; set; } = new List<TaskComment>();
 }
