@@ -5,11 +5,13 @@ using Graduation_Project.API.Authorization.Requirements;
 using Graduation_Project.API.JwtFeatuers;
 using Graduation_Project.API.Middleware;
 using Graduation_Project.Application.Interfaces;
+using Graduation_Project.Application.Interfaces.Notifications;
 using Graduation_Project.Application.Interfaces.Persistence;
 using Graduation_Project.Application.Interfaces.Task.Manager;
 using Graduation_Project.Application.Interfaces.Tasks.Comments;
 using Graduation_Project.Application.Interfaces.Tasks.TimeTracking;
 using Graduation_Project.Application.Services;
+using Graduation_Project.Application.Services.Notifications;
 using Graduation_Project.Application.Services.Task.Manager;
 using Graduation_Project.Application.Services.Tasks.Comments;
 using Graduation_Project.Application.Services.Tasks.TimeTracking;
@@ -79,6 +81,7 @@ builder.Services.AddScoped<IInvitationService, MockInvitationService>();
 builder.Services.AddScoped<IMilestoneService, MilestoneService>();
 builder.Services.AddScoped<ITaskCommentService, TaskCommentService>();
 builder.Services.AddScoped<ITimeLogService, TimeLogService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 
 builder.Services.AddScoped<IAuthorizationHandler, ManagerAuthorizationHandler>();

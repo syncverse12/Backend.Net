@@ -1,5 +1,6 @@
 using Graduation_Project.Application.Common.Results;
 using Graduation_Project.Application.DTOs.Tasks.Comments;
+using Graduation_Project.Application.Interfaces.Notifications;
 using Graduation_Project.Application.Interfaces.Persistence;
 using Graduation_Project.Application.Interfaces.Tasks.Comments;
 using Graduation_Project.Domain.Entities;
@@ -10,10 +11,12 @@ namespace Graduation_Project.Application.Services.Tasks.Comments
     public class TaskCommentService : ITaskCommentService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly INotificationService _notificationService;
 
-        public TaskCommentService(IUnitOfWork unitOfWork)
+        public TaskCommentService(IUnitOfWork unitOfWork, INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
+            _notificationService = notificationService;
         }
 
         public async Task<Result<CommentResponseDto>> AddCommentAsync(string taskId, string userId, CreateCommentDto dto)
@@ -49,6 +52,9 @@ namespace Graduation_Project.Application.Services.Tasks.Comments
             await _unitOfWork.SaveChangesAsync();
 
             var user = await _unitOfWork.Repository<User>().GetByIdAsync(userId);
+
+            // Send notification
+            await _notificationService.NotifyTaskCommentedAsync(taskId, userId, user?.UserName ?? "Unknown");
 
             var response = new CommentResponseDto
             {

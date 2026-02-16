@@ -8,6 +8,7 @@ using Graduation_Project.Application.Interfaces.Task.Manager;
 using System.Threading.Tasks;
 using Graduation_Project.Application.Interfaces.Tasks.Employee;
 using Graduation_Project.Application.DTOs.Tasks.Employee;
+using Graduation_Project.Application.Interfaces.Notifications;
 
 namespace Graduation_Project.Application.Services.Task.Employee
 {
@@ -16,15 +17,18 @@ namespace Graduation_Project.Application.Services.Task.Employee
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICurrentUserService _currentUser;
         private readonly IMapper _mapper;
+        private readonly INotificationService _notificationService;
 
         public EmployeeTaskService(
             IUnitOfWork unitOfWork,
             ICurrentUserService currentUser,
-            IMapper mapper)
+            IMapper mapper,
+            INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
             _currentUser = currentUser;
             _mapper = mapper;
+            _notificationService = notificationService;
         }
 
         public async Task<Result<PagedResult<TaskResponseDto>>> GetMyTasksAsync(string userId, TaskQuery query)
@@ -152,6 +156,9 @@ namespace Graduation_Project.Application.Services.Task.Employee
 
             _unitOfWork.Repository<TaskItem>().Update(task);
             await _unitOfWork.SaveChangesAsync();
+
+            // Send notification
+            await _notificationService.NotifyTaskSubmittedAsync(taskId, employeeId);
 
             return Result<bool>.Success(true, "Task submitted for review");
         }
