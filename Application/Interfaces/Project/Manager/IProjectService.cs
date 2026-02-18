@@ -16,6 +16,7 @@ namespace Graduation_Project.Application.Interfaces
         Task<Result<bool>> DeleteProjectAsync(string projectId, string managerId);
         Task<Result<bool>> RestoreProjectAsync(string projectId, string managerId);
 
+        Task<Result<bool>> InviteEmployeeAsync(string projectId, InviteEmployeeDto dto, string managerId);
 
 
     }

@@ -69,4 +69,16 @@ public class ProjectsController : ControllerBase
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
 
+    // INVITATION
+    [HttpPost("{projectId}/invite")]
+    [Authorize(Policy = "ManagerOnly")]
+    public async Task<IActionResult> Invite(string projectId, InviteEmployeeDto dto)
+    {
+        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+        var result = await _projectService.InviteEmployeeAsync(projectId, dto, managerId);
+
+        return result.IsSuccess ? Ok(result) : BadRequest(result);
+    }
+
 }

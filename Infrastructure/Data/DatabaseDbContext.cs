@@ -32,6 +32,8 @@ namespace Graduation_Project.Infrastructure.Data
         public DbSet<Milestone> Milestones => Set<Milestone>();
         public DbSet<TaskComment> TaskComments => Set<TaskComment>();
         public DbSet<Notification> Notifications => Set<Notification>();
+        public DbSet<ProjectInvitation> ProjectInvitations { get; set; }
+        public DbSet<ProjectMember> ProjectMembers { get; set; }
 
         public override int SaveChanges()
         {

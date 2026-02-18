@@ -17,6 +17,7 @@ namespace Graduation_Project.Domain.Entities
         public TaskItem? Task { get; set; }
 
         public string? RelatedEntityId { get; set; }
+
         public string? ActionUrl { get; set; }
 
         public bool IsRead { get; set; } = false;

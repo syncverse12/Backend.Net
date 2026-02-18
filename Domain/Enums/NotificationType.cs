@@ -2,15 +2,17 @@ namespace Graduation_Project.Domain.Enums
 {
     public enum NotificationType
     {
-        TaskAssigned = 1,
-        TaskCommented = 2,
-        TaskStatusChanged = 3,
-        TaskSubmitted = 4,
-        TaskReviewed = 5,
-        TaskRejected = 6,
-        TaskApproved = 7,
-        TaskDueSoon = 8,
-        TaskOverdue = 9,
-        CommentReply = 10
+        System = 0,
+        Invitation = 1,
+        TaskAssigned = 2,
+        TaskCommented = 3,
+        TaskStatusChanged = 4,
+        TaskSubmitted = 5,
+        TaskReviewed = 6,
+        TaskRejected = 7,
+        TaskApproved = 8,
+        TaskDueSoon = 9,
+        TaskOverdue = 10,
+        CommentReply = 11
     }
 }

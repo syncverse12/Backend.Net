@@ -17,11 +17,9 @@ namespace Synverse.Domain.Entities
 
         public int ProgressPercentage { get; set; }
 
-        // Relations
         public string? AssignedUserId { get; set; }
         public string? ProjectId { get; set; }
 
-        // Navigation Properties
         public User AssignedUser { get; set; } = null!;
         public Project Project { get; set; } = null!;
 

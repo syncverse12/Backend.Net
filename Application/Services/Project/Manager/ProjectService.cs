@@ -1,20 +1,24 @@
 ﻿using AutoMapper;
 using Graduation_Project.Application.Common.Results;
 using Graduation_Project.Application.DTOs.Project;
+using Graduation_Project.Application.Interfaces;
 using Graduation_Project.Application.Interfaces.Persistence;
 using Graduation_Project.Domain.Entities;
-using Graduation_Project.Application.Interfaces;
+using Graduation_Project.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 public class ProjectService : IProjectService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly UserManager<User> _userManager;
 
-    public ProjectService(IUnitOfWork unitOfWork, IMapper mapper)
+    public ProjectService(IUnitOfWork unitOfWork, IMapper mapper, UserManager<User> userManager)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _userManager = userManager;
     }
 
     public async Task<Result<ProjectResponseDto>> CreateAsync(
@@ -166,6 +170,61 @@ public class ProjectService : IProjectService
         await _unitOfWork.SaveChangesAsync();
 
         return Result<bool>.Success(true, "Project restored successfully");
+    }
+
+    // --- INVITE EMPLOYEE LOGIC ---
+    public async Task<Result<bool>> InviteEmployeeAsync(string projectId, InviteEmployeeDto dto, string managerId)
+    {
+        var project = await _unitOfWork.Repository<Project>().GetByIdAsync(projectId);
+
+        if (project == null || project.CreatedByUserId != managerId)
+            return Result<bool>.Failure("Project not found or unauthorized.");
+
+        var isMember = await _unitOfWork.Repository<ProjectMember>().Query()
+            .AnyAsync(m => m.ProjectId == projectId && m.UserId == dto.EmployeeId);
+
+        if (isMember)
+            return Result<bool>.Failure("User is already a member of this project.");
+
+        var hasPendingInv = await _unitOfWork.Repository<ProjectInvitation>().Query()
+            .AnyAsync(i => i.ProjectId == projectId &&
+                           i.EmployeeId == dto.EmployeeId &&
+                           i.Status == InvitationStatus.Pending);
+
+        if (hasPendingInv)
+            return Result<bool>.Failure("An invitation is already pending for this user.");
+
+        var user = await _unitOfWork.Repository<User>()
+          .GetByIdAsync(dto.EmployeeId);
+
+        if (user == null || !await _userManager.IsInRoleAsync(user, "Employee"))
+            return Result<bool>.Failure("Invalid employee.");
+
+        await _unitOfWork.SaveChangesAsync(); 
+
+        var invitation = new ProjectInvitation
+        {
+            ProjectId = projectId,
+            EmployeeId = dto.EmployeeId,
+            SentByManagerId = managerId,
+            Type = dto.Type,
+            Status = InvitationStatus.Pending,
+            SentAt = DateTime.UtcNow
+        };
+        await _unitOfWork.Repository<ProjectInvitation>().AddAsync(invitation);
+
+        var notification = new Notification
+        {
+            UserId = dto.EmployeeId,
+            Title = $"Invitation to join: {project.Name}",
+            Message = $"Project Description: {project.Description ?? "No description provided."} \n Please respond to this invitation.",
+            Type = NotificationType.Invitation
+        };
+        await _unitOfWork.Repository<Notification>().AddAsync(notification);
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return Result<bool>.Success(true, "Invitation sent successfully.");
     }
 
 }
