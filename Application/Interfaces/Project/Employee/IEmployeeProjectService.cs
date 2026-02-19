@@ -8,6 +8,8 @@ namespace Graduation_Project.Application.Services.Project.Employee
     {
         Task<Result<bool>> RespondToInvitationAsync(string invitationId, RespondInvitationDto dto, string employeeId);
         Task<Result<List<ProjectInvitationResponseDto>>> GetMyInvitationsAsync(string employeeId);
+        Task<Result<List<EmployeeProjectResponseDto>>> GetMyProjectsAsync(string employeeId);
+        Task<Result<EmployeeProjectDetailsDto>> GetProjectDetailsAsync(string projectId, string employeeId);
     }
 
 }
