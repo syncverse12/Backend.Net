@@ -22,7 +22,7 @@ namespace Graduation_Project.Application.Services
 
         public async Task<Result<List<TeamMemberResponseDto>>> GetProjectTeamMembersAsync(string projectId,string managerId)
         {
-            var project = await _unitOfWork.Repository<Project>()
+            var project = await _unitOfWork.Repository<Domain.Entities.Project>()
                 .GetByIdAsync(projectId);
 
             if (project == null)
@@ -54,7 +54,7 @@ namespace Graduation_Project.Application.Services
             InviteTeamMemberDto dto,
             string managerId)
         {
-            var project = await _unitOfWork.Repository<Project>()
+            var project = await _unitOfWork.Repository<Domain.Entities.Project>()
                 .GetByIdAsync(dto.ProjectId);
 
             if (project == null)

@@ -1,4 +1,4 @@
-﻿using Graduation_Project.Application.DTOs.Project;
+﻿using Graduation_Project.Application.DTOs.Project.Manager;
 using Graduation_Project.Application.Interfaces;
 using Graduation_Project.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;

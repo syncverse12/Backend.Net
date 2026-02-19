@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace Graduation_Project.API.Controllers
+namespace Graduation_Project.API.Controllers.Tasks.Employee
 {
     [Authorize]
     [ApiController]

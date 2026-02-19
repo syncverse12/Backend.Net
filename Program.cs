@@ -13,6 +13,7 @@ using Graduation_Project.Application.Interfaces.Tasks.Comments;
 using Graduation_Project.Application.Interfaces.Tasks.TimeTracking;
 using Graduation_Project.Application.Services;
 using Graduation_Project.Application.Services.Notifications;
+using Graduation_Project.Application.Services.Project.Employee;
 using Graduation_Project.Application.Services.Task.Manager;
 using Graduation_Project.Application.Services.Tasks.Comments;
 using Graduation_Project.Application.Services.Tasks.TimeTracking;
@@ -83,6 +84,7 @@ builder.Services.AddScoped<IMilestoneService, MilestoneService>();
 builder.Services.AddScoped<ITaskCommentService, TaskCommentService>();
 builder.Services.AddScoped<ITimeLogService, TimeLogService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IEmployeeProjectService, EmployeeProjectService>();
 
 
 builder.Services.AddScoped<IAuthorizationHandler, ManagerAuthorizationHandler>();

@@ -7,6 +7,8 @@ namespace Graduation_Project.Domain.Entities
     {
         public string UserId { get; set; } = null!;
         public User User { get; set; } = null!;
+        public string? TriggeredByUserId { get; set; }
+        public User? TriggeredByUser { get; set; }
 
         public NotificationType Type { get; set; }
         

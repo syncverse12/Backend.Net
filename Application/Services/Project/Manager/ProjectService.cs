@@ -7,6 +7,7 @@ using Graduation_Project.Domain.Entities;
 using Graduation_Project.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Graduation_Project.Application.DTOs.Project.Manager;
 
 public class ProjectService : IProjectService
 {
@@ -212,13 +213,18 @@ public class ProjectService : IProjectService
             SentAt = DateTime.UtcNow
         };
         await _unitOfWork.Repository<ProjectInvitation>().AddAsync(invitation);
+        await _unitOfWork.SaveChangesAsync();
 
         var notification = new Notification
         {
             UserId = dto.EmployeeId,
+            TriggeredByUserId = managerId,
             Title = $"Invitation to join: {project.Name}",
             Message = $"Project Description: {project.Description ?? "No description provided."} \n Please respond to this invitation.",
-            Type = NotificationType.Invitation
+            Type = NotificationType.Invitation,
+            RelatedEntityId = invitation.Id,
+            ActionUrl = $"/employee/invitations/{invitation.Id}",
+            IsRead = false
         };
         await _unitOfWork.Repository<Notification>().AddAsync(notification);
 

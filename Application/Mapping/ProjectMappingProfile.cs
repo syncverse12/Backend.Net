@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Graduation_Project.Application.DTOs.Project;
+using Graduation_Project.Application.DTOs.Project.Manager;
 using Graduation_Project.Domain.Entities;
 
 public class ProjectMappingProfile : Profile
