@@ -7,15 +7,12 @@ namespace Graduation_Project.API.Hubs
     [Authorize]
     public class NotificationHub : Hub
     {
-        private static readonly Dictionary<string, string> _userConnections = new();
-
         public override async Task OnConnectedAsync()
         {
             var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            
+
             if (!string.IsNullOrEmpty(userId))
             {
-                _userConnections[userId] = Context.ConnectionId;
                 await Groups.AddToGroupAsync(Context.ConnectionId, userId);
             }
 
@@ -25,20 +22,13 @@ namespace Graduation_Project.API.Hubs
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            
+
             if (!string.IsNullOrEmpty(userId))
             {
-                _userConnections.Remove(userId);
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, userId);
             }
 
             await base.OnDisconnectedAsync(exception);
-        }
-
-        public static string? GetConnectionId(string userId)
-        {
-            _userConnections.TryGetValue(userId, out var connectionId);
-            return connectionId;
         }
 
         public async Task SendNotificationToUser(string userId, object notification)

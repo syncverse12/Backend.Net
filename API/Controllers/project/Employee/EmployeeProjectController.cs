@@ -19,7 +19,7 @@
             _employeeProjectService = EmployeeProjectService;
         }
 
-        // 📌 1️⃣ Get My Projects
+        // Get My Projects
         [HttpGet("projects")]
         public async Task<IActionResult> GetMyProjects()
         {
@@ -28,7 +28,7 @@
             return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
 
-        // 📌 2️⃣ Get Project Details with Milestones
+        // Get Project Details with Milestones
         [HttpGet("projects/{projectId}")]
         public async Task<IActionResult> GetProjectDetails(string projectId)
         {
@@ -37,7 +37,7 @@
             return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
 
-        // 📌 3️⃣ Get My Invitations
+        // Get My Invitations
         [HttpGet("invitations")]
         public async Task<IActionResult> GetMyInvitations()
         {
@@ -46,7 +46,7 @@
             return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
 
-        // 📌 4️⃣ Respond to Invitation
+        // Respond to Invitation
         [HttpPost("invitations/{invitationId}/respond")]
         public async Task<IActionResult> Respond(
             string invitationId,

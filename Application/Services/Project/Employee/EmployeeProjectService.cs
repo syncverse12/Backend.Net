@@ -1,8 +1,11 @@
 ﻿using Graduation_Project.Application.Common.Results;
+using Graduation_Project.Application.DTOs.Milestones;
+using Graduation_Project.Application.DTOs.Notifications;
 using Graduation_Project.Application.DTOs.Project;
 using Graduation_Project.Application.DTOs.Project.Employee;
-using Graduation_Project.Application.DTOs.Milestones;
+using Graduation_Project.Application.Interfaces.Notifications;
 using Graduation_Project.Application.Interfaces.Persistence;
+using Graduation_Project.Application.Services.Notifications;
 using Graduation_Project.Domain.Entities;
 using Graduation_Project.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -12,10 +15,12 @@ namespace Graduation_Project.Application.Services.Project.Employee
     public class EmployeeProjectService : IEmployeeProjectService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly INotificationService _notificationService;
 
-        public EmployeeProjectService(IUnitOfWork unitOfWork)
+        public EmployeeProjectService(IUnitOfWork unitOfWork, INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
+            _notificationService = notificationService;
         }
         public async Task<Result<List<ProjectInvitationResponseDto>>> GetMyInvitationsAsync(string employeeId)
         {
@@ -42,28 +47,13 @@ namespace Graduation_Project.Application.Services.Project.Employee
             return Result<List<ProjectInvitationResponseDto>>.Success(dtos);
         }
 
-        public async Task<Result<bool>> RespondToInvitationAsync(
-            string invitationId,
-            RespondInvitationDto dto,
-            string employeeId)
+        public async Task<Result<bool>> RespondToInvitationAsync(string invitationId, RespondInvitationDto dto, string employeeId)
         {
-            var invitation = await _unitOfWork.Repository<ProjectInvitation>()
-                .GetByIdAsync(invitationId);
+            var invitation = await _unitOfWork.Repository<ProjectInvitation>().GetByIdAsync(invitationId);
 
-            if (invitation == null)
-                return Result<bool>.Failure("Invitation not found.");
-
-            if (invitation.EmployeeId != employeeId)
-                return Result<bool>.Failure("Unauthorized.");
-
-            if (invitation.Status != InvitationStatus.Pending)
-                return Result<bool>.Failure("Invitation already processed.");
-
-            if (invitation.Type == InvitationType.Mandatory &&
-                dto.Status == InvitationStatus.Rejected)
-            {
-                return Result<bool>.Failure("This invitation is mandatory.");
-            }
+            if (invitation == null) return Result<bool>.Failure("Invitation not found.");
+            if (invitation.EmployeeId != employeeId) return Result<bool>.Failure("Unauthorized.");
+            if (invitation.Status != InvitationStatus.Pending) return Result<bool>.Failure("Invitation already processed.");
 
             invitation.Status = dto.Status;
 
@@ -80,27 +70,28 @@ namespace Graduation_Project.Application.Services.Project.Employee
                     UserId = employeeId,
                     JoinedAt = DateTime.UtcNow
                 };
-
                 await _unitOfWork.Repository<ProjectMember>().AddAsync(member);
             }
 
-            var notification = new Notification
+            var saveResult = await _unitOfWork.SaveChangesAsync();
+
+            if (saveResult <= 0)
+                return Result<bool>.Failure("Failed to save your response.");
+
+            await _notificationService.CreateNotificationAsync(new CreateNotificationDto
             {
                 UserId = invitation.SentByManagerId,
                 TriggeredByUserId = employeeId,
+                Type = NotificationType.System,
                 Title = "Invitation Response",
                 Message = dto.Status == InvitationStatus.Accepted
                     ? "Employee accepted the invitation."
                     : $"Employee rejected the invitation. Reason: {dto.RejectionReason}",
-                Type = NotificationType.System,
                 RelatedEntityId = invitation.Id,
                 ActionUrl = $"/manager/projects/{invitation.ProjectId}/members"
-            };
+            });
 
-            await _unitOfWork.Repository<Notification>().AddAsync(notification);
-            await _unitOfWork.SaveChangesAsync();
-
-            return Result<bool>.Success(true, "Response recorded.");
+            return Result<bool>.Success(true, "Response recorded successfully.");
         }
 
         public async Task<Result<List<EmployeeProjectResponseDto>>> GetMyProjectsAsync(string employeeId)
