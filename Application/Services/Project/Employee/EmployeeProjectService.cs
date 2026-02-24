@@ -5,7 +5,6 @@ using Graduation_Project.Application.DTOs.Project;
 using Graduation_Project.Application.DTOs.Project.Employee;
 using Graduation_Project.Application.Interfaces.Notifications;
 using Graduation_Project.Application.Interfaces.Persistence;
-using Graduation_Project.Application.Services.Notifications;
 using Graduation_Project.Domain.Entities;
 using Graduation_Project.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -53,30 +52,29 @@ namespace Graduation_Project.Application.Services.Project.Employee
 
             if (invitation == null) return Result<bool>.Failure("Invitation not found.");
             if (invitation.EmployeeId != employeeId) return Result<bool>.Failure("Unauthorized.");
-            if (invitation.Status != InvitationStatus.Pending) return Result<bool>.Failure("Invitation already processed.");
+            if (invitation.Status != InvitationStatus.Pending) return Result<bool>.Failure("Already processed.");
 
             invitation.Status = dto.Status;
 
-            if (dto.Status == InvitationStatus.Rejected)
-            {
-                invitation.RejectionReason = dto.RejectionReason;
-            }
-
             if (dto.Status == InvitationStatus.Accepted)
             {
-                var member = new ProjectMember
+                var exists = await _unitOfWork.Repository<ProjectMember>().Query()
+                    .AnyAsync(m => m.ProjectId == invitation.ProjectId && m.UserId == employeeId);
+
+                if (!exists)
                 {
-                    ProjectId = invitation.ProjectId,
-                    UserId = employeeId,
-                    JoinedAt = DateTime.UtcNow
-                };
-                await _unitOfWork.Repository<ProjectMember>().AddAsync(member);
+                    var member = new ProjectMember
+                    {
+                        ProjectId = invitation.ProjectId,
+                        UserId = employeeId,
+                        Role = invitation.Role, 
+                        JoinedAt = DateTime.UtcNow
+                    };
+                    await _unitOfWork.Repository<ProjectMember>().AddAsync(member);
+                }
             }
 
-            var saveResult = await _unitOfWork.SaveChangesAsync();
-
-            if (saveResult <= 0)
-                return Result<bool>.Failure("Failed to save your response.");
+            await _unitOfWork.SaveChangesAsync();
 
             await _notificationService.CreateNotificationAsync(new CreateNotificationDto
             {
@@ -86,12 +84,11 @@ namespace Graduation_Project.Application.Services.Project.Employee
                 Title = "Invitation Response",
                 Message = dto.Status == InvitationStatus.Accepted
                     ? "Employee accepted the invitation."
-                    : $"Employee rejected the invitation. Reason: {dto.RejectionReason}",
-                RelatedEntityId = invitation.Id,
-                ActionUrl = $"/manager/projects/{invitation.ProjectId}/members"
+                    : "Employee rejected the invitation.",
+                RelatedEntityId = invitation.Id
             });
 
-            return Result<bool>.Success(true, "Response recorded successfully.");
+            return Result<bool>.Success(true, "Response recorded.");
         }
 
         public async Task<Result<List<EmployeeProjectResponseDto>>> GetMyProjectsAsync(string employeeId)

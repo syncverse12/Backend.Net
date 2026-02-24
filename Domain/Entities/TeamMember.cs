@@ -10,8 +10,7 @@ namespace Graduation_Project.Domain.Entities
 
         public string UserId { get; set; } = null!;
         public User User { get; set; } = null!;
-
-        public TeamRole Role { get; set; } 
+        public ProjectRole Role { get; set; }
 
         public bool IsActive { get; set; } = false; 
     }

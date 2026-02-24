@@ -26,50 +26,73 @@ public class ProjectService : IProjectService
         _notificationService = notificationService;
     }
 
-    public async Task<Result<ProjectResponseDto>> CreateAsync(
-    CreateProjectDto dto,
-    string managerId)
+    public async Task<Result<ProjectResponseDto>> CreateAsync(CreateProjectDto dto, string currentUserId)
     {
         if (dto.EndDate < dto.StartDate)
-            return Result<ProjectResponseDto>.Failure("Invalid project timeline");
+            return Result<ProjectResponseDto>.Failure("End date cannot be earlier than start date.");
 
-        var workspace = await _unitOfWork.Repository<Workspace>()
-            .GetByIdAsync(dto.WorkspaceId);
+        var workspace = await _unitOfWork.Repository<Workspace>().GetByIdAsync(dto.WorkspaceId);
+        if (workspace == null)
+            return Result<ProjectResponseDto>.Failure("Workspace not found.");
 
-        if (workspace == null || workspace.CreatedByUserId != managerId)
-            return Result<ProjectResponseDto>.Failure("Workspace not found or unauthorized");
+        var isWorkspaceOwner = workspace.CreatedByUserId == currentUserId;
+
+        var user = await _userManager.FindByIdAsync(currentUserId);
+
+        if(user == null)
+            return Result<ProjectResponseDto>.Failure("User not found.");
+
+        var isManagerRole = await _userManager.IsInRoleAsync(user, "ProjectManager");
+
+        if (!isWorkspaceOwner && !isManagerRole)
+        {
+            return Result<ProjectResponseDto>.Failure("Unauthorized: Only Workspace Owners or Project Managers can create projects.");
+        }
 
         var project = _mapper.Map<Project>(dto);
-        project.CreatedByUserId = managerId;
+        project.CreatedByUserId = currentUserId;
+        project.CreatedAt = DateTime.UtcNow;
 
         await _unitOfWork.Repository<Project>().AddAsync(project);
+
+        var adminMember = new ProjectMember
+        {
+            ProjectId = project.Id,
+            UserId = currentUserId,
+            Role = ProjectRole.ProjectManager,
+            JoinedAt = DateTime.UtcNow
+        };
+
+        await _unitOfWork.Repository<ProjectMember>().AddAsync(adminMember);
         await _unitOfWork.SaveChangesAsync();
 
         return Result<ProjectResponseDto>.Success(
             _mapper.Map<ProjectResponseDto>(project),
-            "Project created successfully");
+            "Project created successfully.");
     }
 
 
-    public async Task<Result<ProjectResponseDto>> UpdateAsync(
-    string projectId,
-    UpdateProjectDto dto,
-    string managerId)
+    public async Task<Result<ProjectResponseDto>> UpdateAsync(string projectId, UpdateProjectDto dto, string currentUserId)
     {
         if (dto.EndDate < dto.StartDate)
             return Result<ProjectResponseDto>.Failure("Invalid project timeline");
 
         var project = await _unitOfWork.Repository<Project>()
             .Query()
-            .IgnoreQueryFilters()
             .Include(p => p.Workspace)
-            .FirstOrDefaultAsync(p => p.Id == projectId);
+            .FirstOrDefaultAsync(p => p.Id == projectId && !p.IsDeleted);
 
-        if (project == null || project.IsDeleted)
-            return Result<ProjectResponseDto>.Failure("Project not found");
+        if (project?.Workspace == null)
+            return Result<ProjectResponseDto>.Failure("Project workspace data is missing.");
 
-        if (project.Workspace.CreatedByUserId != managerId)
-            return Result<ProjectResponseDto>.Failure("Unauthorized");
+        var isAuthorized = project.Workspace!.CreatedByUserId == currentUserId ||
+                           await _unitOfWork.Repository<ProjectMember>().Query()
+                               .AnyAsync(m => m.ProjectId == projectId &&
+                                              m.UserId == currentUserId &&
+                                              m.Role == ProjectRole.ProjectManager);
+
+        if (!isAuthorized)
+            return Result<ProjectResponseDto>.Failure("Unauthorized: Only Workspace Owner or Project Manager can update project details.");
 
         _mapper.Map(dto, project);
 
@@ -81,28 +104,28 @@ public class ProjectService : IProjectService
             "Project updated successfully");
     }
 
-    public async Task<Result<ProjectResponseDto>> GetByIdAsync(
-    string projectId,
-    string managerId)
+    public async Task<Result<ProjectResponseDto>> GetByIdAsync(string projectId, string currentUserId)
     {
         var project = await _unitOfWork.Repository<Project>()
             .Query()
             .Include(p => p.Workspace)
-            .FirstOrDefaultAsync(p => p.Id == projectId);
+            .FirstOrDefaultAsync(p => p.Id == projectId && !p.IsDeleted);
 
         if (project == null)
             return Result<ProjectResponseDto>.Failure("Project not found");
 
-        if (project.Workspace.CreatedByUserId != managerId)
-            return Result<ProjectResponseDto>.Failure("Unauthorized");
+        var isAuthorized = project.Workspace?.CreatedByUserId == currentUserId ||
+                           await _unitOfWork.Repository<ProjectMember>().Query()
+                               .AnyAsync(m => m.ProjectId == projectId && m.UserId == currentUserId);
+
+        if (!isAuthorized)
+            return Result<ProjectResponseDto>.Failure("Unauthorized: You don't have permission to view this project.");
 
         return Result<ProjectResponseDto>.Success(
             _mapper.Map<ProjectResponseDto>(project));
     }
 
-    public async Task<Result<List<ProjectResponseDto>>> GetByWorkspaceAsync(
-    string workspaceId,
-    string managerId)
+    public async Task<Result<List<ProjectResponseDto>>> GetByWorkspaceForManagerAsync(string workspaceId,string managerId)
     {
         var workspace = await _unitOfWork.Repository<Workspace>()
             .GetByIdAsync(workspaceId);
@@ -118,19 +141,25 @@ public class ProjectService : IProjectService
         return Result<List<ProjectResponseDto>>.Success(
             _mapper.Map<List<ProjectResponseDto>>(projects));
     }
-    public async Task<Result<bool>> DeleteProjectAsync(string projectId, string managerId)
+
+    public async Task<Result<bool>> DeleteProjectAsync(string projectId, string currentUserId)
     {
-        var project = await _unitOfWork.Repository<Project>()
+        var project = await _unitOfWork.Repository<Project>() 
             .Query()
-            .Include(p => p.Milestones) 
-            .Include(p => p.Taskitem)      
-            .FirstOrDefaultAsync(p => p.Id == projectId);
+            .Include(p => p.Workspace) 
+            .Include(p => p.Milestones)
+            .Include(p => p.Taskitem)
+            .FirstOrDefaultAsync(p => p.Id == projectId && !p.IsDeleted);
 
         if (project == null) return Result<bool>.Failure("Project not found");
-        if (project.CreatedByUserId != managerId) return Result<bool>.Failure("Unauthorized");
+
+        var isAuthorized = project.Workspace?.CreatedByUserId == currentUserId ||
+                           project.CreatedByUserId == currentUserId;
+
+        if (!isAuthorized)
+            return Result<bool>.Failure("Unauthorized: Only the Workspace Owner or the Project Creator can delete this project.");
 
         project.IsDeleted = true;
-
 
         foreach (var milestone in project.Milestones)
         {
@@ -145,22 +174,26 @@ public class ProjectService : IProjectService
         _unitOfWork.Repository<Project>().Update(project);
         await _unitOfWork.SaveChangesAsync();
 
-        return Result<bool>.Success(true, "Project and all its components deleted successfully");
+        return Result<bool>.Success(true, "Project, milestones, and tasks deleted successfully");
     }
 
-    public async Task<Result<bool>> RestoreProjectAsync(string projectId, string managerId)
+    public async Task<Result<bool>> RestoreProjectAsync(string projectId, string currentUserId)
     {
-        var project = await _unitOfWork.Repository<Project>()
+        var project = await _unitOfWork.Repository<Project>() 
             .Query()
-            .IgnoreQueryFilters()
-            .Include(p => p.Milestones) 
+            .IgnoreQueryFilters() 
+            .Include(p => p.Workspace) 
+            .Include(p => p.Milestones)
             .Include(p => p.Taskitem)
             .FirstOrDefaultAsync(p => p.Id == projectId);
 
         if (project == null)
             return Result<bool>.Failure("Project not found");
 
-        if (project.CreatedByUserId != managerId)
+        var isAuthorized = project.Workspace?.CreatedByUserId == currentUserId ||
+                           project.CreatedByUserId == currentUserId;
+
+        if (!isAuthorized)
             return Result<bool>.Failure("Unauthorized to restore this project");
 
         if (!project.IsDeleted)
@@ -174,16 +207,24 @@ public class ProjectService : IProjectService
         _unitOfWork.Repository<Project>().Update(project);
         await _unitOfWork.SaveChangesAsync();
 
-        return Result<bool>.Success(true, "Project restored successfully");
+        return Result<bool>.Success(true, "Project and its components restored successfully");
     }
 
     // --- INVITE EMPLOYEE LOGIC ---
-    public async Task<Result<bool>> InviteEmployeeAsync(string projectId, InviteEmployeeDto dto, string managerId)
+    public async Task<Result<bool>> InviteEmployeeAsync(string projectId, InviteEmployeeDto dto, string currentUserId)
     {
-        var project = await _unitOfWork.Repository<Project>().GetByIdAsync(projectId);
+        var project = await _unitOfWork.Repository<Project>().Query()
+            .Include(p => p.Workspace)
+            .FirstOrDefaultAsync(p => p.Id == projectId && !p.IsDeleted);
 
-        if (project == null || project.CreatedByUserId != managerId)
-            return Result<bool>.Failure("Project not found or unauthorized.");
+        if (project == null)
+            return Result<bool>.Failure("Project not found.");
+
+        var isAuthorized = project.Workspace?.CreatedByUserId == currentUserId ||
+                           project.CreatedByUserId == currentUserId;
+
+        if (!isAuthorized)
+            return Result<bool>.Failure("Unauthorized: Only the Workspace Owner or Project Creator can invite employees.");
 
         var isMember = await _unitOfWork.Repository<ProjectMember>().Query()
             .AnyAsync(m => m.ProjectId == projectId && m.UserId == dto.EmployeeId);
@@ -199,17 +240,16 @@ public class ProjectService : IProjectService
         if (hasPendingInv)
             return Result<bool>.Failure("An invitation is already pending for this user.");
 
-        var user = await _unitOfWork.Repository<User>().GetByIdAsync(dto.EmployeeId);
-
-        if (user == null || !await _userManager.IsInRoleAsync(user, "Employee"))
-            return Result<bool>.Failure("Invalid employee.");
+        var user = await _userManager.FindByIdAsync(dto.EmployeeId);
+        if (user == null) return Result<bool>.Failure("Employee not found.");
 
         var invitation = new ProjectInvitation
         {
             ProjectId = projectId,
             EmployeeId = dto.EmployeeId,
-            SentByManagerId = managerId,
+            SentByManagerId = currentUserId,
             Type = dto.Type,
+            Role = dto.Role,
             Status = InvitationStatus.Pending,
             SentAt = DateTime.UtcNow
         };
@@ -220,10 +260,10 @@ public class ProjectService : IProjectService
         await _notificationService.CreateNotificationAsync(new CreateNotificationDto
         {
             UserId = dto.EmployeeId,
-            TriggeredByUserId = managerId, 
+            TriggeredByUserId = currentUserId,
             Type = NotificationType.Invitation,
             Title = $"Invitation to join: {project.Name}",
-            Message = $"You have been invited to join the project: {project.Name}. Please respond to the invitation.",
+            Message = $"You have been invited to join as {dto.Role} in project: {project.Name}.",
             RelatedEntityId = invitation.Id,
             ActionUrl = $"/employee/invitations/{invitation.Id}"
         });

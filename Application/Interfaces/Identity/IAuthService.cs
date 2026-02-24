@@ -1,7 +1,7 @@
 ﻿using Graduation_Project.Application.Common.Results;
 using Graduation_Project.Application.DTOs.Auth;
 
-namespace Graduation_Project.Application.Interfaces.Task.Manager
+namespace Graduation_Project.Application.Interfaces.Identity
 {
     public interface IAuthService
     {

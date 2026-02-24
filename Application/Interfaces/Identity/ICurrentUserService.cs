@@ -1,4 +1,4 @@
-﻿namespace Graduation_Project.Application.Interfaces.Task.Manager
+﻿namespace Graduation_Project.Application.Interfaces.Identity
 {
     public interface ICurrentUserService
     {

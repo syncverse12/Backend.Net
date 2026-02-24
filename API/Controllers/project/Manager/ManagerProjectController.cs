@@ -44,10 +44,10 @@ public class ProjectsController : ControllerBase
 
     [HttpGet("workspace/{workspaceId}")]
     [Authorize(Policy = "ManagerOnly")]
-    public async Task<IActionResult> GetByWorkspace(string workspaceId)
+    public async Task<IActionResult> GetByWorkspaceForManager(string workspaceId)
     {
         var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var result = await _projectService.GetByWorkspaceAsync(workspaceId, managerId);
+        var result = await _projectService.GetByWorkspaceForManagerAsync(workspaceId, managerId);
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
 

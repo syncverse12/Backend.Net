@@ -1,14 +1,16 @@
 ﻿using AutoMapper;
-using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.Interfaces.Persistence;
 using Graduation_Project.Application.Common.Models;
-using Microsoft.EntityFrameworkCore;
-using Graduation_Project.Application.DTOs.Tasks.Manager;
-using Graduation_Project.Application.Interfaces.Task.Manager;
-using System.Threading.Tasks;
-using Graduation_Project.Application.Interfaces.Tasks.Employee;
+using Graduation_Project.Application.Common.Results;
+using Graduation_Project.Application.DTOs.Notifications;
 using Graduation_Project.Application.DTOs.Tasks.Employee;
+using Graduation_Project.Application.DTOs.Tasks.Manager;
+using Graduation_Project.Application.Interfaces.Identity;
 using Graduation_Project.Application.Interfaces.Notifications;
+using Graduation_Project.Application.Interfaces.Persistence;
+using Graduation_Project.Application.Interfaces.Tasks.Employee;
+using Graduation_Project.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace Graduation_Project.Application.Services.Task.Employee
 {
@@ -138,16 +140,15 @@ namespace Graduation_Project.Application.Services.Task.Employee
             var employeeId = string.IsNullOrEmpty(userId) ? _currentUser.UserId : userId;
 
             var task = await _unitOfWork.Repository<TaskItem>()
-                .GetByIdAsync(taskId);
+                .Query()
+                .Include(t => t.Project)
+                .FirstOrDefaultAsync(t => t.Id == taskId);
 
-            if (task == null)
-                return Result<bool>.Failure("Task not found");
+            if (task == null) return Result<bool>.Failure("Task not found");
+            if (task.AssignedToUserId != employeeId) return Result<bool>.Failure("Unauthorized");
 
-            if (task.AssignedToUserId != employeeId)
-                return Result<bool>.Failure("Unauthorized");
-
-            if (task.Status != TaskStatus.InProgress)
-                return Result<bool>.Failure("Task must be in progress");
+            if (task.Status == TaskStatus.Submitted)
+                return Result<bool>.Failure("Task is already submitted.");
 
             task.Status = TaskStatus.Submitted;
             task.SubmissionLink = submitDto.SubmissionLink;
@@ -157,11 +158,21 @@ namespace Graduation_Project.Application.Services.Task.Employee
             _unitOfWork.Repository<TaskItem>().Update(task);
             await _unitOfWork.SaveChangesAsync();
 
-            // Send notification
-            await _notificationService.NotifyTaskSubmittedAsync(taskId, employeeId);
+            if (task.Project != null)
+            {
+                await _notificationService.CreateNotificationAsync(new CreateNotificationDto
+                {
+                    UserId = task.Project.CreatedByUserId,
+                    TriggeredByUserId = employeeId,
+                    Title = "Task Submitted",
+                    Message = $"The task '{task.Title}' has been submitted for review.",
+                    Type = NotificationType.System,
+                    RelatedEntityId = task.Id
+                });
+            }
 
             return Result<bool>.Success(true, "Task submitted for review");
         }
-    }
 
+    }
 }

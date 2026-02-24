@@ -21,10 +21,16 @@ namespace Graduation_Project.Application.Services.Task.Manager
 
         public async Task<Result<CategoryResponseDto>> CreateAsync(CreateCategoryDto dto, string userId)
         {
+            var nameExists = await _unitOfWork.Repository<Category>().Query()
+        .AnyAsync(c => c.Name.ToLower() == dto.Name.ToLower() && !c.IsDeleted);
+
+            if (nameExists)
+                return Result<CategoryResponseDto>.Failure("This category type already exists in the system.");
+
             var category = new Category
             {
                 Name = dto.Name,
-                UserId = userId
+                UserId = userId 
             };
 
             await _unitOfWork.Repository<Category>().AddAsync(category);
@@ -32,7 +38,7 @@ namespace Graduation_Project.Application.Services.Task.Manager
 
             return Result<CategoryResponseDto>.Success(
                 _mapper.Map<CategoryResponseDto>(category),
-                "Category created"
+                "Category created successfully"
             );
         }
 
@@ -40,7 +46,8 @@ namespace Graduation_Project.Application.Services.Task.Manager
         {
             var categories = await _unitOfWork.Repository<Category>()
                 .Query()
-                .Where(c => c.UserId == userId && !c.IsDeleted)
+                .Where(c => !c.IsDeleted)
+                .OrderBy(c => c.Name)
                 .ToListAsync();
 
             return Result<List<CategoryResponseDto>>.Success(
