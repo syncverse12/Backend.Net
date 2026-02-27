@@ -500,7 +500,12 @@ namespace Graduation_Project.Application.Services.Task.Manager
                 .Include(t => t.AssignedToUser)
                 .Where(t => t.ProjectId != null && managerProjectIds.Contains(t.ProjectId!));
 
-            var tasks = await tasksQuery.ToListAsync();
+            var tasks = await _unitOfWork.Repository<TaskItem>()
+                .Query()
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.Category) 
+                .Where(t => t.ProjectId != null && managerProjectIds.Contains(t.ProjectId!))
+                .ToListAsync();
 
             var statusStats = new TaskStatusStatsDto
             {
@@ -532,7 +537,12 @@ namespace Graduation_Project.Application.Services.Task.Manager
             return Result<ManagerTaskDashboardDto>.Success(new ManagerTaskDashboardDto
             {
                 StatusStats = statusStats,
-                TasksPerEmployee = tasksPerEmployee
+                TasksPerEmployee = tasksPerEmployee,
+                TasksPerCategory = tasks
+                    .Where(t => t.Category != null)
+                    .GroupBy(t => t.Category!.Name)
+                    .Select(g => new CategoryTaskStatsDto { CategoryName = g.Key, TasksCount = g.Count() })
+                    .ToList()
             });
         }
 
@@ -556,7 +566,7 @@ namespace Graduation_Project.Application.Services.Task.Manager
                 .Include(t => t.Milestone)
                 .Include(t => t.AssignedToUser)
                 .Include(t => t.Category)
-                .Where(t => authorizedProjectIds.Contains(t.ProjectId))
+                .Where(t => t.ProjectId != null && authorizedProjectIds.Contains(t.ProjectId!))
                 .AsQueryable();
 
 
@@ -603,6 +613,7 @@ namespace Graduation_Project.Application.Services.Task.Manager
 
             var tasks = await _unitOfWork.Repository<TaskItem>()
                 .Query()
+                .Include(t => t.Category)
                 .Where(t => t.ProjectId == projectId && !t.IsDeleted)
                 .ToListAsync();
 
@@ -614,8 +625,15 @@ namespace Graduation_Project.Application.Services.Task.Manager
                 OverdueTasks = tasks.Count(t =>
                     t.DueDate.HasValue &&
                     t.DueDate.Value < DateTime.UtcNow &&
-                    t.Status != TaskStatus.Completed)
+                    t.Status != TaskStatus.Completed),
+
+                CategoryStats = tasks
+                    .Where(t => t.Category != null)
+                    .GroupBy(t => t.Category!.Name)
+                    .Select(g => new CategoryTaskStatsDto { CategoryName = g.Key, TasksCount = g.Count() })
+                    .ToList()
             };
+
 
             return Result<TaskDashboardDto>.Success(dashboard);
         }

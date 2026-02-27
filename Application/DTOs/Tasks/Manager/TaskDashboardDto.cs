@@ -1,4 +1,6 @@
-﻿namespace Graduation_Project.Application.DTOs.Tasks
+﻿using Graduation_Project.Application.DTOs.Tasks.Manager;
+
+namespace Graduation_Project.Application.DTOs.Tasks
 {
     public class TaskDashboardDto
     {
@@ -6,5 +8,6 @@
         public int CompletedTasks { get; set; }
         public int InProgressTasks { get; set; }
         public int OverdueTasks { get; set; }
+        public List<CategoryTaskStatsDto> CategoryStats { get; set; } = new();
     }
 }
