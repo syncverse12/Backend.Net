@@ -11,5 +11,6 @@ namespace Graduation_Project.Application.Interfaces.Tasks.TimeTracking
         Task<Result<List<TimeLogResponseDto>>> GetTaskTimeLogsAsync(string taskId, string userId);
         Task<Result<List<TimeLogResponseDto>>> GetMyTimeLogsAsync(string userId, DateTime? fromDate, DateTime? toDate);
         Task<Result<int>> GetTotalTimeSpentAsync(string taskId, string userId);
+        Task<Result<TaskTimeStatsDto>> GetActiveWorkingTimeAsync(string taskId, string userId);
     }
 }

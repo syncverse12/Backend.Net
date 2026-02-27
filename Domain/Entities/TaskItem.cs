@@ -35,6 +35,9 @@ public class TaskItem : BaseEntity
     public string? SubmissionNotes { get; set; }
     public DateTime? SubmittedAt { get; set; }
 
+    public DateTime? TaskStartedAt { get; set; }
+    public DateTime? TaskCompletedAt { get; set; }
+
     public string? ProjectId { get; set; }
     public Project? Project { get; set; }
 

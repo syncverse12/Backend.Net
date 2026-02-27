@@ -251,5 +251,53 @@ namespace Graduation_Project.Application.Services.Tasks.TimeTracking
 
             return Result<int>.Success(totalMinutes);
         }
+
+        public async Task<Result<TaskTimeStatsDto>> GetActiveWorkingTimeAsync(string taskId, string userId)
+        {
+            var task = await _unitOfWork.Repository<TaskItem>()
+                .Query()
+                .FirstOrDefaultAsync(t => t.Id == taskId && !t.IsDeleted);
+
+            if (task == null)
+                return Result<TaskTimeStatsDto>.Failure("Task not found");
+
+            if (task.AssignedToUserId != userId && task.CreatedByUserId != userId)
+                return Result<TaskTimeStatsDto>.Failure("You don't have access to view time stats for this task");
+
+            var timeLogs = await _unitOfWork.Repository<TimeLog>()
+                .Query()
+                .Where(t => t.TaskId == taskId && !t.IsDeleted && t.EndTime != null)
+                .ToListAsync();
+
+            var activeWorkingTimeMinutes = timeLogs.Sum(t => t.DurationInMinutes);
+            var activeHours = activeWorkingTimeMinutes / 60;
+            var activeMinutes = activeWorkingTimeMinutes % 60;
+
+            int? totalDurationMinutes = null;
+            string? totalDurationFormatted = null;
+
+            if (task.TaskStartedAt.HasValue && task.TaskCompletedAt.HasValue)
+            {
+                totalDurationMinutes = (int)(task.TaskCompletedAt.Value - task.TaskStartedAt.Value).TotalMinutes;
+                var totalHours = totalDurationMinutes.Value / 60;
+                var totalMinutes = totalDurationMinutes.Value % 60;
+                totalDurationFormatted = $"{totalHours}h {totalMinutes}m";
+            }
+
+            var stats = new TaskTimeStatsDto
+            {
+                TaskId = task.Id,
+                TaskTitle = task.Title,
+                ActiveWorkingTimeMinutes = activeWorkingTimeMinutes,
+                ActiveWorkingTimeFormatted = $"{activeHours}h {activeMinutes}m",
+                TotalDurationMinutes = totalDurationMinutes,
+                TotalDurationFormatted = totalDurationFormatted,
+                TaskStartedAt = task.TaskStartedAt,
+                TaskCompletedAt = task.TaskCompletedAt,
+                SessionsCount = timeLogs.Count
+            };
+
+            return Result<TaskTimeStatsDto>.Success(stats);
+        }
     }
 }

@@ -8,6 +8,7 @@ using Graduation_Project.Application.Interfaces.Identity;
 using Graduation_Project.Application.Interfaces.Notifications;
 using Graduation_Project.Application.Interfaces.Persistence;
 using Graduation_Project.Application.Interfaces.Tasks.Employee;
+using Graduation_Project.Domain.Entities;
 using Graduation_Project.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
@@ -128,11 +129,33 @@ namespace Graduation_Project.Application.Services.Task.Employee
                 return Result<bool>.Failure("Task cannot be started");
 
             task.Status = TaskStatus.InProgress;
+            task.TaskStartedAt = DateTime.UtcNow;
+
+            var activeTimer = await _unitOfWork.Repository<TimeLog>()
+                .Query()
+                .FirstOrDefaultAsync(t => t.TaskId == taskId && 
+                                         t.UserId == employeeId && 
+                                         t.EndTime == null && 
+                                         !t.IsDeleted);
+
+            if (activeTimer == null)
+            {
+                var timeLog = new TimeLog
+                {
+                    TaskId = taskId,
+                    UserId = employeeId,
+                    StartTime = DateTime.UtcNow,
+                    IsManual = false,
+                    Notes = "Auto-started with task"
+                };
+
+                await _unitOfWork.Repository<TimeLog>().AddAsync(timeLog);
+            }
 
             _unitOfWork.Repository<TaskItem>().Update(task);
             await _unitOfWork.SaveChangesAsync();
 
-            return Result<bool>.Success(true, "Task started");
+            return Result<bool>.Success(true, "Task started and timer activated");
         }
 
         public async Task<Result<bool>> SubmitTaskAsync(string taskId, string userId, SubmitTaskDto submitDto)
@@ -154,6 +177,25 @@ namespace Graduation_Project.Application.Services.Task.Employee
             task.SubmissionLink = submitDto.SubmissionLink;
             task.SubmissionNotes = submitDto.SubmissionNotes;
             task.SubmittedAt = DateTime.UtcNow;
+            task.TaskCompletedAt = DateTime.UtcNow;
+
+            var activeTimer = await _unitOfWork.Repository<TimeLog>()
+                .Query()
+                .FirstOrDefaultAsync(t => t.TaskId == taskId && 
+                                         t.UserId == employeeId && 
+                                         t.EndTime == null && 
+                                         !t.IsDeleted);
+
+            if (activeTimer != null)
+            {
+                activeTimer.EndTime = DateTime.UtcNow;
+                activeTimer.DurationInMinutes = (int)(activeTimer.EndTime.Value - activeTimer.StartTime).TotalMinutes;
+                activeTimer.Notes = string.IsNullOrEmpty(activeTimer.Notes) 
+                    ? "Auto-stopped with task submission" 
+                    : activeTimer.Notes + " (Auto-stopped)";
+
+                _unitOfWork.Repository<TimeLog>().Update(activeTimer);
+            }
 
             _unitOfWork.Repository<TaskItem>().Update(task);
             await _unitOfWork.SaveChangesAsync();

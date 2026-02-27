@@ -50,6 +50,14 @@ namespace Graduation_Project.API.Controllers
             return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
 
+        [HttpGet("active-time")]
+        public async Task<IActionResult> GetActiveWorkingTime(string taskId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var result = await _timeLogService.GetActiveWorkingTimeAsync(taskId, userId);
+            return result.IsSuccess ? Ok(result) : BadRequest(result);
+        }
+
         [HttpGet("total")]
         public async Task<IActionResult> GetTotalTimeSpent(string taskId)
         {
