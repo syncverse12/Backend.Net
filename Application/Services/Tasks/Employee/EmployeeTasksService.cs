@@ -22,10 +22,7 @@ namespace Graduation_Project.Application.Services.Task.Employee
         private readonly IMapper _mapper;
         private readonly INotificationService _notificationService;
 
-        public EmployeeTaskService(
-            IUnitOfWork unitOfWork,
-            ICurrentUserService currentUser,
-            IMapper mapper,
+        public EmployeeTaskService(IUnitOfWork unitOfWork,ICurrentUserService currentUser,IMapper mapper,
             INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
@@ -112,50 +109,44 @@ namespace Graduation_Project.Application.Services.Task.Employee
             return Result<EmployeeTaskDetailsDto>.Success(details);
         }
 
-        public async Task<Result<bool>> StartTaskAsync(string taskId, string userId)
+        public async Task<Result<bool>> StartTaskAsync(string taskId, string currentUserId)
         {
-            var employeeId = string.IsNullOrEmpty(userId) ? _currentUser.UserId : userId;
-
             var task = await _unitOfWork.Repository<TaskItem>()
-                .GetByIdAsync(taskId);
+                .Query()
+                .FirstOrDefaultAsync(t => t.Id == taskId);
 
             if (task == null)
-                return Result<bool>.Failure("Task not found");
+                return Result<bool>.Failure("Task not found.");
 
-            if (task.AssignedToUserId != employeeId)
-                return Result<bool>.Failure("Unauthorized");
+            if (task.IsDeleted)
+                return Result<bool>.Failure("Cannot start a deleted task.");
+
+            if (task.AssignedToUserId != currentUserId)
+                return Result<bool>.Failure("Unauthorized: You can only start tasks assigned to you.");
 
             if (task.Status != TaskStatus.Pending && task.Status != TaskStatus.Rejected)
-                return Result<bool>.Failure("Task cannot be started from its current status.");
+                return Result<bool>.Failure("Task cannot be started in its current state.");
+
+            var hasUnresolvedDependencies = await _unitOfWork.Repository<TaskDependency>()
+                .Query()
+                .Include(d => d.DependsOnTask)
+                .AnyAsync(d =>
+                    d.TaskId == taskId &&
+                    d.DependsOnTask.Status != TaskStatus.Completed);
+
+            if (hasUnresolvedDependencies)
+                return Result<bool>.Failure("This task cannot be started. Some prerequisite tasks are not completed yet.");
 
             task.Status = TaskStatus.InProgress;
-            task.TaskStartedAt = DateTime.UtcNow;
-
-            var activeTimer = await _unitOfWork.Repository<TimeLog>()
-                .Query()
-                .FirstOrDefaultAsync(t => t.TaskId == taskId && 
-                                         t.UserId == employeeId && 
-                                         t.EndTime == null && 
-                                         !t.IsDeleted);
-
-            if (activeTimer == null)
+            if (task.TaskStartedAt == null)
             {
-                var timeLog = new TimeLog
-                {
-                    TaskId = taskId,
-                    UserId = employeeId,
-                    StartTime = DateTime.UtcNow,
-                    IsManual = false,
-                    Notes = "Auto-started with task"
-                };
-
-                await _unitOfWork.Repository<TimeLog>().AddAsync(timeLog);
+                task.TaskStartedAt = DateTime.UtcNow;
             }
 
             _unitOfWork.Repository<TaskItem>().Update(task);
             await _unitOfWork.SaveChangesAsync();
 
-            return Result<bool>.Success(true, "Task started and timer activated");
+            return Result<bool>.Success(true, "Task started successfully.");
         }
 
         public async Task<Result<bool>> SubmitTaskAsync(string taskId, string userId, SubmitTaskDto submitDto)
