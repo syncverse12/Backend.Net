@@ -242,6 +242,9 @@ namespace Graduation_Project.Application.Services.Task.Manager
                 task.TaskCompletedAt = DateTime.UtcNow; 
             }
 
+            var oldAssignedUserId = task.AssignedToUserId;
+            var isReassignment = oldAssignedUserId != dto.AssignedToUserId;
+
             task.Title = dto.Title;
             task.Description = dto.Description;
             task.Priority = dto.Priority;
@@ -254,17 +257,48 @@ namespace Graduation_Project.Application.Services.Task.Manager
 
             await _unitOfWork.SaveChangesAsync();
 
-            if (!string.IsNullOrEmpty(task.AssignedToUserId))
+            if (isReassignment)
             {
-                await _notificationService.CreateNotificationAsync(new CreateNotificationDto
+                if (!string.IsNullOrEmpty(oldAssignedUserId))
                 {
-                    UserId = task.AssignedToUserId,
-                    TriggeredByUserId = currentUserId,
-                    Title = "Task Updated",
-                    Message = $"Details for task '{task.Title}' have been updated by the manager.",
-                    Type = NotificationType.System,
-                    RelatedEntityId = task.Id
-                });
+                    await _notificationService.CreateNotificationAsync(new CreateNotificationDto
+                    {
+                        UserId = oldAssignedUserId,
+                        TriggeredByUserId = currentUserId,
+                        Title = "Task Unassigned",
+                        Message = $"You have been unassigned from task: {task.Title}",
+                        Type = NotificationType.System,
+                        RelatedEntityId = task.Id
+                    });
+                }
+
+                if (!string.IsNullOrEmpty(dto.AssignedToUserId))
+                {
+                    await _notificationService.CreateNotificationAsync(new CreateNotificationDto
+                    {
+                        UserId = dto.AssignedToUserId,
+                        TriggeredByUserId = currentUserId,
+                        Title = "New Task Assigned",
+                        Message = $"You have been assigned a new task: {task.Title}",
+                        Type = NotificationType.TaskAssigned,
+                        RelatedEntityId = task.Id
+                    });
+                }
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(task.AssignedToUserId))
+                {
+                    await _notificationService.CreateNotificationAsync(new CreateNotificationDto
+                    {
+                        UserId = task.AssignedToUserId,
+                        TriggeredByUserId = currentUserId,
+                        Title = "Task Updated",
+                        Message = $"Details for task '{task.Title}' have been updated by the manager.",
+                        Type = NotificationType.System,
+                        RelatedEntityId = task.Id
+                    });
+                }
             }
 
             var updatedTask = await _unitOfWork.Repository<TaskItem>()
