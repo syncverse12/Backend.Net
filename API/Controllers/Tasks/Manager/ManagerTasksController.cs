@@ -1,4 +1,5 @@
-﻿using Graduation_Project.Application.DTOs.Tasks;
+﻿using Graduation_Project.Application.DTOs.Project.Manager;
+using Graduation_Project.Application.DTOs.Tasks;
 using Graduation_Project.Application.DTOs.Tasks.Manager;
 using Graduation_Project.Application.Interfaces.Task.Manager;
 using Graduation_Project.Domain.Entities;
@@ -123,5 +124,4 @@ public class TasksController : ControllerBase
         var result = await _taskService.GetDashboardAsync(projectId, managerId);
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
-
 }

@@ -57,6 +57,16 @@ namespace Graduation_Project.Application.Services.Task.Manager
                 return Result<TaskResponseDto>.Failure($"Task Due Date must be between {milestone.StartDate:yyyy-MM-dd} and {milestone.EndDate:yyyy-MM-dd}");
             }
 
+            if (!string.IsNullOrEmpty(dto.AssignedToUserId))
+            {
+                var isMember = await _unitOfWork.Repository<ProjectMember>().Query()
+                    .AnyAsync(m => m.ProjectId == dto.ProjectId
+                                && m.UserId == dto.AssignedToUserId);
+
+                if (!isMember)
+                    return Result<TaskResponseDto>.Failure("Assigned user is not a member of this project.");
+            }
+
             var task = new TaskItem
             {
                 Title = dto.Title,
@@ -92,7 +102,7 @@ namespace Graduation_Project.Application.Services.Task.Manager
                 });
             }
 
-            return Result<TaskResponseDto>.Success(_mapper.Map<TaskResponseDto>(task), "Task Created Successfully");
+            return Result<TaskResponseDto>.Success(_mapper.Map<TaskResponseDto>(taskWithCategory), "Task Created Successfully");
         }
 
 
@@ -170,12 +180,27 @@ namespace Graduation_Project.Application.Services.Task.Manager
             if (task == null)
                 return Result<TaskResponseDto>.Failure("Task not found");
 
-            var projectMember = await _unitOfWork.Repository<ProjectMember>().Query()
+            if (task.Status == TaskStatus.Completed)
+                return Result<TaskResponseDto>.Failure("Cannot reassign or modify a completed task.");
+
+            if (task.IsDeleted)
+                return Result<TaskResponseDto>.Failure("Cannot modify or assign a deleted task.");
+
+            var projectMember = await _unitOfWork.Repository<ProjectMember>().Query()   
                 .FirstOrDefaultAsync(m => m.ProjectId == task.ProjectId && m.UserId == currentUserId);
 
             if (projectMember == null || (projectMember.Role != ProjectRole.ProjectManager && projectMember.Role != ProjectRole.TeamLeader))
             {
                 return Result<TaskResponseDto>.Failure("Unauthorized: Only PMs or Team Leaders can modify tasks.");
+            }
+
+            if (!string.IsNullOrEmpty(dto.AssignedToUserId))
+            {
+                var isMember = await _unitOfWork.Repository<ProjectMember>().Query()
+                    .AnyAsync(m => m.ProjectId == task.ProjectId && m.UserId == dto.AssignedToUserId);
+
+                if (!isMember)
+                    return Result<TaskResponseDto>.Failure("Assigned user is not a member of this project.");
             }
 
             if (task.Status == TaskStatus.Submitted)
@@ -198,6 +223,23 @@ namespace Graduation_Project.Application.Services.Task.Manager
 
                 if (!categoryExists)
                     return Result<TaskResponseDto>.Failure("The selected Category is invalid.");
+            }
+
+            if (!IsValidStatusTransition(task.Status, dto.Status))
+            {
+                return Result<TaskResponseDto>.Failure(
+                    $"Invalid status transition from '{task.Status}' to '{dto.Status}'. " +
+                    "Please follow the correct workflow: Pending → InProgress → Submitted → Completed/Rejected");
+            }
+
+            if (task.Status != TaskStatus.InProgress && dto.Status == TaskStatus.InProgress)
+            {
+                task.TaskStartedAt = DateTime.UtcNow; 
+            }
+
+            if (task.Status != TaskStatus.Completed && dto.Status == TaskStatus.Completed)
+            {
+                task.TaskCompletedAt = DateTime.UtcNow; 
             }
 
             task.Title = dto.Title;
@@ -354,11 +396,9 @@ namespace Graduation_Project.Application.Services.Task.Manager
             if (exists)
                 return Result<bool>.Failure("Dependency already exists.");
 
-            var circular = await _unitOfWork.Repository<TaskDependency>().Query()
-                .AnyAsync(d => d.TaskId == dto.DependsOnTaskId && d.DependsOnTaskId == dto.TaskId);
-
-            if (circular)
-                return Result<bool>.Failure("Circular dependency detected! Task B already depends on Task A.");
+            var hasCircular = await HasCircularDependencyAsync(dto.TaskId, dto.DependsOnTaskId);
+            if (hasCircular)
+                return Result<bool>.Failure("Circular dependency detected! This would create a dependency loop.");
 
             var dependency = new TaskDependency
             {
@@ -404,6 +444,8 @@ namespace Graduation_Project.Application.Services.Task.Manager
                 .Where(d => d.DependsOnTaskId == taskId)
                 .ToListAsync();
 
+            await _unitOfWork.SaveChangesAsync();
+
             foreach (var dep in dependentTasks)
             {
                 if (dep.Task != null && !string.IsNullOrEmpty(dep.Task.AssignedToUserId))
@@ -418,8 +460,6 @@ namespace Graduation_Project.Application.Services.Task.Manager
                     });
                 }
             }
-
-            await _unitOfWork.SaveChangesAsync();
 
             if (!string.IsNullOrEmpty(task.AssignedToUserId))
             {
@@ -449,20 +489,21 @@ namespace Graduation_Project.Application.Services.Task.Manager
 
             if (projectMember == null || projectMember.Role == ProjectRole.TeamMember)
             {
-                return Result<bool>.Failure("Unauthorized: Only Project Managers or Team Leaders can reject tasks.");
+                return Result<bool>.Failure("Unauthorized: Only PMs or Team Leaders can reject tasks.");
             }
 
             if (task.Status != TaskStatus.Submitted)
             {
-                return Result<bool>.Failure("Task cannot be rejected because it's not in 'Submitted' status.");
+                return Result<bool>.Failure("Only submitted tasks can be rejected.");
             }
 
-            task.Status = TaskStatus.InProgress;
+            task.Status = TaskStatus.Rejected;
             task.ReviewComment = comment;
             task.ReviewedAt = DateTime.UtcNow;
             task.ReviewedByUserId = currentUserId;
 
             _unitOfWork.Repository<TaskItem>().Update(task);
+            
             await _unitOfWork.SaveChangesAsync();
 
             if (!string.IsNullOrEmpty(task.AssignedToUserId))
@@ -471,14 +512,14 @@ namespace Graduation_Project.Application.Services.Task.Manager
                 {
                     UserId = task.AssignedToUserId,
                     TriggeredByUserId = currentUserId,
-                    Title = "Task Needs Revision",
-                    Message = $"Your work on '{task.Title}' was rejected. Comment: {comment}. Task is back to InProgress.",
+                    Title = "Task Rejected",
+                    Message = $"Your work on '{task.Title}' was rejected. Reason: {comment}. Please revise and start again.",
                     Type = NotificationType.System,
                     RelatedEntityId = task.Id
                 });
             }
 
-            return Result<bool>.Success(true, "Task rejected and returned for revision.");
+            return Result<bool>.Success(true, "Task status set to Rejected.");
         }
 
         // ManagerDashboard
@@ -490,20 +531,16 @@ namespace Graduation_Project.Application.Services.Task.Manager
                 .Where(p => p.CreatedByUserId == managerId ||
                             p.Workspace!.CreatedByUserId == managerId ||
                             p.TeamMembers.Any(m => m.UserId == managerId &&
-                                             (m.Role == ProjectRole.ProjectManager || m.Role == ProjectRole.TeamLeader))) // 👈 حصرناها للقياديين فقط
+                                             (m.Role == ProjectRole.ProjectManager || m.Role == ProjectRole.TeamLeader)))
                 .Select(p => p.Id)
                 .ToListAsync();
 
-            var tasksQuery = _unitOfWork.Repository<TaskItem>()
-                .Query()
-                .IgnoreQueryFilters()
-                .Include(t => t.AssignedToUser)
-                .Where(t => t.ProjectId != null && managerProjectIds.Contains(t.ProjectId!));
 
             var tasks = await _unitOfWork.Repository<TaskItem>()
                 .Query()
+                .IgnoreQueryFilters() 
                 .Include(t => t.AssignedToUser)
-                .Include(t => t.Category) 
+                .Include(t => t.Category)
                 .Where(t => t.ProjectId != null && managerProjectIds.Contains(t.ProjectId!))
                 .ToListAsync();
 
@@ -539,7 +576,7 @@ namespace Graduation_Project.Application.Services.Task.Manager
                 StatusStats = statusStats,
                 TasksPerEmployee = tasksPerEmployee,
                 TasksPerCategory = tasks
-                    .Where(t => t.Category != null)
+                    .Where(t => t.Category != null && !t.IsDeleted) 
                     .GroupBy(t => t.Category!.Name)
                     .Select(g => new CategoryTaskStatsDto { CategoryName = g.Key, TasksCount = g.Count() })
                     .ToList()
@@ -636,6 +673,54 @@ namespace Graduation_Project.Application.Services.Task.Manager
 
 
             return Result<TaskDashboardDto>.Success(dashboard);
+        }
+
+        // STATUS TRANSITION VALIDATION
+        private bool IsValidStatusTransition(TaskStatus current, TaskStatus next)
+        {
+            if (current == next)
+                return true;
+
+            return current switch
+            {
+                TaskStatus.Pending => next == TaskStatus.InProgress,
+                TaskStatus.InProgress => next == TaskStatus.Submitted || next == TaskStatus.Pending,
+                TaskStatus.Submitted => next == TaskStatus.Completed || next == TaskStatus.Rejected,
+                TaskStatus.Rejected => next == TaskStatus.InProgress,
+                TaskStatus.Completed => false,
+                _ => false
+            };
+        }
+
+        // CIRCULAR DEPENDENCY DETECTION (DFS-based)
+        private async Task<bool> HasCircularDependencyAsync(string taskId, string dependsOnTaskId)
+        {
+            var visited = new HashSet<string>();
+            return await DfsCheckCircularAsync(dependsOnTaskId, taskId, visited);
+        }
+
+        private async Task<bool> DfsCheckCircularAsync(string currentTaskId, string targetTaskId, HashSet<string> visited)
+        {
+            if (currentTaskId == targetTaskId)
+                return true;
+
+            if (visited.Contains(currentTaskId))
+                return false;
+
+            visited.Add(currentTaskId);
+
+            var dependencies = await _unitOfWork.Repository<TaskDependency>().Query()
+                .Where(d => d.TaskId == currentTaskId)
+                .Select(d => d.DependsOnTaskId)
+                .ToListAsync();
+
+            foreach (var depTaskId in dependencies)
+            {
+                if (await DfsCheckCircularAsync(depTaskId, targetTaskId, visited))
+                    return true;
+            }
+
+            return false;
         }
 
     }

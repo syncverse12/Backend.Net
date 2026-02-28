@@ -125,8 +125,8 @@ namespace Graduation_Project.Application.Services.Task.Employee
             if (task.AssignedToUserId != employeeId)
                 return Result<bool>.Failure("Unauthorized");
 
-            if (task.Status != TaskStatus.Pending)
-                return Result<bool>.Failure("Task cannot be started");
+            if (task.Status != TaskStatus.Pending && task.Status != TaskStatus.Rejected)
+                return Result<bool>.Failure("Task cannot be started from its current status.");
 
             task.Status = TaskStatus.InProgress;
             task.TaskStartedAt = DateTime.UtcNow;
