@@ -1,4 +1,4 @@
-﻿namespace Graduation_Project.Application.Common.Pagination
+﻿namespace SyncVerse.Application.Common.Pagination
 {
     public class PagedResult<T>
     {

@@ -1,8 +1,8 @@
-﻿using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Project;
-using Graduation_Project.Application.DTOs.Project.Employee;
+﻿using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Project;
+using SyncVerse.Application.DTOs.Project.Employee;
 
-namespace Graduation_Project.Application.Services.Project.Employee
+namespace SyncVerse.Application.Services.Project.Employee
 {
     public interface IEmployeeProjectService
     {

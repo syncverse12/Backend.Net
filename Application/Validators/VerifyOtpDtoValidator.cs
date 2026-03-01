@@ -1,7 +1,7 @@
 using FluentValidation;
-using Graduation_Project.Application.DTOs.Auth;
+using SyncVerse.Application.DTOs.Auth;
 
-namespace Graduation_Project.Application.Validators
+namespace SyncVerse.Application.Validators
 {
     public class VerifyOtpValidator : AbstractValidator<VerifyOtpDto>
     {

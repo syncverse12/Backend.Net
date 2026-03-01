@@ -1,5 +1,5 @@
-﻿using Graduation_Project.Application.Interfaces.Persistence;
-using Graduation_Project.Domain.Entities;
+﻿using SyncVerse.Application.Interfaces.Persistence;
+using SyncVerse.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 

@@ -1,9 +1,9 @@
-using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Notifications;
-using Graduation_Project.Domain.Enums;
+using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Notifications;
+using SyncVerse.Domain.Enums;
 using System.Threading.Tasks;
 
-namespace Graduation_Project.Application.Interfaces.Notifications
+namespace SyncVerse.Application.Interfaces.Notifications
 {
     public interface INotificationService
     {

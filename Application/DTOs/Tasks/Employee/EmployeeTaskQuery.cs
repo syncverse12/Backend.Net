@@ -1,6 +1,6 @@
-﻿using Graduation_Project.Domain.Enums;
+﻿using SyncVerse.Domain.Enums;
 
-namespace Graduation_Project.Application.DTOs.Tasks.Employee
+namespace SyncVerse.Application.DTOs.Tasks.Employee
 {
     public class EmployeeTaskQuery
     {

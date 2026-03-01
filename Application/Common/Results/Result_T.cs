@@ -1,4 +1,4 @@
-﻿namespace Graduation_Project.Application.Common.Results
+﻿namespace SyncVerse.Application.Common.Results
 {
     public class Result<T> : Result
     {

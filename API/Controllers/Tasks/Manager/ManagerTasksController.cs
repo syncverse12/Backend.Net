@@ -1,8 +1,8 @@
-﻿using Graduation_Project.Application.DTOs.Project.Manager;
-using Graduation_Project.Application.DTOs.Tasks;
-using Graduation_Project.Application.DTOs.Tasks.Manager;
-using Graduation_Project.Application.Interfaces.Task.Manager;
-using Graduation_Project.Domain.Entities;
+﻿using SyncVerse.Application.DTOs.Project.Manager;
+using SyncVerse.Application.DTOs.Tasks;
+using SyncVerse.Application.DTOs.Tasks.Manager;
+using SyncVerse.Application.Interfaces.Task.Manager;
+using SyncVerse.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;

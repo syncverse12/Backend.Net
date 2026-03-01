@@ -1,5 +1,5 @@
-﻿using Graduation_Project.Domain.Common;
-using Graduation_Project.Domain.Entities;
+﻿using SyncVerse.Domain.Common;
+using SyncVerse.Domain.Entities;
 
 public class Category : BaseEntity
 {

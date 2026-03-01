@@ -1,11 +1,11 @@
-﻿using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.Interfaces;
-using Graduation_Project.Application.Interfaces.Persistence;
-using Graduation_Project.Domain.Entities;
+﻿using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.Interfaces;
+using SyncVerse.Application.Interfaces.Persistence;
+using SyncVerse.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 
-namespace Graduation_Project.Application.Services
+namespace SyncVerse.Application.Services
 {
     public class TeamService : ITeamService
     {

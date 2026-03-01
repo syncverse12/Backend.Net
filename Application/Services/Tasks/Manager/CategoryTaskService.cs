@@ -1,12 +1,12 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Category;
-using Graduation_Project.Application.Interfaces.Persistence;
-using Graduation_Project.Application.Interfaces.Task.Manager;
-using Graduation_Project.Domain.Entities;
+using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Category;
+using SyncVerse.Application.Interfaces.Persistence;
+using SyncVerse.Application.Interfaces.Task.Manager;
+using SyncVerse.Domain.Entities;
 
-namespace Graduation_Project.Application.Services.Task.Manager
+namespace SyncVerse.Application.Services.Task.Manager
 {
     public class CategoryTaskService : ICategoryTaskService
     {

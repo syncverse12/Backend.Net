@@ -1,7 +1,7 @@
-﻿using Graduation_Project.Domain.Common;
-using Graduation_Project.Domain.Entities;
+﻿using SyncVerse.Domain.Common;
+using SyncVerse.Domain.Entities;
 
-namespace Graduation_Project.Domain.Entities
+namespace SyncVerse.Domain.Entities
 {
     public class Workspace : BaseEntity
     {

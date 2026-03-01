@@ -1,6 +1,6 @@
-using Graduation_Project.Application.DTOs.Milestones;
+using SyncVerse.Application.DTOs.Milestones;
 
-namespace Graduation_Project.Application.DTOs.Project.Employee
+namespace SyncVerse.Application.DTOs.Project.Employee
 {
     public class EmployeeProjectDetailsDto
     {

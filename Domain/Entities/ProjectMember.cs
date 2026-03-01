@@ -1,5 +1,5 @@
-﻿using Graduation_Project.Domain.Common;
-using Graduation_Project.Domain.Enums;
+﻿using SyncVerse.Domain.Common;
+using SyncVerse.Domain.Enums;
 
 public class ProjectMember : BaseEntity
 {

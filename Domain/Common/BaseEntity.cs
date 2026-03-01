@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Graduation_Project.Domain.Common
+namespace SyncVerse.Domain.Common
 {
     public abstract class BaseEntity
     {

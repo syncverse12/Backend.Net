@@ -1,4 +1,4 @@
-﻿namespace Graduation_Project.Application.Common.Models
+﻿namespace SyncVerse.Application.Common.Models
 {
     public class QueryParams : PaginationParams
     {

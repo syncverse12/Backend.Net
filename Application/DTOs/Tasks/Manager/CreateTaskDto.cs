@@ -1,7 +1,7 @@
-﻿using Graduation_Project.Domain.Enums;
+﻿using SyncVerse.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 
-namespace Graduation_Project.Application.DTOs.Tasks.Manager
+namespace SyncVerse.Application.DTOs.Tasks.Manager
 {
     public class CreateTaskDto
     {

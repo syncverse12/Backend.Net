@@ -1,4 +1,4 @@
-﻿namespace Graduation_Project.Application.DTOs.Milestones
+﻿namespace SyncVerse.Application.DTOs.Milestones
 {
     public class UpdateMilestoneDto
     {

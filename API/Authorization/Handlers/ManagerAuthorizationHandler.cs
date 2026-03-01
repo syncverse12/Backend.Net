@@ -1,7 +1,7 @@
-﻿using Graduation_Project.API.Authorization.Requirements;
+﻿using SyncVerse.API.Authorization.Requirements;
 using Microsoft.AspNetCore.Authorization;
 
-namespace Graduation_Project.API.Authorization.Handlers
+namespace SyncVerse.API.Authorization.Handlers
 {
     public class ManagerAuthorizationHandler
       : AuthorizationHandler<ManagerRequirement>

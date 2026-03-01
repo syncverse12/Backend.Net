@@ -1,15 +1,15 @@
-using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Notifications;
-using Graduation_Project.Application.Interfaces.Notifications;
-using Graduation_Project.Application.Interfaces.Persistence;
-using Graduation_Project.Domain.Entities;
-using Graduation_Project.Domain.Enums;
+using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Notifications;
+using SyncVerse.Application.Interfaces.Notifications;
+using SyncVerse.Application.Interfaces.Persistence;
+using SyncVerse.Domain.Entities;
+using SyncVerse.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Graduation_Project.Application.Services.Notifications
+namespace SyncVerse.Application.Services.Notifications
 {
     public class NotificationService : INotificationService
     {

@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Text.Json;
 
-namespace Graduation_Project.API.Middleware
+namespace SyncVerse.API.Middleware
 {
     public class ExceptionMiddleware
     {

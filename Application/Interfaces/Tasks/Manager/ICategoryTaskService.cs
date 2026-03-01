@@ -1,7 +1,7 @@
-﻿using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Category;
+﻿using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Category;
 
-namespace Graduation_Project.Application.Interfaces.Task.Manager
+namespace SyncVerse.Application.Interfaces.Task.Manager
 {
     public interface ICategoryTaskService
     {

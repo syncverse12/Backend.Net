@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
 
-namespace Graduation_Project.Migrations
+namespace SyncVerse.Migrations
 {
     /// <inheritdoc />
     public partial class Change : Migration

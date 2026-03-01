@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Graduation_Project.Application.Interfaces.Notifications
+namespace SyncVerse.Application.Interfaces.Notifications
 {
     public interface IRealtimeNotificationService
     {

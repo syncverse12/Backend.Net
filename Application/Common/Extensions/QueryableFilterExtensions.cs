@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace Graduation_Project.Application.Common.Extensions
+namespace SyncVerse.Application.Common.Extensions
 {
     public static class QueryableFilterExtensions
     {

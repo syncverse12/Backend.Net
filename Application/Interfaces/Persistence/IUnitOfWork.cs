@@ -1,6 +1,6 @@
-﻿using Graduation_Project.Domain.Common;
+﻿using SyncVerse.Domain.Common;
 
-namespace Graduation_Project.Application.Interfaces.Persistence
+namespace SyncVerse.Application.Interfaces.Persistence
 {
     public interface IUnitOfWork : IDisposable
     {

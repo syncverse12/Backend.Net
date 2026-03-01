@@ -1,4 +1,4 @@
-﻿using Graduation_Project.Domain.Enums;
+﻿using SyncVerse.Domain.Enums;
 
 public class InviteTeamMemberDto
 {

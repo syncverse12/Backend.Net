@@ -1,10 +1,10 @@
-using Graduation_Project.Application.DTOs.Tasks.Comments;
-using Graduation_Project.Application.Interfaces.Tasks.Comments;
+using SyncVerse.Application.DTOs.Tasks.Comments;
+using SyncVerse.Application.Interfaces.Tasks.Comments;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace Graduation_Project.API.Controllers.Tasks.Employee
+namespace SyncVerse.API.Controllers.Tasks.Employee
 {
     [Authorize]
     [ApiController]

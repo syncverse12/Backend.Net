@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 
-namespace Graduation_Project.API.Hubs
+namespace SyncVerse.API.Hubs
 {
     [Authorize]
     public class NotificationHub : Hub

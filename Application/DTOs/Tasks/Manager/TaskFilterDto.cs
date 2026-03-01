@@ -1,6 +1,6 @@
-﻿using Graduation_Project.Domain.Enums;
+﻿using SyncVerse.Domain.Enums;
 
-namespace Graduation_Project.Application.DTOs.Tasks
+namespace SyncVerse.Application.DTOs.Tasks
 {
     public class TaskFilterDto
     {

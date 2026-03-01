@@ -1,4 +1,4 @@
-namespace Graduation_Project.Application.DTOs.Tasks.Comments
+namespace SyncVerse.Application.DTOs.Tasks.Comments
 {
     public class UpdateCommentDto
     {

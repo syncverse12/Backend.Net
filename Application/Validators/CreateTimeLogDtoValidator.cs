@@ -1,7 +1,7 @@
 using FluentValidation;
-using Graduation_Project.Application.DTOs.Tasks.Employee;
+using SyncVerse.Application.DTOs.Tasks.Employee;
 
-namespace Graduation_Project.Application.Validators
+namespace SyncVerse.Application.Validators
 {
     public class CreateTimeLogDtoValidator : AbstractValidator<CreateTimeLogDto>
     {

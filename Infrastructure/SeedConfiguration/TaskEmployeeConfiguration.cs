@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Synverse.Domain.Entities;
 
-namespace Graduation_Project.Infrastructure.SeedConfiguration
+namespace SyncVerse.Infrastructure.SeedConfiguration
 {
     public class TaskEmployeeConfiguration : IEntityTypeConfiguration<TaskEmployee>
     {

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 
-namespace Graduation_Project.API.Authorization.Requirements
+namespace SyncVerse.API.Authorization.Requirements
 {
     public class ReviewTaskRequirement : IAuthorizationRequirement
     {

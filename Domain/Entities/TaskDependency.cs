@@ -1,6 +1,6 @@
-﻿using Graduation_Project.Domain.Common;
+﻿using SyncVerse.Domain.Common;
 
-namespace Graduation_Project.Domain.Entities
+namespace SyncVerse.Domain.Entities
 {
     public class TaskDependency : BaseEntity
     {

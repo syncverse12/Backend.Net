@@ -1,6 +1,6 @@
-﻿using Graduation_Project.Domain.Common;
-using Graduation_Project.Domain.Entities;
-using Graduation_Project.Domain.Enums;
+﻿using SyncVerse.Domain.Common;
+using SyncVerse.Domain.Entities;
+using SyncVerse.Domain.Enums;
 
 
 public class TaskItem : BaseEntity

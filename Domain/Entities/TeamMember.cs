@@ -1,7 +1,7 @@
-﻿using Graduation_Project.Domain.Common;
-using Graduation_Project.Domain.Enums;
+﻿using SyncVerse.Domain.Common;
+using SyncVerse.Domain.Enums;
 
-namespace Graduation_Project.Domain.Entities
+namespace SyncVerse.Domain.Entities
 {
     public class TeamMember : BaseEntity
     {

@@ -1,6 +1,6 @@
-﻿using Graduation_Project.Application.Common.Results;
+﻿using SyncVerse.Application.Common.Results;
 
-namespace Graduation_Project.Application.Interfaces
+namespace SyncVerse.Application.Interfaces
 {
     public interface ITeamService
     {

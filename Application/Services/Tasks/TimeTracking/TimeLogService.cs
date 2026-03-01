@@ -1,11 +1,11 @@
-using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Tasks.Employee;
-using Graduation_Project.Application.Interfaces.Persistence;
-using Graduation_Project.Application.Interfaces.Tasks.TimeTracking;
-using Graduation_Project.Domain.Entities;
+using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Tasks.Employee;
+using SyncVerse.Application.Interfaces.Persistence;
+using SyncVerse.Application.Interfaces.Tasks.TimeTracking;
+using SyncVerse.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace Graduation_Project.Application.Services.Tasks.TimeTracking
+namespace SyncVerse.Application.Services.Tasks.TimeTracking
 {
     public class TimeLogService : ITimeLogService
     {

@@ -1,4 +1,4 @@
-﻿namespace Graduation_Project.Infrastructure.Email
+﻿namespace SyncVerse.Infrastructure.Email
 {
     public class EmailService
     {

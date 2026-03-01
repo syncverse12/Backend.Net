@@ -1,8 +1,8 @@
-﻿using Graduation_Project.Domain.Entities;
+﻿using SyncVerse.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Graduation_Project.Infrastructure.Persistence.Configurations
+namespace SyncVerse.Infrastructure.Persistence.Configurations
 {
     public class ProjectConfiguration : IEntityTypeConfiguration<Project>
     {

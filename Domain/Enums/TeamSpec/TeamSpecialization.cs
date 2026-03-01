@@ -1,4 +1,4 @@
-﻿namespace Graduation_Project.Domain.Enums.TeamSpec
+﻿namespace SyncVerse.Domain.Enums.TeamSpec
 {
     public enum TeamSpecialization
     {

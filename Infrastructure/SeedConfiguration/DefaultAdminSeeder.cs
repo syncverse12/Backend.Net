@@ -1,15 +1,13 @@
-﻿using Graduation_Project.Domain.Entities;
+﻿using SyncVerse.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using System.Threading.Tasks;
 
-namespace Graduation_Project.Infrastructure.SeedConfiguration
+namespace SyncVerse.Infrastructure.SeedConfiguration
 {
     public static class DefaultAdminSeeder
     {
         public static async Task SeedAsync(UserManager<User> userManager, RoleManager<Role> roleManager)
         {
-            // 1️⃣ إنشاء الأدوار (Roles) اللي الـ Policies بتعتمد عليها
-            // "Admin" للتحكم الكامل، "Manager" لـ ManagerOnly، "Employee" لـ EmployeeOnly
             string[] roleNames = { "Admin", "Manager", "Employee" };
 
             foreach (var roleName in roleNames)
@@ -20,19 +18,15 @@ namespace Graduation_Project.Infrastructure.SeedConfiguration
                     {
                         Name = roleName,
                         NormalizedName = roleName.ToUpper(),
-                        Description = $"{roleName} role for Synverse system"
+                        Description = $"{roleName} role for SyncVerse system"  
                     });
                 }
             }
 
-            // 2️⃣ إنشاء مستخدم Default Admin
             await CreateUserAsync(userManager, "admin@domain.com", "Admin", "Admin123!");
 
-            // 3️⃣ إنشاء مستخدم Default Manager (عشان يحل مشكلة الـ 403 في الـ Workspaces)
-            // ده اللي الـ ManagerAuthorizationHandler هيوافق عليه
             await CreateUserAsync(userManager, "manager@domain.com", "Manager", "Manager123!");
 
-            // 4️⃣ إنشاء مستخدم Default Employee (عشان الـ EmployeeOnly والـ TaskOwner)
             await CreateUserAsync(userManager, "employee@domain.com", "Employee", "Employee123!");
         }
 
@@ -44,7 +38,7 @@ namespace Graduation_Project.Infrastructure.SeedConfiguration
                 var newUser = new User
                 {
                     FirstName = "Default",
-                    LastName = role, // بنسميه بإسم الدور عشان نميزه في الـ Swagger
+                    LastName = role, 
                     Email = email,
                     UserName = email,
                     EmailConfirmed = true

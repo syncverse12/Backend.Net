@@ -1,4 +1,4 @@
-﻿namespace Graduation_Project.API.Authorization.Policies
+﻿namespace SyncVerse.API.Authorization.Policies
 {
     public static class Policies
     {

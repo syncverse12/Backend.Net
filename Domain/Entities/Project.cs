@@ -1,7 +1,6 @@
-﻿using Graduation_Project.Domain.Common;
-using Synverse.Domain.Entities;
+﻿using SyncVerse.Domain.Common;
 
-namespace Graduation_Project.Domain.Entities
+namespace SyncVerse.Domain.Entities
 {
     public class Project : BaseEntity
     {
@@ -26,5 +25,3 @@ namespace Graduation_Project.Domain.Entities
 
     }
 }
-
-   

@@ -1,20 +1,20 @@
 ﻿using AutoMapper;
-using Graduation_Project.Application.Common.Pagination;
-using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Notifications;
-using Graduation_Project.Application.DTOs.Tasks;
-using Graduation_Project.Application.DTOs.Tasks.Manager;
-using Graduation_Project.Application.Interfaces.Notifications;
-using Graduation_Project.Application.Interfaces.Persistence;
-using Graduation_Project.Application.Interfaces.Task.Manager;
-using Graduation_Project.Domain.Entities;
-using Graduation_Project.Domain.Enums;
+using SyncVerse.Application.Common.Pagination;
+using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Notifications;
+using SyncVerse.Application.DTOs.Tasks;
+using SyncVerse.Application.DTOs.Tasks.Manager;
+using SyncVerse.Application.Interfaces.Notifications;
+using SyncVerse.Application.Interfaces.Persistence;
+using SyncVerse.Application.Interfaces.Task.Manager;
+using SyncVerse.Domain.Entities;
+using SyncVerse.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 
-using ProjectEntity = Graduation_Project.Domain.Entities.Project;
+using ProjectEntity = SyncVerse.Domain.Entities.Project;
 
-namespace Graduation_Project.Application.Services.Task.Manager
+namespace SyncVerse.Application.Services.Task.Manager
 {
     public class TaskService : ITaskService
     {
@@ -679,7 +679,7 @@ namespace Graduation_Project.Application.Services.Task.Manager
         //FilterTasks
         public async Task<Result<List<TaskResponseDto>>> FilterTasksAsync(TaskFilterDto filter, string currentUserId)
         {
-            var authorizedProjectIds = await _unitOfWork.Repository<Graduation_Project.Domain.Entities.Project>()
+            var authorizedProjectIds = await _unitOfWork.Repository<SyncVerse.Domain.Entities.Project>()
                 .Query()
                 .Include(p => p.Workspace)
                 .Include(p => p.TeamMembers)
@@ -729,7 +729,7 @@ namespace Graduation_Project.Application.Services.Task.Manager
         //Dashboard
         public async Task<Result<TaskDashboardDto>> GetDashboardAsync(string projectId, string currentUserId)
         {
-            var isAuthorized = await _unitOfWork.Repository<Graduation_Project.Domain.Entities.Project>().Query()
+            var isAuthorized = await _unitOfWork.Repository<SyncVerse.Domain.Entities.Project>().Query()
                 .Include(p => p.Workspace)
                 .Include(p => p.TeamMembers)
                 .AnyAsync(p => p.Id == projectId &&

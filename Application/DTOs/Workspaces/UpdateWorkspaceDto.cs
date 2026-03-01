@@ -1,4 +1,4 @@
-﻿namespace Graduation_Project.Application.DTOs.Workspaces
+﻿namespace SyncVerse.Application.DTOs.Workspaces
 {
     public class UpdateWorkspaceDto
     {

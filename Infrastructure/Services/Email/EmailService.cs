@@ -1,10 +1,10 @@
-using Graduation_Project.Application.Interfaces.Identity;
+using SyncVerse.Application.Interfaces.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Net.Mail;
 
-namespace Graduation_Project.Infrastructure.Services.Email
+namespace SyncVerse.Infrastructure.Services.Email
 {
     public class EmailService : IEmailService
     {

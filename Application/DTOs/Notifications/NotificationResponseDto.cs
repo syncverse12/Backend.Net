@@ -1,6 +1,6 @@
-using Graduation_Project.Domain.Enums;
+using SyncVerse.Domain.Enums;
 
-namespace Graduation_Project.Application.DTOs.Notifications
+namespace SyncVerse.Application.DTOs.Notifications
 {
     public class NotificationResponseDto
     {

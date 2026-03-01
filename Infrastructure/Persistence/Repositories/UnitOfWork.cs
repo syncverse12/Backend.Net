@@ -1,9 +1,9 @@
-﻿using Graduation_Project.Application.Interfaces.Persistence;
-using Graduation_Project.Domain.Common;
-using Graduation_Project.Infrastructure.Data;
-using Graduation_Project.Infrastructure.Persistence.Repositories;
+﻿using SyncVerse.Application.Interfaces.Persistence;
+using SyncVerse.Domain.Common;
+using SyncVerse.Infrastructure.Data;
+using SyncVerse.Infrastructure.Persistence.Repositories;
 
-namespace Graduation_Project.Infrastructure.Persistence
+namespace SyncVerse.Infrastructure.Persistence
 {
     public class UnitOfWork : IUnitOfWork
     {

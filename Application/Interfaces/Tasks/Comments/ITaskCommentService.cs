@@ -1,7 +1,7 @@
-using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Tasks.Comments;
+using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Tasks.Comments;
 
-namespace Graduation_Project.Application.Interfaces.Tasks.Comments
+namespace SyncVerse.Application.Interfaces.Tasks.Comments
 {
     public interface ITaskCommentService
     {

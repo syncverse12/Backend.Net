@@ -1,9 +1,9 @@
-﻿using Graduation_Project.API.Hubs;
-using Graduation_Project.Application.Interfaces.Notifications;
+﻿using SyncVerse.API.Hubs;
+using SyncVerse.Application.Interfaces.Notifications;
 using Microsoft.AspNetCore.SignalR;
 
 
-namespace Graduation_Project.Infrastructure.Realtime
+namespace SyncVerse.Infrastructure.Realtime
 {
     public class SignalRNotificationService : IRealtimeNotificationService
     {

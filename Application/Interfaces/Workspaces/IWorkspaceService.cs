@@ -1,7 +1,7 @@
-﻿using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Workspaces;
+﻿using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Workspaces;
 
-namespace Graduation_Project.Application.Interfaces
+namespace SyncVerse.Application.Interfaces
 {
     public interface IWorkspaceService
     {

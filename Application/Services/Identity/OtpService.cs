@@ -1,7 +1,7 @@
-﻿using Graduation_Project.Application.Interfaces.Identity;
+﻿using SyncVerse.Application.Interfaces.Identity;
 using System.Security.Cryptography;
 
-namespace Graduation_Project.Application.Services.Identity
+namespace SyncVerse.Application.Services.Identity
 {
     public class OtpService : IOtpService
     {

@@ -1,7 +1,7 @@
 using FluentValidation;
-using Graduation_Project.Application.DTOs.Tasks.Comments;
+using SyncVerse.Application.DTOs.Tasks.Comments;
 
-namespace Graduation_Project.Application.Validators
+namespace SyncVerse.Application.Validators
 {
     public class UpdateCommentDtoValidator : AbstractValidator<UpdateCommentDto>
     {

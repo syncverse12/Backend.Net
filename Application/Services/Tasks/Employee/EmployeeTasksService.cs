@@ -1,19 +1,19 @@
 ﻿using AutoMapper;
-using Graduation_Project.Application.Common.Models;
-using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Notifications;
-using Graduation_Project.Application.DTOs.Tasks.Employee;
-using Graduation_Project.Application.DTOs.Tasks.Manager;
-using Graduation_Project.Application.Interfaces.Identity;
-using Graduation_Project.Application.Interfaces.Notifications;
-using Graduation_Project.Application.Interfaces.Persistence;
-using Graduation_Project.Application.Interfaces.Tasks.Employee;
-using Graduation_Project.Domain.Entities;
-using Graduation_Project.Domain.Enums;
+using SyncVerse.Application.Common.Models;
+using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Notifications;
+using SyncVerse.Application.DTOs.Tasks.Employee;
+using SyncVerse.Application.DTOs.Tasks.Manager;
+using SyncVerse.Application.Interfaces.Identity;
+using SyncVerse.Application.Interfaces.Notifications;
+using SyncVerse.Application.Interfaces.Persistence;
+using SyncVerse.Application.Interfaces.Tasks.Employee;
+using SyncVerse.Domain.Entities;
+using SyncVerse.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 
-namespace Graduation_Project.Application.Services.Task.Employee
+namespace SyncVerse.Application.Services.Task.Employee
 {
     public class EmployeeTaskService : IEmployeeTaskService
     {

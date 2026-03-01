@@ -1,5 +1,5 @@
-﻿using Graduation_Project.Application.Common.Pagination;
-using Graduation_Project.Domain.Enums;
+﻿using SyncVerse.Application.Common.Pagination;
+using SyncVerse.Domain.Enums;
 
 public class TaskQuery : PaginationQuery
 {

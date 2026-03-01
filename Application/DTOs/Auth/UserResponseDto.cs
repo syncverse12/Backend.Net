@@ -1,4 +1,4 @@
-﻿namespace Graduation_Project.Application.DTOs.Auth
+﻿namespace SyncVerse.Application.DTOs.Auth
 {
     public class UserResponseDto
     {

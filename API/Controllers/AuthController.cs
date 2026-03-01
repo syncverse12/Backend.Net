@@ -1,9 +1,9 @@
-﻿using Graduation_Project.Application.DTOs.Auth;
-using Graduation_Project.Application.Interfaces.Identity;
+﻿using SyncVerse.Application.DTOs.Auth;
+using SyncVerse.Application.Interfaces.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 
-namespace Graduation_Project.API.Controllers
+namespace SyncVerse.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

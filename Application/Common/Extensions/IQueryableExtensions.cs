@@ -1,7 +1,7 @@
-﻿using Graduation_Project.Application.Common.Models;
+﻿using SyncVerse.Application.Common.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Graduation_Project.Application.Common.Extensions
+namespace SyncVerse.Application.Common.Extensions
 {
     public static class IQueryableExtensions
     {

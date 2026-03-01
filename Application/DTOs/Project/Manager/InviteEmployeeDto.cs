@@ -1,6 +1,6 @@
-﻿using Graduation_Project.Domain.Enums;
+﻿using SyncVerse.Domain.Enums;
 
-namespace Graduation_Project.Application.DTOs.Project.Manager
+namespace SyncVerse.Application.DTOs.Project.Manager
 {
     public class InviteEmployeeDto
     {

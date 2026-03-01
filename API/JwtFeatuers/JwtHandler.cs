@@ -1,12 +1,12 @@
-﻿using Graduation_Project.Application.DTOs.Auth;
-using Graduation_Project.Domain.Entities;
+﻿using SyncVerse.Application.DTOs.Auth;
+using SyncVerse.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Graduation_Project.API.JwtFeatuers
+namespace SyncVerse.API.JwtFeatuers
 {
     public class JwtHandler
     {

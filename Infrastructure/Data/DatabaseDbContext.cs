@@ -1,12 +1,11 @@
-﻿using Graduation_Project.Application.Interfaces.Identity;
-using Graduation_Project.Domain.Common;
-using Graduation_Project.Domain.Entities;
+﻿using SyncVerse.Application.Interfaces.Identity;
+using SyncVerse.Domain.Common;
+using SyncVerse.Domain.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Synverse.Domain.Entities;
 using System.Linq.Expressions;
 
-namespace Graduation_Project.Infrastructure.Data
+namespace SyncVerse.Infrastructure.Data
 {
     public class DatabaseDbContext : IdentityDbContext<User, Role, string>
     {

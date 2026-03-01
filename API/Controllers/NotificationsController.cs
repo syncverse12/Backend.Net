@@ -1,9 +1,9 @@
-using Graduation_Project.Application.Interfaces.Notifications;
+using SyncVerse.Application.Interfaces.Notifications;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace Graduation_Project.API.Controllers
+namespace SyncVerse.API.Controllers
 {
     [Authorize]
     [ApiController]

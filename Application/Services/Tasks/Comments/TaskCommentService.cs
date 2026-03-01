@@ -1,12 +1,12 @@
-using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Tasks.Comments;
-using Graduation_Project.Application.Interfaces.Notifications;
-using Graduation_Project.Application.Interfaces.Persistence;
-using Graduation_Project.Application.Interfaces.Tasks.Comments;
-using Graduation_Project.Domain.Entities;
+using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Tasks.Comments;
+using SyncVerse.Application.Interfaces.Notifications;
+using SyncVerse.Application.Interfaces.Persistence;
+using SyncVerse.Application.Interfaces.Tasks.Comments;
+using SyncVerse.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace Graduation_Project.Application.Services.Tasks.Comments
+namespace SyncVerse.Application.Services.Tasks.Comments
 {
     public class TaskCommentService : ITaskCommentService
     {

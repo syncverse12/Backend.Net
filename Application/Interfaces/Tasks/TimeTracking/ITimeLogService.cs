@@ -1,7 +1,7 @@
-using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Tasks.Employee;
+using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Tasks.Employee;
 
-namespace Graduation_Project.Application.Interfaces.Tasks.TimeTracking
+namespace SyncVerse.Application.Interfaces.Tasks.TimeTracking
 {
     public interface ITimeLogService
     {

@@ -1,6 +1,6 @@
-﻿using Graduation_Project.Application.DTOs.Tasks.Manager;
+﻿using SyncVerse.Application.DTOs.Tasks.Manager;
 
-namespace Graduation_Project.Application.DTOs.Tasks
+namespace SyncVerse.Application.DTOs.Tasks
 {
     public class TaskDashboardDto
     {

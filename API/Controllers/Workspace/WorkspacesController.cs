@@ -1,6 +1,6 @@
-﻿using Graduation_Project.Application.DTOs.Workspaces;
-using Graduation_Project.Application.Interfaces;
-using Graduation_Project.Domain.Entities;
+﻿using SyncVerse.Application.DTOs.Workspaces;
+using SyncVerse.Application.Interfaces;
+using SyncVerse.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;

@@ -1,10 +1,10 @@
-using Graduation_Project.Application.DTOs.Tasks.Employee;
-using Graduation_Project.Application.Interfaces.Tasks.TimeTracking;
+using SyncVerse.Application.DTOs.Tasks.Employee;
+using SyncVerse.Application.Interfaces.Tasks.TimeTracking;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace Graduation_Project.API.Controllers
+namespace SyncVerse.API.Controllers
 {
     [Authorize]
     [ApiController]

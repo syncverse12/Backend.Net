@@ -1,4 +1,4 @@
-﻿namespace Graduation_Project.Application.Interfaces.Identity
+﻿namespace SyncVerse.Application.Interfaces.Identity
 {
     public interface IOtpService
     {

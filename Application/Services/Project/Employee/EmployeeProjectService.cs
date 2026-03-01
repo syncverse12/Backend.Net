@@ -1,15 +1,15 @@
-﻿using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Milestones;
-using Graduation_Project.Application.DTOs.Notifications;
-using Graduation_Project.Application.DTOs.Project;
-using Graduation_Project.Application.DTOs.Project.Employee;
-using Graduation_Project.Application.Interfaces.Notifications;
-using Graduation_Project.Application.Interfaces.Persistence;
-using Graduation_Project.Domain.Entities;
-using Graduation_Project.Domain.Enums;
+﻿using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Milestones;
+using SyncVerse.Application.DTOs.Notifications;
+using SyncVerse.Application.DTOs.Project;
+using SyncVerse.Application.DTOs.Project.Employee;
+using SyncVerse.Application.Interfaces.Notifications;
+using SyncVerse.Application.Interfaces.Persistence;
+using SyncVerse.Domain.Entities;
+using SyncVerse.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
-namespace Graduation_Project.Application.Services.Project.Employee
+namespace SyncVerse.Application.Services.Project.Employee
 {
     public class EmployeeProjectService : IEmployeeProjectService
     {

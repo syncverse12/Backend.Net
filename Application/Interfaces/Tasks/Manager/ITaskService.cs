@@ -1,10 +1,10 @@
-﻿using Graduation_Project.Application.Common.Pagination;
-using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Project.Manager;
-using Graduation_Project.Application.DTOs.Tasks;
-using Graduation_Project.Application.DTOs.Tasks.Manager;
+﻿using SyncVerse.Application.Common.Pagination;
+using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Project.Manager;
+using SyncVerse.Application.DTOs.Tasks;
+using SyncVerse.Application.DTOs.Tasks.Manager;
 
-namespace Graduation_Project.Application.Interfaces.Task.Manager
+namespace SyncVerse.Application.Interfaces.Task.Manager
 {
     public interface ITaskService
     {

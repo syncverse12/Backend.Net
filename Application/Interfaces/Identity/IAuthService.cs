@@ -1,7 +1,7 @@
-﻿using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Auth;
+﻿using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Auth;
 
-namespace Graduation_Project.Application.Interfaces.Identity
+namespace SyncVerse.Application.Interfaces.Identity
 {
     public interface IAuthService
     {

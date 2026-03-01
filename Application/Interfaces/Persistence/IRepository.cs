@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-namespace Graduation_Project.Application.Interfaces.Persistence
+namespace SyncVerse.Application.Interfaces.Persistence
 {
     public interface IRepository<T> where T : class
     {

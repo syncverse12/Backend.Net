@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 
-namespace Graduation_Project.API.Extensions
+namespace SyncVerse.API.Extensions
 {
     public static class AuthorizationExtensions
     {

@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
-using Graduation_Project.Application.DTOs.Project;
-using Graduation_Project.Application.DTOs.Project.Manager;
-using Graduation_Project.Domain.Entities;
+using SyncVerse.Application.DTOs.Project;
+using SyncVerse.Application.DTOs.Project.Manager;
+using SyncVerse.Domain.Entities;
 
 public class ProjectMappingProfile : Profile
 {

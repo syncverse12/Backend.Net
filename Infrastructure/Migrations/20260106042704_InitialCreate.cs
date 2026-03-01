@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace Graduation_Project.Migrations
+namespace SyncVerse.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration

@@ -1,4 +1,4 @@
-namespace Graduation_Project.Application.DTOs.Project.Employee
+namespace SyncVerse.Application.DTOs.Project.Employee
 {
     public class EmployeeProjectResponseDto
     {

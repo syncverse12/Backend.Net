@@ -1,5 +1,5 @@
-﻿using Graduation_Project.Application.DTOs.Tasks.Employee;
-using Graduation_Project.Application.Interfaces.Tasks.Employee;
+﻿using SyncVerse.Application.DTOs.Tasks.Employee;
+using SyncVerse.Application.Interfaces.Tasks.Employee;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;

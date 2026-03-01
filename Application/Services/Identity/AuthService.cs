@@ -1,11 +1,11 @@
-﻿using Graduation_Project.API.JwtFeatuers;
-using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Auth;
-using Graduation_Project.Application.Interfaces.Identity;
-using Graduation_Project.Domain.Entities;
+﻿using SyncVerse.API.JwtFeatuers;
+using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Auth;
+using SyncVerse.Application.Interfaces.Identity;
+using SyncVerse.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 
-namespace Graduation_Project.Application.Services.Identity
+namespace SyncVerse.Application.Services.Identity
 {
     public class AuthService : IAuthService
     {

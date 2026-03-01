@@ -1,8 +1,8 @@
-using Graduation_Project.Domain.Entities;
+using SyncVerse.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Graduation_Project.Infrastructure.SeedConfiguration
+namespace SyncVerse.Infrastructure.SeedConfiguration
 {
     public class TaskCommentConfiguration : IEntityTypeConfiguration<TaskComment>
     {

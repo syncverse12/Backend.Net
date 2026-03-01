@@ -1,10 +1,10 @@
-﻿using Graduation_Project.Application.Common.Models;
-using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Tasks;
-using Graduation_Project.Application.DTOs.Tasks.Employee;
-using Graduation_Project.Application.DTOs.Tasks.Manager;
+﻿using SyncVerse.Application.Common.Models;
+using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Tasks;
+using SyncVerse.Application.DTOs.Tasks.Employee;
+using SyncVerse.Application.DTOs.Tasks.Manager;
 
-namespace Graduation_Project.Application.Interfaces.Tasks.Employee
+namespace SyncVerse.Application.Interfaces.Tasks.Employee
 {
     public interface IEmployeeTaskService
     {

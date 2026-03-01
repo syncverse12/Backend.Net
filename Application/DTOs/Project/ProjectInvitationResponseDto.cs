@@ -1,6 +1,6 @@
-﻿using Graduation_Project.Domain.Common;
+﻿using SyncVerse.Domain.Common;
 
-namespace Graduation_Project.Application.DTOs.Project
+namespace SyncVerse.Application.DTOs.Project
 {
     public class ProjectInvitationResponseDto
     {

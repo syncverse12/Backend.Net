@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Graduation_Project.API.Controllers
+namespace SyncVerse.API.Controllers
 {
     [ApiController]
     [Route("api/admin")]

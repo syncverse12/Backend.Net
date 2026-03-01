@@ -1,5 +1,5 @@
-﻿using Graduation_Project.Application.DTOs.Milestones;
-using Graduation_Project.Domain.Entities;
+﻿using SyncVerse.Application.DTOs.Milestones;
+using SyncVerse.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;

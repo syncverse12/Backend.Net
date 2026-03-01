@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
-using Graduation_Project.Application.DTOs.Auth;
-using Graduation_Project.Domain.Entities;
+using SyncVerse.Application.DTOs.Auth;
+using SyncVerse.Domain.Entities;
 
 
-namespace Graduation_Project.Application.Mapping
+namespace SyncVerse.Application.Mapping
 {
     public class MappingProfile : Profile
     {

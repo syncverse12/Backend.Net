@@ -1,11 +1,11 @@
-﻿using Graduation_Project.Application.Interfaces.Persistence;
-using Graduation_Project.Infrastructure.Data;
+﻿using SyncVerse.Application.Interfaces.Persistence;
+using SyncVerse.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-namespace Graduation_Project.Infrastructure.Persistence.Repositories
+namespace SyncVerse.Infrastructure.Persistence.Repositories
 {
     public class GenericRepository<T> : IRepository<T> where T : class
     {

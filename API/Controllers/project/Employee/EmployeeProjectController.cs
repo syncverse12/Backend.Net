@@ -1,8 +1,8 @@
-﻿namespace Graduation_Project.API.Controllers.project.Employee
+﻿namespace SyncVerse.API.Controllers.project.Employee
 {
-    using Graduation_Project.Application.DTOs.Project.Employee;
-    using Graduation_Project.Application.Interfaces;
-    using Graduation_Project.Application.Services.Project.Employee;
+    using SyncVerse.Application.DTOs.Project.Employee;
+    using SyncVerse.Application.Interfaces;
+    using SyncVerse.Application.Services.Project.Employee;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using System.Security.Claims;

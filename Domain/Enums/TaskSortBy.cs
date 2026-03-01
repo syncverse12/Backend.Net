@@ -1,4 +1,4 @@
-﻿namespace Graduation_Project.Domain.Enums 
+﻿namespace SyncVerse.Domain.Enums 
 {
     public enum TaskSortBy
     {

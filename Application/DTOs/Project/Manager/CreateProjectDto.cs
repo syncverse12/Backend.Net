@@ -1,4 +1,4 @@
-﻿namespace Graduation_Project.Application.DTOs.Project.Manager
+﻿namespace SyncVerse.Application.DTOs.Project.Manager
 {
     public class CreateProjectDto
     {

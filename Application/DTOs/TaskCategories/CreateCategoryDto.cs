@@ -1,4 +1,4 @@
-﻿namespace Graduation_Project.Application.DTOs.Category
+﻿namespace SyncVerse.Application.DTOs.Category
 {
     public class CreateCategoryDto
     {

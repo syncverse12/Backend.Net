@@ -1,5 +1,5 @@
-﻿using Graduation_Project.Application.Common.Results;
-using Graduation_Project.Application.DTOs.Milestones;
+﻿using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Milestones;
 
 public interface IMilestoneService
 {
