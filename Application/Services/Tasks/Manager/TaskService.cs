@@ -32,12 +32,25 @@ namespace Graduation_Project.Application.Services.Task.Manager
         //CREATE
         public async Task<Result<TaskResponseDto>> CreateAsync(CreateTaskDto dto, string currentUserId)
         {
+            var project = await _unitOfWork.Repository<ProjectEntity>().Query()
+                .Include(p => p.Workspace)
+                .FirstOrDefaultAsync(p => p.Id == dto.ProjectId);
+
+            if (project == null)
+                return Result<TaskResponseDto>.Failure("Project not found");
+
             var projectMember = await _unitOfWork.Repository<ProjectMember>().Query()
                 .FirstOrDefaultAsync(m => m.ProjectId == dto.ProjectId && m.UserId == currentUserId);
 
-            if (projectMember == null || (projectMember.Role != ProjectRole.ProjectManager && projectMember.Role != ProjectRole.TeamLeader))
+            // ✅ Check: Workspace Owner OR Project Manager OR Team Leader
+            bool isWorkspaceOwner = project.Workspace?.CreatedByUserId == currentUserId;
+            bool isProjectManager = project.CreatedByUserId == currentUserId;
+            bool isTeamLeader = projectMember?.Role == ProjectRole.TeamLeader;
+
+            if (!isWorkspaceOwner && !isProjectManager && !isTeamLeader)
             {
-                return Result<TaskResponseDto>.Failure("Unauthorized: Only Project Managers or Team Leaders can create tasks.");
+                return Result<TaskResponseDto>.Failure(
+                    "Unauthorized: Only Workspace Owner, Project Manager, or Team Leader can create tasks.");
             }
 
             if (!string.IsNullOrEmpty(dto.CategoryId))
@@ -102,7 +115,7 @@ namespace Graduation_Project.Application.Services.Task.Manager
                 });
             }
 
-            return Result<TaskResponseDto>.Success(_mapper.Map<TaskResponseDto>(taskWithCategory), "Task Created Successfully");
+            return Result<TaskResponseDto>.Success(_mapper.Map<TaskResponseDto>(task), "Task Created Successfully");
         }
 
 
@@ -175,6 +188,8 @@ namespace Graduation_Project.Application.Services.Task.Manager
             var task = await _unitOfWork.Repository<TaskItem>()
                 .Query()
                 .Include(t => t.Milestone)
+                .Include(t => t.Project)
+                    .ThenInclude(p => p!.Workspace)
                 .FirstOrDefaultAsync(t => t.Id == taskId);
 
             if (task == null)
@@ -189,9 +204,15 @@ namespace Graduation_Project.Application.Services.Task.Manager
             var projectMember = await _unitOfWork.Repository<ProjectMember>().Query()   
                 .FirstOrDefaultAsync(m => m.ProjectId == task.ProjectId && m.UserId == currentUserId);
 
-            if (projectMember == null || (projectMember.Role != ProjectRole.ProjectManager && projectMember.Role != ProjectRole.TeamLeader))
+            // ✅ Safe null checks
+            bool isWorkspaceOwner = task.Project?.Workspace?.CreatedByUserId == currentUserId;
+            bool isProjectManager = task.Project?.CreatedByUserId == currentUserId;
+            bool isTeamLeader = projectMember?.Role == ProjectRole.TeamLeader;
+
+            if (!isWorkspaceOwner && !isProjectManager && !isTeamLeader)
             {
-                return Result<TaskResponseDto>.Failure("Unauthorized: Only PMs or Team Leaders can modify tasks.");
+                return Result<TaskResponseDto>.Failure(
+                    "Unauthorized: Only Workspace Owner, Project Manager, or Team Leader can modify tasks.");
             }
 
             if (!string.IsNullOrEmpty(dto.AssignedToUserId))
@@ -320,6 +341,7 @@ namespace Graduation_Project.Application.Services.Task.Manager
         {
             var task = await _unitOfWork.Repository<TaskItem>().Query()
                 .Include(t => t.Project)
+                    .ThenInclude(p => p!.Workspace)
                 .FirstOrDefaultAsync(t => t.Id == taskId);
 
             if (task == null) return Result<bool>.Failure("Task not found");
@@ -327,9 +349,15 @@ namespace Graduation_Project.Application.Services.Task.Manager
             var projectMember = await _unitOfWork.Repository<ProjectMember>().Query()
                 .FirstOrDefaultAsync(m => m.ProjectId == task.ProjectId && m.UserId == userId);
 
-            if (projectMember == null || projectMember.Role == ProjectRole.TeamMember)
+            // ✅ Safe null checks
+            bool isWorkspaceOwner = task.Project?.Workspace?.CreatedByUserId == userId;
+            bool isProjectManager = task.Project?.CreatedByUserId == userId;
+            bool isTeamLeader = projectMember?.Role == ProjectRole.TeamLeader;
+
+            if (!isWorkspaceOwner && !isProjectManager && !isTeamLeader)
             {
-                return Result<bool>.Failure("Unauthorized: Only Project Managers or Team Leaders can delete tasks.");
+                return Result<bool>.Failure(
+                    "Unauthorized: Only Workspace Owner, Project Manager, or Team Leader can delete tasks.");
             }
 
             var dependencies = await _unitOfWork.Repository<TaskDependency>().Query()
@@ -357,6 +385,7 @@ namespace Graduation_Project.Application.Services.Task.Manager
                 .IgnoreQueryFilters()
                 .Include(t => t.Milestone)
                 .Include(t => t.Project)
+                    .ThenInclude(p => p!.Workspace)
                 .FirstOrDefaultAsync(t => t.Id == taskId);
 
             if (task == null) return Result<bool>.Failure("Task not found");
@@ -364,9 +393,15 @@ namespace Graduation_Project.Application.Services.Task.Manager
             var projectMember = await _unitOfWork.Repository<ProjectMember>().Query()
                 .FirstOrDefaultAsync(m => m.ProjectId == task.ProjectId && m.UserId == userId);
 
-            if (projectMember == null || (projectMember.Role != ProjectRole.ProjectManager && projectMember.Role != ProjectRole.TeamLeader))
+            // ✅ Safe null checks
+            bool isWorkspaceOwner = task.Project?.Workspace?.CreatedByUserId == userId;
+            bool isProjectManager = task.Project?.CreatedByUserId == userId;
+            bool isTeamLeader = projectMember?.Role == ProjectRole.TeamLeader;
+
+            if (!isWorkspaceOwner && !isProjectManager && !isTeamLeader)
             {
-                return Result<bool>.Failure("Unauthorized: Only PMs or Team Leaders can restore tasks.");
+                return Result<bool>.Failure(
+                    "Unauthorized: Only Workspace Owner, Project Manager, or Team Leader can restore tasks.");
             }
 
             if (task.Milestone != null && task.Milestone.IsDeleted)
@@ -404,7 +439,11 @@ namespace Graduation_Project.Application.Services.Task.Manager
             if (dto.TaskId == dto.DependsOnTaskId)
                 return Result<bool>.Failure("Task cannot depend on itself");
 
-            var task = await _unitOfWork.Repository<TaskItem>().GetByIdAsync(dto.TaskId);
+            var task = await _unitOfWork.Repository<TaskItem>().Query()
+                .Include(t => t.Project)
+                    .ThenInclude(p => p!.Workspace)
+                .FirstOrDefaultAsync(t => t.Id == dto.TaskId);
+
             var dependsOnTask = await _unitOfWork.Repository<TaskItem>().GetByIdAsync(dto.DependsOnTaskId);
 
             if (task == null || dependsOnTask == null)
@@ -419,9 +458,15 @@ namespace Graduation_Project.Application.Services.Task.Manager
             var projectMember = await _unitOfWork.Repository<ProjectMember>().Query()
                 .FirstOrDefaultAsync(m => m.ProjectId == task.ProjectId && m.UserId == currentUserId);
 
-            if (projectMember == null || (projectMember.Role != ProjectRole.ProjectManager && projectMember.Role != ProjectRole.TeamLeader))
+            // ✅ Safe null checks
+            bool isWorkspaceOwner = task.Project?.Workspace?.CreatedByUserId == currentUserId;
+            bool isProjectManager = task.Project?.CreatedByUserId == currentUserId;
+            bool isTeamLeader = projectMember?.Role == ProjectRole.TeamLeader;
+
+            if (!isWorkspaceOwner && !isProjectManager && !isTeamLeader)
             {
-                return Result<bool>.Failure("Unauthorized: Only PMs or Team Leaders can manage task dependencies.");
+                return Result<bool>.Failure(
+                    "Unauthorized: Only Workspace Owner, Project Manager, or Team Leader can manage task dependencies.");
             }
 
             var exists = await _unitOfWork.Repository<TaskDependency>().Query()
@@ -450,6 +495,8 @@ namespace Graduation_Project.Application.Services.Task.Manager
         public async Task<Result<bool>> ConfirmTaskAsync(string taskId, string currentUserId)
         {
             var task = await _unitOfWork.Repository<TaskItem>().Query()
+                .Include(t => t.Project)
+                    .ThenInclude(p => p!.Workspace)
                 .FirstOrDefaultAsync(t => t.Id == taskId);
 
             if (task == null) return Result<bool>.Failure("Task not found");
@@ -457,9 +504,15 @@ namespace Graduation_Project.Application.Services.Task.Manager
             var projectMember = await _unitOfWork.Repository<ProjectMember>().Query()
                 .FirstOrDefaultAsync(m => m.ProjectId == task.ProjectId && m.UserId == currentUserId);
 
-            if (projectMember == null || projectMember.Role == ProjectRole.TeamMember)
+            // ✅ Safe null checks
+            bool isWorkspaceOwner = task.Project?.Workspace?.CreatedByUserId == currentUserId;
+            bool isProjectManager = task.Project?.CreatedByUserId == currentUserId;
+            bool isTeamLeader = projectMember?.Role == ProjectRole.TeamLeader;
+
+            if (!isWorkspaceOwner && !isProjectManager && !isTeamLeader)
             {
-                return Result<bool>.Failure("Unauthorized: Only Project Managers or Team Leaders can confirm tasks.");
+                return Result<bool>.Failure(
+                    "Unauthorized: Only Workspace Owner, Project Manager, or Team Leader can confirm tasks.");
             }
 
             if (task.Status != TaskStatus.Submitted)
@@ -514,6 +567,8 @@ namespace Graduation_Project.Application.Services.Task.Manager
         public async Task<Result<bool>> RejectTaskAsync(string taskId, string currentUserId, string comment)
         {
             var task = await _unitOfWork.Repository<TaskItem>().Query()
+                .Include(t => t.Project)
+                    .ThenInclude(p => p!.Workspace)
                 .FirstOrDefaultAsync(t => t.Id == taskId);
 
             if (task == null) return Result<bool>.Failure("Task not found");
@@ -521,9 +576,15 @@ namespace Graduation_Project.Application.Services.Task.Manager
             var projectMember = await _unitOfWork.Repository<ProjectMember>().Query()
                 .FirstOrDefaultAsync(m => m.ProjectId == task.ProjectId && m.UserId == currentUserId);
 
-            if (projectMember == null || projectMember.Role == ProjectRole.TeamMember)
+            // ✅ Safe null checks
+            bool isWorkspaceOwner = task.Project?.Workspace?.CreatedByUserId == currentUserId;
+            bool isProjectManager = task.Project?.CreatedByUserId == currentUserId;
+            bool isTeamLeader = projectMember?.Role == ProjectRole.TeamLeader;
+
+            if (!isWorkspaceOwner && !isProjectManager && !isTeamLeader)
             {
-                return Result<bool>.Failure("Unauthorized: Only PMs or Team Leaders can reject tasks.");
+                return Result<bool>.Failure(
+                    "Unauthorized: Only Workspace Owner, Project Manager, or Team Leader can reject tasks.");
             }
 
             if (task.Status != TaskStatus.Submitted)
