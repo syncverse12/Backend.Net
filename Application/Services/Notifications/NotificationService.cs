@@ -4,20 +4,24 @@ using Graduation_Project.Application.Interfaces.Notifications;
 using Graduation_Project.Application.Interfaces.Persistence;
 using Graduation_Project.Domain.Entities;
 using Graduation_Project.Domain.Enums;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Graduation_Project.Application.Services.Notifications
 {
     public class NotificationService : INotificationService
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IHubContext<API.Hubs.NotificationHub> _hubContext;
+        private readonly IRealtimeNotificationService _realtimeService;
 
-        public NotificationService(IUnitOfWork unitOfWork, IHubContext<API.Hubs.NotificationHub> hubContext)
+        public NotificationService(
+            IUnitOfWork unitOfWork, 
+            IRealtimeNotificationService realtimeService)
         {
             _unitOfWork = unitOfWork;
-            _hubContext = hubContext;
+            _realtimeService = realtimeService;
         }
 
         public async Task<Result<NotificationResponseDto>> CreateNotificationAsync(CreateNotificationDto dto)
@@ -56,8 +60,7 @@ namespace Graduation_Project.Application.Services.Notifications
                 CreatedAt = notification.CreatedAt
             };
 
-            // Send real-time notification via SignalR
-            await _hubContext.Clients.Group(dto.UserId).SendAsync("ReceiveNotification", response);
+            await _realtimeService.SendNotificationToUserAsync(dto.UserId, response);
 
             return Result<NotificationResponseDto>.Success(response);
         }
@@ -122,8 +125,7 @@ namespace Graduation_Project.Application.Services.Notifications
             _unitOfWork.Repository<Notification>().Update(notification);
             await _unitOfWork.SaveChangesAsync();
 
-            // Send real-time update via SignalR
-            await _hubContext.Clients.Group(userId).SendAsync("NotificationMarkedAsRead", notificationId);
+            await _realtimeService.SendNotificationMarkedAsReadAsync(userId, notificationId);
 
             return Result<bool>.Success(true, "Notification marked as read");
         }
@@ -170,10 +172,9 @@ namespace Graduation_Project.Application.Services.Notifications
         public async System.Threading.Tasks.Task NotifyTaskAssignedAsync(string taskId, string assignedUserId, string assignedByUserName)
         {
             var task = await _unitOfWork.Repository<TaskItem>().GetByIdAsync(taskId);
-
             if (task == null) return;
 
-            var notification = new CreateNotificationDto
+            await CreateNotificationAsync(new CreateNotificationDto
             {
                 UserId = assignedUserId,
                 Type = NotificationType.TaskAssigned,
@@ -181,9 +182,7 @@ namespace Graduation_Project.Application.Services.Notifications
                 Message = $"You have been assigned a new task: '{task.Title}' by {assignedByUserName}",
                 TaskId = taskId,
                 ActionUrl = $"/tasks/{taskId}"
-            };
-
-            await CreateNotificationAsync(notification);
+            });
         }
 
         public async System.Threading.Tasks.Task NotifyTaskCommentedAsync(string taskId, string commentUserId, string commentUserName)
@@ -198,15 +197,15 @@ namespace Graduation_Project.Application.Services.Notifications
 
             var userIdsToNotify = new List<string>();
 
-            if (task.AssignedToUserId != commentUserId)
+            if (!string.IsNullOrEmpty(task.AssignedToUserId) && task.AssignedToUserId != commentUserId)
                 userIdsToNotify.Add(task.AssignedToUserId);
 
-            if (task.CreatedByUserId != commentUserId && !userIdsToNotify.Contains(task.CreatedByUserId))
+            if (!string.IsNullOrEmpty(task.CreatedByUserId) && task.CreatedByUserId != commentUserId && !userIdsToNotify.Contains(task.CreatedByUserId))
                 userIdsToNotify.Add(task.CreatedByUserId);
 
             foreach (var userId in userIdsToNotify)
             {
-                var notification = new CreateNotificationDto
+                await CreateNotificationAsync(new CreateNotificationDto
                 {
                     UserId = userId,
                     Type = NotificationType.TaskCommented,
@@ -214,9 +213,7 @@ namespace Graduation_Project.Application.Services.Notifications
                     Message = $"{commentUserName} commented on task: '{task.Title}'",
                     TaskId = taskId,
                     ActionUrl = $"/tasks/{taskId}"
-                };
-
-                await CreateNotificationAsync(notification);
+                });
             }
         }
 
@@ -229,10 +226,10 @@ namespace Graduation_Project.Application.Services.Notifications
                 .FirstOrDefaultAsync(t => t.Id == taskId);
 
             if (task == null) return;
-
             if (task.CreatedByUserId == submittedByUserId) return;
+            if (string.IsNullOrEmpty(task.CreatedByUserId)) return;
 
-            var notification = new CreateNotificationDto
+            await CreateNotificationAsync(new CreateNotificationDto
             {
                 UserId = task.CreatedByUserId,
                 Type = NotificationType.TaskSubmitted,
@@ -240,9 +237,7 @@ namespace Graduation_Project.Application.Services.Notifications
                 Message = $"{task.AssignedToUser?.UserName ?? "Employee"} has submitted task: '{task.Title}' for review",
                 TaskId = taskId,
                 ActionUrl = $"/tasks/{taskId}"
-            };
-
-            await CreateNotificationAsync(notification);
+            });
         }
 
         public async System.Threading.Tasks.Task NotifyTaskReviewedAsync(string taskId, string reviewedByUserName, bool isApproved, string? reviewComment)
@@ -253,6 +248,7 @@ namespace Graduation_Project.Application.Services.Notifications
                 .FirstOrDefaultAsync(t => t.Id == taskId);
 
             if (task == null) return;
+            if (string.IsNullOrEmpty(task.AssignedToUserId)) return;
 
             var notificationType = isApproved ? NotificationType.TaskApproved : NotificationType.TaskRejected;
             var title = isApproved ? "Task Approved" : "Task Rejected";
@@ -263,7 +259,7 @@ namespace Graduation_Project.Application.Services.Notifications
             if (!string.IsNullOrWhiteSpace(reviewComment))
                 message += $". Comment: {reviewComment}";
 
-            var notification = new CreateNotificationDto
+            await CreateNotificationAsync(new CreateNotificationDto
             {
                 UserId = task.AssignedToUserId,
                 Type = notificationType,
@@ -271,9 +267,7 @@ namespace Graduation_Project.Application.Services.Notifications
                 Message = message,
                 TaskId = taskId,
                 ActionUrl = $"/tasks/{taskId}"
-            };
-
-            await CreateNotificationAsync(notification);
+            });
         }
     }
 }

@@ -24,6 +24,7 @@ using Graduation_Project.Infrastructure.Data;
 using Graduation_Project.Infrastructure.Persistence;
 using Graduation_Project.Infrastructure.Persistence.Repositories;
 using Graduation_Project.Infrastructure.SeedConfiguration;
+using Graduation_Project.Infrastructure.Realtime;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -85,6 +86,7 @@ builder.Services.AddScoped<IInvitationService, MockInvitationService>();
 builder.Services.AddScoped<IMilestoneService, MilestoneService>();
 builder.Services.AddScoped<ITaskCommentService, TaskCommentService>();
 builder.Services.AddScoped<ITimeLogService, TimeLogService>();
+builder.Services.AddScoped<IRealtimeNotificationService, SignalRNotificationService>();  
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEmployeeProjectService, EmployeeProjectService>();
 
