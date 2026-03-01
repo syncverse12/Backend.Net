@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
-using Synverse.Domain.Entities;
+using SyncVerse.Domain.Entities;  // ✅ تم التصحيح من Synverse إلى SyncVerse
 
 namespace SyncVerse.Infrastructure.SeedConfiguration
 {
@@ -36,5 +36,4 @@ namespace SyncVerse.Infrastructure.SeedConfiguration
                    .OnDelete(DeleteBehavior.Restrict);
         }
     }
-
 }

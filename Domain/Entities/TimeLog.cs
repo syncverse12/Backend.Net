@@ -1,5 +1,4 @@
 ﻿using SyncVerse.Domain.Common;
-using SyncVerse.Domain.Entities;
 
 namespace SyncVerse.Domain.Entities
 {
