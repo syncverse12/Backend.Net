@@ -38,6 +38,39 @@ A **production-ready**, **enterprise-level** project management system built wit
 - Soft delete with restore capabilities
 - Project invitations and collaboration
 
+### 🏢 Workspace Management
+- Create and manage multiple workspaces
+- Workspace-level access control and ownership
+- Project organization within workspaces
+- Soft delete with restore capabilities
+
+### 🎯 Milestone Management
+- Create milestones within projects (sprints/phases)
+- Define start/end dates for project timelines
+- Link tasks to specific milestones
+- Track milestone progress and completion
+- Date validation for task due dates within milestone bounds
+
+### 🏷️ Category Management
+- Create custom task categories (Frontend, Backend, DevOps, etc.)
+- Assign categories to tasks for organization
+- Category-based analytics and reporting
+- Soft delete support with cascade handling
+
+### 💬 Task Comments System
+- Add comments to any task
+- Comment history tracking with timestamps
+- Automatic notifications to task participants (assignee + creator)
+- Edit/delete own comments
+- Rich collaboration features
+
+### 👥 Team Management
+- Invite team members with role-based assignments
+- Role management: Project Manager, Team Leader, Team Member
+- Team specializations: Frontend, Backend, FullStack, DevOps, QA, Design, Mobile
+- Update member roles dynamically
+- Remove team members with proper authorization
+
 ### ✅ Advanced Task Management
 - Complete task lifecycle workflow (Pending → InProgress → Submitted → Completed)
 - **Circular dependency detection** using DFS algorithm
@@ -70,8 +103,9 @@ A **production-ready**, **enterprise-level** project management system built wit
 
 ## 🏗️ Architecture
 
-This project follows **Clean Architecture** principles with clear separation of concerns:
-┌─────────────────────────────────────────────────────┐ │                   API Layer                         │ │  • REST Controllers                                 │ │  • SignalR Hubs (Real-time Communication)          │ │  • JWT Authentication Middleware                   │ │  • Exception Handling Middleware                   │ └────────────────────┬────────────────────────────────┘ │ depends on ┌────────────────────▼────────────────────────────────┐ │              Application Layer                      │ │  • Business Logic Services                         │ │  • DTOs & Mapping Profiles                         │ │  • Interfaces (Contracts)                          │ │  • Validation Rules                                │ └────────────────────┬────────────────────────────────┘ │ depends on ┌────────────────────▼────────────────────────────────┐ │                Domain Layer                         │ │  • Entities (User, Project, Task, etc.)           │ │  • Enums (TaskStatus, ProjectRole, etc.)          │ │  • Business Rules                                  │ │  • Domain Events                                   │ └─────────────────────────────────────────────────────┘ ▲ │ implements ┌────────────────────┴────────────────────────────────┐ │            Infrastructure Layer                     │ │  • Entity Framework Core (Repositories)            │ │  • Database Context & Migrations                   │ │  • SignalR Real-time Service                       │ │  • Identity Configuration                          │ └─────────────────────────────────────────────────────┘
+This project follows **Clean Architecture** principles with clear separation of concerns
+
+**Benefits:** Testable, Flexible, No layer violations, SOLID principles
 
 ### Key Architecture Benefits
 
@@ -91,11 +125,12 @@ This project follows **Clean Architecture** principles with clear separation of 
 | **Language** | C# 12.0 |
 | **ORM** | Entity Framework Core 8 |
 | **Database** | SQL Server |
-| **Authentication** | ASP.NET Core Identity, JWT |
-| **Real-time** | SignalR |
+| **Authentication** | ASP.NET Core Identity, JWT Bearer |
+| **Real-time** | SignalR (WebSocket) |
 | **Mapping** | AutoMapper |
 | **Validation** | FluentValidation |
-| **API Documentation** | Swagger/OpenAPI |
+| **API Documentation** | Swagger/OpenAPI 3.0 |
+| **Patterns** | Repository, Unit of Work, Result, CQRS |
 
 ---
 
@@ -110,26 +145,16 @@ This project follows **Clean Architecture** principles with clear separation of 
 ### Installation
 
 1. **Clone the repository**
-   git clone https://github.com/syncverse12/Backend.Net.git cd Backend.Net
 
 2. **Update connection string**
 
-   Edit `appsettings.json`:
-   { "ConnectionStrings": { "Default": "Server=(localdb)\mssqllocaldb;Database=ProjectManagementDB;Trusted_Connection=true;MultipleActiveResultSets=true" } }
-
 3. **Update JWT settings**
-   
-   Edit `appsettings.json`:
-   { "JwtSettings": { "securityKey": "your-secret-key-min-32-characters", "validIssuer": "https://localhost:7001", "validAudience": "https://localhost:7001", "expiryInMinutes": 60 } }
 
 4. **Apply database migrations**
-   dotnet ef database update
 
 5. **Run the application**
-   dotnet run --project API
 
 6. **Access Swagger UI**
-   https://localhost:7001/swagger
 
 ### Default Admin Credentials
 
@@ -143,247 +168,619 @@ After first run, a default admin account is created:
 
 ## 📚 API Documentation
 
-### Authentication Endpoints
-POST /api/auth/register Content-Type: application/json
-{ "email": "user@example.com", "password": "Password@123", "firstName": "John", "lastName": "Doe" }
+### 🔐 Authentication
 
-### Task Management Endpoints
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/auth/register` | Register new user | ❌ |
+| POST | `/api/auth/login` | Login and get JWT token | ❌ |
+| GET | `/api/users` | List all users | ✅ Admin |
+| PUT | `/api/users/{id}/role` | Update user role | ✅ Admin |
 
-#### Create Task (Manager/Team Leader)
+**Example Request:**
+````````
+POST /api/auth/register
+Content-Type: application/json
 
-#### Start Task (Employee)
+{
+  "email": "newuser@example.com",
+  "password": "User@123",
+  "role": "Employee"
+}
+````````
 
-#### Submit Task (Employee)
+**Example Response:**
+````````
+HTTP/1.1 201 Created
+Location: /api/auth/login
 
-### SignalR Real-time Connection
+{
+  "token": "jwt.token.here",
+  "expiresIn": 3600
+}
+````````
 
-**Hub URL**: `/hubs/notifications`
+---
 
-**Client Example** (JavaScript/TypeScript):
+### 🏢 Workspaces
 
-For complete API documentation, visit `/swagger` after running the application.
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/workspaces` | Create workspace | Manager |
+| GET | `/api/workspaces` | Get my workspaces | User |
+| GET | `/api/workspaces/{id}` | Get workspace details | Owner/Member |
+| PUT | `/api/workspaces/{id}` | Update workspace | Owner |
+| DELETE | `/api/workspaces/{id}` | Delete workspace | Owner |
+| PUT | `/api/workspaces/{id}/restore` | Restore workspace | Owner |
+
+**Example Request:**
+````````
+POST /api/workspaces
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "name": "New Workspace",
+  "description": "Workspace for project X"
+}
+````````
+
+**Example Response:**
+````````
+HTTP/1.1 201 Created
+Location: /api/workspaces/1
+
+{
+  "id": 1,
+  "name": "New Workspace",
+  "description": "Workspace for project X",
+  "ownerId": "user-id",
+  "members": [],
+  "projects": []
+}
+````````
+
+---
+
+### 📊 Projects
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/projects` | Create project | Owner/PM |
+| GET | `/api/projects/{id}` | Get project details | Member |
+| PUT | `/api/projects/{id}` | Update project | Owner/PM |
+| DELETE | `/api/projects/{id}` | Soft delete project | Owner/PM |
+| PUT | `/api/projects/{id}/restore` | Restore project | Owner/PM |
+| GET | `/api/projects/workspace/{id}` | Get workspace projects | Owner |
+| POST | `/api/projects/{id}/invite` | Invite employee | Owner/PM |
+
+**Example Request:**
+````````
+POST /api/projects
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "workspaceId": 1,
+  "name": "New Project",
+  "description": "Project for feature Y",
+  "startDate": "2023-10-01",
+  "endDate": "2023-10-31"
+}
+````````
+
+**Example Response:**
+````````
+HTTP/1.1 201 Created
+Location: /api/projects/1
+
+{
+  "id": 1,
+  "name": "New Project",
+  "description": "Project for feature Y",
+  "startDate": "2023-10-01T00:00:00",
+  "endDate": "2023-10-31T23:59:59",
+  "workspaceId": 1,
+  "tasks": [],
+  "milestones": []
+}
+````````
+
+---
+
+### 🎯 Milestones
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/milestones` | Create milestone | Owner/PM |
+| GET | `/api/milestones/project/{id}` | Get project milestones | Member |
+| GET | `/api/milestones/{id}` | Get milestone details | Member |
+| PUT | `/api/milestones/{id}` | Update milestone | Owner/PM |
+| DELETE | `/api/milestones/{id}` | Delete milestone | Owner/PM |
+| PUT | `/api/milestones/{id}/restore` | Restore milestone | Owner/PM |
+
+**Example Request:**
+````````
+POST /api/milestones
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "projectId": 1,
+  "name": "Milestone 1",
+  "description": "First milestone for project",
+  "dueDate": "2023-10-15"
+}
+````````
+
+**Example Response:**
+````````
+HTTP/1.1 201 Created
+Location: /api/milestones/1
+
+{
+  "id": 1,
+  "name": "Milestone 1",
+  "description": "First milestone for project",
+  "dueDate": "2023-10-15T23:59:59",
+  "projectId": 1,
+  "tasks": []
+}
+````````
+
+---
+
+### ✅ Tasks (Manager/Team Leader)
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/tasks` | Create task | Owner/PM/TL |
+| GET | `/api/tasks/manager/tasks` | List tasks (paginated) | PM/TL |
+| GET | `/api/tasks/{id}` | Get task details | Member |
+| PUT | `/api/tasks/{id}` | Update task | Owner/PM/TL |
+| DELETE | `/api/tasks/{id}` | Soft delete task | Owner/PM/TL |
+| PUT | `/api/tasks/{id}/restore` | Restore task | Owner/PM/TL |
+| POST | `/api/tasks/dependency` | Add dependency | Owner/PM/TL |
+| PUT | `/api/tasks/{id}/confirm` | Approve task | PM/TL |
+| PUT | `/api/tasks/{id}/reject` | Reject task | PM/TL |
+| GET | `/api/tasks/manager/dashboard` | Analytics dashboard | PM/TL |
+| POST | `/api/tasks/filter` | Advanced filtering | PM/TL |
+| GET | `/api/tasks/dashboard/{projectId}` | Project dashboard | PM/TL |
+
+**Example Request:**
+````````
+POST /api/tasks
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "projectId": 1,
+  "name": "New Task",
+  "description": "Task details here",
+  "assignedTo": "user-id",
+  "dueDate": "2023-10-10",
+  "priority": "High"
+}
+````````
+
+**Example Response:**
+````````
+HTTP/1.1 201 Created
+Location: /api/tasks/1
+
+{
+  "id": 1,
+  "name": "New Task",
+  "description": "Task details here",
+  "assignedTo": "user-id",
+  "dueDate": "2023-10-10T23:59:59",
+  "priority": "High",
+  "projectId": 1,
+  "dependencies": [],
+  "comments": []
+}
+````````
+
+---
+
+### 👤 Tasks (Employee)
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/api/employee/tasks` | My assigned tasks | Employee |
+| GET | `/api/employee/tasks/{id}` | Task details | Employee |
+| POST | `/api/employee/tasks/{id}/start` | Start working | Employee |
+| POST | `/api/employee/tasks/{id}/submit` | Submit for review | Employee |
+| GET | `/api/employee/tasks/blocked` | Blocked tasks | Employee |
+
+**Example Request:**
+````````
+GET /api/employee/tasks
+Authorization: Bearer {token}
+````````
+
+**Example Response:**
+````````
+HTTP/1.1 200 OK
+
+{
+  "tasks": [
+    {
+      "id": 1,
+      "name": "Task 1",
+      "description": "Details about task 1",
+      "status": "Pending",
+      "priority": "Medium",
+      "dueDate": "2023-10-05",
+      "createdDate": "2023-09-01"
+    },
+    {
+      "id": 2,
+      "name": "Task 2",
+      "description": "Details about task 2",
+      "status": "InProgress",
+      "priority": "High",
+      "dueDate": "2023-10-10",
+      "createdDate": "2023-09-15"
+    }
+  ]
+}
+````````
+
+---
+
+### 🏷️ Categories
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/categories` | Create category | PM |
+| GET | `/api/categories` | List categories | User |
+| GET | `/api/categories/{id}` | Get category details | User |
+| PUT | `/api/categories/{id}` | Update category | PM |
+| DELETE | `/api/categories/{id}` | Delete category | PM |
+
+**Example Request:**
+````````
+POST /api/categories
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "name": "Frontend",
+  "description": "Tasks related to frontend development"
+}
+````````
+
+**Example Response:**
+````````
+HTTP/1.1 201 Created
+Location: /api/categories/1
+
+{
+  "id": 1,
+  "name": "Frontend",
+  "description": "Tasks related to frontend development",
+  "tasks": []
+}
+````````
+
+---
+
+### 💬 Task Comments
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/tasks/{id}/comments` | Add comment | Member |
+| GET | `/api/tasks/{id}/comments` | Get comments | Member |
+| PUT | `/api/comments/{id}` | Update comment | Author |
+| DELETE | `/api/comments/{id}` | Delete comment | Author |
+
+**Example Request:**
+````````
+POST /api/tasks/1/comments
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "text": "This is a comment on the task"
+}
+````````
+
+**Example Response:**
+````````
+HTTP/1.1 201 Created
+Location: /api/comments/1
+
+{
+  "id": 1,
+  "taskId": 1,
+  "authorId": "user-id",
+  "text": "This is a comment on the task",
+  "createdDate": "2023-09-20T10:30:00"
+}
+````````
+
+---
+
+### 👥 Team Management
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/api/teams/project/{id}` | Get team members | Member |
+| POST | `/api/teams/invite` | Invite member | Owner/PM/TL |
+| PUT | `/api/teams/member/role` | Update role | Owner/PM |
+| DELETE | `/api/teams/member/{id}` | Remove member | Owner/PM |
+
+**Example Request:**
+````````
+POST /api/teams/invite
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "projectId": 1,
+  "email": "newmember@example.com",
+  "role": "Developer"
+}
+````````
+
+**Example Response:**
+````````
+HTTP/1.1 201 Created
+Location: /api/teams/project/1
+
+{
+  "projectId": 1,
+  "teamMembers": [
+    {
+      "id": "user-id",
+      "email": "existingmember@example.com",
+      "role": "Developer"
+    },
+    {
+      "id": "new-member-id",
+      "email": "newmember@example.com",
+      "role": "Developer"
+    }
+  ]
+}
+````````
+
+---
+
+### ⏱️ Time Tracking
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/timelogs/start` | Start timer | Employee |
+| PUT | `/api/timelogs/stop` | Stop timer | Employee |
+| GET | `/api/timelogs/task/{taskId}` | Get task time logs | Member |
+| GET | `/api/timelogs/my-logs` | My time logs | Employee |
+| DELETE | `/api/timelogs/{id}` | Delete time log | Employee |
+
+**Example Request:**
+````````
+POST /api/timelogs/start
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "taskId": 1
+}
+````````
+
+**Example Response:**
+````````
+HTTP/1.1 201 Created
+Location: /api/timelogs/1
+
+{
+  "id": 1,
+  "taskId": 1,
+  "userId": "user-id",
+  "startTime": "2023-09-20T10:00:00",
+  "endTime": null,
+  "duration": 0
+}
+````````
+
+---
+
+### 🔔 Notifications
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/api/notifications` | Get my notifications | User |
+| GET | `/api/notifications/unread-count` | Unread count | User |
+| PUT | `/api/notifications/{id}/read` | Mark as read | User |
+| PUT | `/api/notifications/read-all` | Mark all as read | User |
+| DELETE | `/api/notifications/{id}` | Delete notification | User |
+
+**SignalR Hub Endpoint**: `/hubs/notifications`
+
+**SignalR Client Example** (JavaScript/TypeScript):
+````````
+const connection = new signalR.HubConnectionBuilder()
+    .withUrl("/hubs/notifications")
+    .build();
+
+connection.on("ReceiveNotification", (notification) => {
+    console.log("New notification:", notification);
+    // Update UI or show toast
+});
+
+connection.start()
+    .then(() => console.log("SignalR connected"))
+    .catch(err => console.error("SignalR connection error:", err));
+````````
 
 ---
 
 ## 📁 Project Structure
-Backend.Net/ │ ├── API/                                    # Presentation Layer │   ├── Controllers/ │   │   ├── Tasks/Manager/ │   │   ├── project/Manager/ │   │   └── project/Employee/ │   ├── Hubs/ │   │   └── NotificationHub.cs           # SignalR Hub │   ├── Middleware/ │   │   └── ExceptionMiddleware.cs │   └── Program.cs │ ├── Application/                            # Business Logic Layer │   ├── Interfaces/ │   │   ├── Notifications/ │   │   │   ├── INotificationService.cs │   │   │   └── IRealtimeNotificationService.cs │   │   ├── Tasks/ │   │   ├── Project/ │   │   └── Identity/ │   ├── Services/ │   │   ├── Notifications/ │   │   │   └── NotificationService.cs │   │   ├── Tasks/ │   │   │   ├── Manager/TaskService.cs │   │   │   └── Employee/EmployeeTaskService.cs │   │   ├── Project/ │   │   └── Identity/ │   ├── DTOs/ │   └── Mapping/ │ ├── Domain/                                 # Core Domain Layer │   ├── Entities/ │   │   ├── User.cs │   │   ├── Project.cs │   │   ├── TaskItem.cs │   │   ├── Notification.cs │   │   └── ProjectMember.cs │   └── Enums/ │       ├── TaskStatus.cs │       ├── ProjectRole.cs │       └── NotificationType.cs │ └── Infrastructure/                         # External Concerns Layer ├── Data/ │   └── DatabaseDbContext.cs ├── Persistence/ │   └── Repositories/ │       ├── GenericRepository.cs │       └── UnitOfWork.cs └── Realtime/ └── SignalRNotificationService.cs  # SignalR Implementation
+
+### 🎨 Layer Overview
+
+| Layer | Location | Responsibility | Dependencies |
+|-------|----------|----------------|--------------|
+| **API** | `API/` | Presentation & Entry Point | Application |
+| **Application** | `Application/` | Business Logic | Domain |
+| **Domain** | `Domain/` | Core Entities & Rules | None (Pure) |
+| **Infrastructure** | `Infrastructure/` | Technical Implementations | Application, Domain |
 
 ---
 
-## 🗃️ Database Schema
+### Detailed Structure
 
-### Core Entities
+<details>
+<summary>📦 <b>API Layer</b> - Click to expand</summary>
 
-- **User** - System users with roles
-- **Workspace** - Top-level container
-- **Project** - Projects within workspaces
-- **ProjectMember** - Team membership with roles
-- **Milestone** - Project phases
-- **TaskItem** - Individual tasks
-- **TaskDependency** - Task relationships
-- **Category** - Task categories
-- **TimeLog** - Time tracking
-- **Notification** - System notifications
-- **ProjectInvitation** - Membership invitations
+- **`API/`**: Contains the presentation layer and entry point for the application.
+  - **`Controllers/`**: API controllers for handling HTTP requests.
+  - **`DTOs/`**: Data Transfer Objects for API communication.
+  - **`Models/`**: View models and data models for the API.
+  - **`Extensions/`**: Extension methods for API functionality.
+  - **`Filters/`**: Action filters for logging, validation, etc.
+  - **`Middlware/`**: Custom middleware for request processing.
+  - **`Swagger/`**: Swagger configuration and setup.
 
-### Relationships
-User 1──────* ProjectMember ──────1 Project Project 1─────── Milestone Milestone 1─────* TaskItem TaskItem 1──────* TaskDependency TaskItem 1──────* TimeLog User 1──────────* Notification
+</details>
 
----
+<details>
+<summary>📦 <b>Application Layer</b> - Click to expand</summary>
 
-## 🎯 Business Rules
+- **`Application/`**: Contains the business logic and application rules.
+  - **`Services/`**: Application services for handling business operations.
+  - **`Interfaces/`**: Interfaces for services, repositories, etc.
+  - **`Specifications/`**: Business logic specifications and validations.
+  - **`Mappings/`**: AutoMapper profiles for object mapping.
 
-### Task Status Transitions
-✅ Valid Transitions: Pending → InProgress InProgress → Submitted | Pending Submitted → Completed | Rejected Rejected → InProgress
-❌ Invalid Transitions: Pending → Completed (skip workflow) Completed → Any (immutable)
+</details>
 
-### Task Dependencies
-✅ Valid:
-•	Tasks in same project
-•	No self-dependencies
-•	No circular dependencies
-❌ Invalid:
-•	Task depends on itself
-•	Circular: A→B→C→A
-•	Cross-project dependencies
+<details>
+<summary>📦 <b>Domain Layer</b> - Click to expand</summary>
 
-### Authorization Rules
-Workspace Owner: ✅ Full control over workspace and projects
-Project Manager: ✅ Manage project, milestones, tasks ✅ Invite team leaders and members
-Team Leader: ✅ Create and assign tasks ✅ Review submissions ✅ Invite team members
-Team Member: ✅ Work on assigned tasks only ✅ Submit work for review
+- **`Domain/`**: Contains the core entities and domain logic.
+  - **`Entities/`**: Core business entities and their configurations.
+  - **`ValueObjects/`**: Immutable value objects for domain consistency.
+  - **`Enums/`**: Enumeration types used in the domain.
+  - **`Events/`**: Domain events for event sourcing and messaging.
 
----
+</details>
 
-## 🔐 Security Features
+<details>
+<summary>📦 <b>Infrastructure Layer</b> - Click to expand</summary>
 
-### Authentication
-- ✅ JWT token-based (Bearer authentication)
-- ✅ Secure password hashing (PBKDF2)
-- ✅ Token expiration and refresh
-- ✅ SignalR authentication via access_token query param
+- **`Infrastructure/`**: Contains technical implementations and external integrations.
+  - **`Persistence/`**: Entity Framework Core DbContext and migrations.
+  - **`Repositories/`**: Repository implementations for data access.
+  - **`Services/`**: External services and integrations (e.g., email, SMS).
+  - **`Logging/`**: Logging configuration and implementations.
+  - **`Security/`**: Security features like JWT authentication and authorization.
+  - **`SignalR/`**: SignalR hubs and configurations for real-time notifications.
+  - **`Swagger/`**: Swagger UI setup and configuration.
 
-### Authorization
-- ✅ Role-based access control (RBAC)
-- ✅ Resource-based authorization (project members only)
-- ✅ Custom authorization handlers
-- ✅ Policy-based authorization
-
-### Data Protection
-- ✅ Soft delete (no data loss)
-- ✅ Audit trails (CreatedBy, UpdatedAt)
-- ✅ Input validation (FluentValidation)
-- ✅ SQL injection protection (EF Core)
-- ✅ XSS protection
+</details>
 
 ---
 
-## 🧪 Testing
+## 🌟 Key Highlights
 
-### Unit Test Example (using xUnit)
+### 1. Real-time Notifications with Clean Architecture
 
----
+**Architecture Pattern:**
+````````
 
-## 📈 Performance Considerations
+**Notification Events:**
 
-### Optimizations
-
-- ✅ **Pagination** - All list endpoints support paging
-- ✅ **Eager Loading** - Minimize database round-trips
-- ✅ **AsNoTracking** - Read-only queries optimization
-- ✅ **Indexed Columns** - Fast lookups on frequently queried fields
-- ✅ **DTO Projection** - Transfer only required data
-
-### Scalability
-
-- ✅ **Repository Pattern** - Database abstraction
-- ✅ **Unit of Work** - Transaction management
-- ✅ **SignalR Scaleout** - Ready for Redis/Azure SignalR
-- ✅ **Async/Await** - Non-blocking operations
+| Event | Triggered When | Recipients | Real-time? |
+|-------|----------------|-----------|------------|
+| Task Assigned | New task created & assigned | Assignee | ✅ |
+| Task Reassigned | Task assigned to different user | Old + New | ✅ |
+| Task Updated | Task details modified | Assignee | ✅ |
+| Task Submitted | Employee submits work | Manager/TL | ✅ |
+| Task Approved | Manager approves task | Employee | ✅ |
+| Task Rejected | Manager rejects task | Employee | ✅ |
+| Dependency Resolved | Prerequisite completed | Blocked assignee | ✅ |
+| Comment Added | New comment on task | Participants | ✅ |
+| Project Invitation | User invited to project | Invited user | ✅ |
 
 ---
 
-## 🛡️ Error Handling
+### 2. Advanced Dependency Management
 
-### Centralized Exception Middleware
+**Circular Detection Algorithm:**
+- **Type**: Depth-First Search (DFS)
+- **Complexity**: O(V + E) where V = tasks, E = dependencies
+- **Detects**: Both direct and transitive circular dependencies
 
----
-
-## 📖 Documentation
-
-- **API Documentation**: Available at `/swagger` endpoint
-- **Architecture Diagrams**: See [Architecture](#-architecture) section
-- **Code Comments**: Comprehensive inline documentation
-- **XML Documentation**: Enabled for all public APIs
+**Examples:**
+````````
 
 ---
 
-## 🤝 Contributing
+### 3. Permission Matrix
 
-Contributions are welcome! Please follow these guidelines:
+| Action | Workspace Owner | Project Manager | Team Leader | Team Member |
+|--------|:---------------:|:---------------:|:-----------:|:-----------:|
+| Create Workspace | ✅ | ❌ | ❌ | ❌ |
+| Create Project | ✅ | ✅ | ❌ | ❌ |
+| Create Milestones | ✅ | ✅ | ❌ | ❌ |
+| Invite Team Leader | ✅ | ✅ | ❌ | ❌ |
+| Invite Team Members | ✅ | ✅ | ✅ | ❌ |
+| Create/Assign Tasks | ✅ | ✅ | ✅ | ❌ |
+| Update/Delete Tasks | ✅ | ✅ | ✅ | ❌ |
+| Review Tasks | ✅ | ✅ | ✅ | ❌ |
+| Manage Dependencies | ✅ | ✅ | ✅ | ❌ |
+| Start/Submit Tasks | ❌ | ❌ | ✅ | ✅ |
+| Add Comments | ✅ | ✅ | ✅ | ✅ |
+| Track Time | ❌ | ❌ | ✅ | ✅ |
+| View Analytics | ✅ | ✅ | ✅ | ❌ |
+````````
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-### Code Style
-
-- Follow Clean Architecture principles
-- Use meaningful variable and method names
-- Add XML documentation for public APIs
-- Write unit tests for business logic
-- Follow C# naming conventions
-
----
-
-## 📊 Project Statistics
+### 4. Metrics
 
 | Metric | Count |
 |--------|-------|
-| API Endpoints | 40+ |
-| Core Entities | 12+ |
-| Services | 10+ |
-| DTOs | 25+ |
-| Business Validations | 30+ |
-| Notification Types | 10+ |
-| Unit Tests | TBD |
+| **API Endpoints** | 50+ |
+| **Core Entities** | 13 |
+| **Services** | 12+ |
+| **DTOs** | 30+ |
+| **Business Validations** | 35+ |
+| **Notification Types** | 10 |
+| **Enum Types** | 8 |
+| **Design Patterns** | 6+ |
+````````
 
 ---
 
-## 🎓 Learning Resources
+### ✅ Completed Features
 
-This project demonstrates:
+- [x] Authentication & JWT
+- [x] Workspace Management
+- [x] Project Management
+- [x] Milestone Management
+- [x] Task Management with Dependencies
+- [x] Circular Dependency Detection (DFS)
+- [x] Real-time Notifications (SignalR)
+- [x] Task Comments System
+- [x] Category Management
+- [x] Team Management with Roles
+- [x] Time Tracking
+- [x] Analytics Dashboards
+- [x] Advanced Filtering & Search
+- [x] Soft Delete & Restore
+- [x] Role-based Authorization
 
-- ✅ Clean Architecture implementation in .NET 8
-- ✅ SOLID principles in practice
-- ✅ Domain-Driven Design (DDD)
-- ✅ Repository and Unit of Work patterns
-- ✅ SignalR real-time communication
-- ✅ JWT authentication and authorization
-- ✅ Graph algorithms (DFS for circular dependencies)
-- ✅ State machine pattern (task workflow)
-
----
-
-## 🔮 Roadmap
-
-### Planned Features
+### 🚧 Planned Features
 
 - [ ] Email notifications integration
 - [ ] File attachments for tasks
-- [ ] Task comments and discussions
 - [ ] Gantt chart visualization
-- [ ] Sprint/Agile board management
+- [ ] Sprint/Agile board (Kanban)
 - [ ] Burndown charts
 - [ ] Export to PDF/Excel
 - [ ] Task templates
 - [ ] Recurring tasks
-- [ ] Mobile app (React Native/Flutter)
+- [ ] Mobile app
 - [ ] Docker containerization
 - [ ] CI/CD pipeline
-
----
-
-## 📜 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 👤 Author
-
-**Your Name**  
-📧 Email: your.email@example.com  
-🔗 LinkedIn: [Your LinkedIn](https://linkedin.com/in/yourprofile)  
-🐙 GitHub: [@syncverse12](https://github.com/syncverse12)
-
----
-
-## 🙏 Acknowledgments
-
-- Inspired by Clean Architecture principles by Robert C. Martin
-- Built with modern .NET 8 and C# 12 features
-- SignalR for real-time communication
-- Entity Framework Core for data access
-
----
-
-## 📞 Support
-
-For issues, questions, or suggestions:
-
-- 🐛 [Open an Issue](https://github.com/syncverse12/Backend.Net/issues)
-- 💬 [Start a Discussion](https://github.com/syncverse12/Backend.Net/discussions)
-- 📧 Email: your.email@example.com
-
----
-
-## ⭐ Star This Project
-
-If you find this project useful, please consider giving it a ⭐ on GitHub!
-
----
-
-**Built using .NET 8 and Clean Architecture**
