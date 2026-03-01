@@ -1,70 +1,56 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using Graduation_Project.Application.DTOs.Auth;
+using Graduation_Project.Domain.Entities;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Graduation_Project.Domain.Entities;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Graduation_Project.API.JwtFeatuers
 {
     public class JwtHandler
     {
-        private readonly IConfiguration _config; 
-        private readonly UserManager<User> _userManager;
+        private readonly IConfiguration _configuration;
 
-        public JwtHandler(IConfiguration config, UserManager<User> userManager)
+        public JwtHandler(IConfiguration configuration)
         {
-            _config = config;
-            _userManager = userManager;
+            _configuration = configuration;
         }
 
-        public async Task<string> CreateTokenAsync(User user)
+        public (string Token, DateTime Expiration) GenerateToken(User user, IList<string> roles)
         {
-            var signingCredentials = GetSigningCredentials();
-            var claims = await GetClaims(user);
-            var tokenOptions = GenerateTokenOptions(signingCredentials, claims);
+            var jwtSettings = _configuration.GetSection("JwtSettings");
+            var securityKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtSettings["securityKey"]!));
 
-            return new JwtSecurityTokenHandler().WriteToken(tokenOptions);
-        }
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-        private SigningCredentials GetSigningCredentials()
-        {
-          
-            var jwtSettings = _config.GetSection("JwtSettings");
-            var key = Encoding.UTF8.GetBytes(jwtSettings["securityKey"]!);
-            var secret = new SymmetricSecurityKey(key);
-            return new SigningCredentials(secret, SecurityAlgorithms.HmacSha256);
-        }
-
-        private async Task<List<Claim>> GetClaims(User user)
-        {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, user.UserName!),
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Email, user.Email!) 
+                new Claim(ClaimTypes.Email, user.Email!),
+                new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
+                new Claim("firstName", user.FirstName),
+                new Claim("lastName", user.LastName)
             };
 
-            var roles = await _userManager.GetRolesAsync(user);
             foreach (var role in roles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
             }
 
-            return claims;
-        }
+            var expirationMinutes = int.Parse(jwtSettings["ExpirationMinutes"] ?? "60");
+            var expiration = DateTime.UtcNow.AddMinutes(expirationMinutes);
 
-        private JwtSecurityToken GenerateTokenOptions(SigningCredentials signingCredentials, List<Claim> claims)
-        {
-            var jwtSettings = _config.GetSection("JwtSettings"); 
-
-            return new JwtSecurityToken(
+            var token = new JwtSecurityToken(
                 issuer: jwtSettings["validIssuer"],
                 audience: jwtSettings["validAudience"],
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(Convert.ToDouble(jwtSettings["expiryInMinutes"])),
-                signingCredentials: signingCredentials
+                expires: expiration,
+                signingCredentials: credentials
             );
+
+            return (new JwtSecurityTokenHandler().WriteToken(token), expiration);
         }
     }
 }

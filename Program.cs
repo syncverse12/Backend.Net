@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using FluentValidation.AspNetCore;
 using Graduation_Project.API.Authorization.Handlers;
 using Graduation_Project.API.Authorization.Requirements;
@@ -23,8 +23,9 @@ using Graduation_Project.Domain.Entities;
 using Graduation_Project.Infrastructure.Data;
 using Graduation_Project.Infrastructure.Persistence;
 using Graduation_Project.Infrastructure.Persistence.Repositories;
-using Graduation_Project.Infrastructure.SeedConfiguration;
 using Graduation_Project.Infrastructure.Realtime;
+using Graduation_Project.Infrastructure.SeedConfiguration;
+using Graduation_Project.Infrastructure.Services.Email; // ✅ ADD THIS
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -67,11 +68,28 @@ builder.Services.AddAuthentication(opt =>
         ValidAudience = jwtSettings["validAudience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey))
     };
+    
+    // ✅ SignalR authentication
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/notifications"))
+            {
+                context.Token = accessToken;
+            }
+            
+            return System.Threading.Tasks.Task.CompletedTask;
+        }
+    };
 });
 
-//builder.Services.AddAuthorizationPolicies();
-
-
+// ✅ Services Registration
+builder.Services.AddScoped<IOtpService, OtpService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<JwtHandler>();
 builder.Services.AddHttpContextAccessor();
@@ -90,11 +108,9 @@ builder.Services.AddScoped<IRealtimeNotificationService, SignalRNotificationServ
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEmployeeProjectService, EmployeeProjectService>();
 
-
 builder.Services.AddScoped<IAuthorizationHandler, ManagerAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TaskOwnerAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ReviewTaskAuthorizationHandler>();
-builder.Services.AddSingleton<IAuthorizationHandler, ManagerAuthorizationHandler>();
 
 // SignalR
 builder.Services.AddSignalR();
@@ -115,6 +131,7 @@ builder.Services.AddAuthorization(options =>
 
     options.AddPolicy("ReviewTask", policy =>
         policy.Requirements.Add(new ReviewTaskRequirement()));
+        
     options.AddPolicy("EmployeeOnly", policy =>
         policy.RequireRole("Employee"));
 });
@@ -130,7 +147,7 @@ builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
 {
-    opt.SwaggerDoc("v1", new OpenApiInfo { Title = "MyAPI", Version = "v1" });
+    opt.SwaggerDoc("v1", new OpenApiInfo { Title = "Project Management API", Version = "v1" });
     opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,

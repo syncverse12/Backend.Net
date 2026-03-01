@@ -2,8 +2,9 @@
 {
     public class AuthResponseDto
     {
-        public bool IsAuthenticated { get; set; }
-        public string Token { get; set; } = string.Empty;
-        public DateTime? ExpiresOn { get; set; }
+        public string Token { get; set; } = null!;
+        public DateTime Expiration { get; set; }
+        public UserResponseDto User { get; set; } = null!;
+        public string Message { get; set; } = null!;
     }
 }

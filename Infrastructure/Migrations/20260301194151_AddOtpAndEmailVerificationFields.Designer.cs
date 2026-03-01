@@ -4,6 +4,7 @@ using Graduation_Project.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Graduation_Project.Migrations
 {
     [DbContext(typeof(DatabaseDbContext))]
-    partial class DatabaseDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260301194151_AddOtpAndEmailVerificationFields")]
+    partial class AddOtpAndEmailVerificationFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -483,7 +486,8 @@ namespace Graduation_Project.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("datetime2");
@@ -505,6 +509,9 @@ namespace Graduation_Project.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("UserId1")
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TaskEmployeeId");
@@ -513,7 +520,9 @@ namespace Graduation_Project.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TimeLogs");
+                    b.HasIndex("UserId1");
+
+                    b.ToTable("TimeLogs", (string)null);
                 });
 
             modelBuilder.Entity("Graduation_Project.Domain.Entities.User", b =>
@@ -1095,10 +1104,14 @@ namespace Graduation_Project.Migrations
                         .IsRequired();
 
                     b.HasOne("Graduation_Project.Domain.Entities.User", "User")
-                        .WithMany("TimeLogs")
+                        .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.HasOne("Graduation_Project.Domain.Entities.User", null)
+                        .WithMany("TimeLogs")
+                        .HasForeignKey("UserId1");
 
                     b.Navigation("Task");
 

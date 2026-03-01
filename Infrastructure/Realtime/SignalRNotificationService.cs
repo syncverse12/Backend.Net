@@ -1,8 +1,7 @@
 ﻿using Graduation_Project.API.Hubs;
 using Graduation_Project.Application.Interfaces.Notifications;
 using Microsoft.AspNetCore.SignalR;
-using System;
-using System.Collections.Generic;
+
 
 namespace Graduation_Project.Infrastructure.Realtime
 {
@@ -15,7 +14,7 @@ namespace Graduation_Project.Infrastructure.Realtime
             _hubContext = hubContext;
         }
 
-        public async System.Threading.Tasks.Task SendNotificationToUserAsync(string userId, object notification)
+        public async Task SendNotificationToUserAsync(string userId, object notification)
         {
             try
             {
@@ -28,7 +27,7 @@ namespace Graduation_Project.Infrastructure.Realtime
             }
         }
 
-        public async System.Threading.Tasks.Task SendNotificationMarkedAsReadAsync(string userId, string notificationId)
+        public async Task SendNotificationMarkedAsReadAsync(string userId, string notificationId)
         {
             try
             {
@@ -41,7 +40,7 @@ namespace Graduation_Project.Infrastructure.Realtime
             }
         }
 
-        public async System.Threading.Tasks.Task SendBulkNotificationAsync(List<string> userIds, object notification)
+        public async Task SendBulkNotificationAsync(List<string> userIds, object notification)
         {
             try
             {

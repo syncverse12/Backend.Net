@@ -9,10 +9,10 @@ namespace Graduation_Project.Application.Mapping
     {
         public MappingProfile()
         {
-            CreateMap<RegisterRequestDto, User>()
+            CreateMap<RegisterDto, User>()
                 .ForMember(u => u.UserName, opt => opt.MapFrom(src => src.Email));
 
-            CreateMap<RegisterRequestDto, User>();
+            CreateMap<RegisterDto, User>();
 
            
 

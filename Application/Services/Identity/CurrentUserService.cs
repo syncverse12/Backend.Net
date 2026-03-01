@@ -1,17 +1,21 @@
 ﻿using Graduation_Project.Application.Interfaces.Identity;
+using System.Security.Claims;
 
-public class CurrentUserService : ICurrentUserService
+namespace Graduation_Project.Application.Services.Identity
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public CurrentUserService(IHttpContextAccessor httpContextAccessor)
+    public class CurrentUserService : ICurrentUserService
     {
-        _httpContextAccessor = httpContextAccessor;
-    }
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public string? UserId =>
-        _httpContextAccessor.HttpContext?
-        .User?
-        .FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?
-        .Value;
+        public CurrentUserService(IHttpContextAccessor httpContextAccessor)
+        {
+            _httpContextAccessor = httpContextAccessor;
+        }
+
+        public string? UserId =>
+            _httpContextAccessor.HttpContext?
+            .User?
+            .FindFirst(ClaimTypes.NameIdentifier)?
+            .Value;
+    }
 }

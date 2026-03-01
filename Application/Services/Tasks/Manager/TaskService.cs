@@ -204,7 +204,6 @@ namespace Graduation_Project.Application.Services.Task.Manager
             var projectMember = await _unitOfWork.Repository<ProjectMember>().Query()   
                 .FirstOrDefaultAsync(m => m.ProjectId == task.ProjectId && m.UserId == currentUserId);
 
-            // ✅ Safe null checks
             bool isWorkspaceOwner = task.Project?.Workspace?.CreatedByUserId == currentUserId;
             bool isProjectManager = task.Project?.CreatedByUserId == currentUserId;
             bool isTeamLeader = projectMember?.Role == ProjectRole.TeamLeader;
@@ -349,7 +348,6 @@ namespace Graduation_Project.Application.Services.Task.Manager
             var projectMember = await _unitOfWork.Repository<ProjectMember>().Query()
                 .FirstOrDefaultAsync(m => m.ProjectId == task.ProjectId && m.UserId == userId);
 
-            // ✅ Safe null checks
             bool isWorkspaceOwner = task.Project?.Workspace?.CreatedByUserId == userId;
             bool isProjectManager = task.Project?.CreatedByUserId == userId;
             bool isTeamLeader = projectMember?.Role == ProjectRole.TeamLeader;
