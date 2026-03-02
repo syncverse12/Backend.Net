@@ -25,7 +25,7 @@ using SyncVerse.Infrastructure.Persistence;
 using SyncVerse.Infrastructure.Persistence.Repositories;
 using SyncVerse.Infrastructure.Realtime;
 using SyncVerse.Infrastructure.SeedConfiguration;
-using SyncVerse.Infrastructure.Services.Email; // ✅ ADD THIS
+using SyncVerse.Infrastructure.Services.Email;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;

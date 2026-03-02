@@ -52,7 +52,7 @@ namespace SyncVerse.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Category", (string)null);
+                    b.ToTable("Category");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -199,7 +199,7 @@ namespace SyncVerse.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ProjectMembers", (string)null);
+                    b.ToTable("ProjectMembers");
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.Milestone", b =>
@@ -247,7 +247,7 @@ namespace SyncVerse.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("Milestones", (string)null);
+                    b.ToTable("Milestones");
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.Notification", b =>
@@ -427,7 +427,7 @@ namespace SyncVerse.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("ProjectInvitations", (string)null);
+                    b.ToTable("ProjectInvitations");
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.Role", b =>
@@ -563,6 +563,63 @@ namespace SyncVerse.Migrations
                     b.ToTable("TaskDependencies", (string)null);
                 });
 
+            modelBuilder.Entity("SyncVerse.Domain.Entities.TaskEmployee", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("AssignedUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("Deadline")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProgressPercentage")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("ProjectId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TaskTitle")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedUserId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("TaskEmployees", (string)null);
+                });
+
             modelBuilder.Entity("SyncVerse.Domain.Entities.TeamMember", b =>
                 {
                     b.Property<string>("Id")
@@ -603,7 +660,7 @@ namespace SyncVerse.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TeamMember", (string)null);
+                    b.ToTable("TeamMember");
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.TimeLog", b =>
@@ -630,7 +687,8 @@ namespace SyncVerse.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("datetime2");
@@ -660,7 +718,7 @@ namespace SyncVerse.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TimeLogs", (string)null);
+                    b.ToTable("TimeLogs");
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.User", b =>
@@ -793,63 +851,6 @@ namespace SyncVerse.Migrations
                     b.HasIndex("CreatedByUserId");
 
                     b.ToTable("Workspaces", (string)null);
-                });
-
-            modelBuilder.Entity("SyncVerse.Domain.Entities.TaskEmployee", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("AssignedUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("Deadline")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("Priority")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProgressPercentage")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.Property<string>("ProjectId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TaskTitle")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AssignedUserId");
-
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("TaskEmployees", (string)null);
                 });
 
             modelBuilder.Entity("TaskItem", b =>
@@ -1123,6 +1124,23 @@ namespace SyncVerse.Migrations
                     b.Navigation("Task");
                 });
 
+            modelBuilder.Entity("SyncVerse.Domain.Entities.TaskEmployee", b =>
+                {
+                    b.HasOne("SyncVerse.Domain.Entities.User", "AssignedUser")
+                        .WithMany()
+                        .HasForeignKey("AssignedUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SyncVerse.Domain.Entities.Project", "Project")
+                        .WithMany("Tasks")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("AssignedUser");
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("SyncVerse.Domain.Entities.TeamMember", b =>
                 {
                     b.HasOne("SyncVerse.Domain.Entities.Project", "Project")
@@ -1174,23 +1192,6 @@ namespace SyncVerse.Migrations
                         .IsRequired();
 
                     b.Navigation("CreatedByUser");
-                });
-
-            modelBuilder.Entity("SyncVerse.Domain.Entities.TaskEmployee", b =>
-                {
-                    b.HasOne("SyncVerse.Domain.Entities.User", "AssignedUser")
-                        .WithMany()
-                        .HasForeignKey("AssignedUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("SyncVerse.Domain.Entities.Project", "Project")
-                        .WithMany("Tasks")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("AssignedUser");
-
-                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("TaskItem", b =>
@@ -1267,6 +1268,11 @@ namespace SyncVerse.Migrations
                     b.Navigation("Replies");
                 });
 
+            modelBuilder.Entity("SyncVerse.Domain.Entities.TaskEmployee", b =>
+                {
+                    b.Navigation("TimeLogs");
+                });
+
             modelBuilder.Entity("SyncVerse.Domain.Entities.User", b =>
                 {
                     b.Navigation("AssignedTasks");
@@ -1281,11 +1287,6 @@ namespace SyncVerse.Migrations
             modelBuilder.Entity("SyncVerse.Domain.Entities.Workspace", b =>
                 {
                     b.Navigation("Projects");
-                });
-
-            modelBuilder.Entity("SyncVerse.Domain.Entities.TaskEmployee", b =>
-                {
-                    b.Navigation("TimeLogs");
                 });
 
             modelBuilder.Entity("TaskItem", b =>
