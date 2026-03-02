@@ -192,10 +192,26 @@ app.MapHub<NotificationHub>("/hubs/notifications");
 // --- 3. Database Seeding ---
 using (var scope = app.Services.CreateScope())
 {
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
+    try
+    {
+        var context = scope.ServiceProvider.GetRequiredService<DatabaseDbContext>();
 
-    await DefaultAdminSeeder.SeedAsync(userManager, roleManager);
+        // Ensure database is created
+        await context.Database.EnsureCreatedAsync();
+
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
+
+        await DefaultAdminSeeder.SeedAsync(userManager, roleManager);
+
+        Console.WriteLine("✅ Database seeding completed successfully!");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ Error during database seeding: {ex.Message}");
+        Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+        // Don't throw - let the app continue to run
+    }
 }
 
 await app.RunAsync();
