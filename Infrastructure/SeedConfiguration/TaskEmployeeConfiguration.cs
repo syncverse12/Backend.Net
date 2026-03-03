@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
-using SyncVerse.Domain.Entities;  // ✅ تم التصحيح من Synverse إلى SyncVerse
+using SyncVerse.Domain.Entities; 
 
 namespace SyncVerse.Infrastructure.SeedConfiguration
 {

@@ -196,8 +196,8 @@ using (var scope = app.Services.CreateScope())
     {
         var context = scope.ServiceProvider.GetRequiredService<DatabaseDbContext>();
 
-        // Ensure database is created
-        await context.Database.EnsureCreatedAsync();
+        // ✅ تطبيق الـ migrations بدلاً من EnsureCreated
+        await context.Database.MigrateAsync();
 
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
