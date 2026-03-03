@@ -15,12 +15,15 @@ namespace SyncVerse.Domain.Entities
 
             public decimal? Budget { get; set; }
 
+            public string? RepositoryUrl { get; set; }
+            public string? DocumentationUrl { get; set; }
+
             public string CreatedByUserId { get; set; } = string.Empty;
             public User CreatedByUser { get; set; } = null!;
            public virtual ICollection<Milestone> Milestones { get; set; } = new List<Milestone>();
            public virtual ICollection<TaskItem> Taskitem { get; set; } = new List<TaskItem>();
            public ICollection<TeamMember> TeamMembers { get; set; } = new List<TeamMember>();
- 
+
           public ICollection<TaskEmployee> Tasks { get; set; } = new List<TaskEmployee>();
 
     }

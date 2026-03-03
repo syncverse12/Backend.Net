@@ -117,7 +117,9 @@ namespace SyncVerse.Application.Services.Project.Employee
                     TotalTasks = p.Tasks.Count(t => !t.IsDeleted),
                     MyTasks = myTasks,
                     CompletedTasks = completedTasks,
-                    JoinedAt = member.CreatedAt
+                    JoinedAt = member.CreatedAt,
+                    RepositoryUrl = p.RepositoryUrl,
+                    DocumentationUrl = p.DocumentationUrl
                 };
             }).ToList();
 
@@ -173,6 +175,8 @@ namespace SyncVerse.Application.Services.Project.Employee
                 CompletedTasks = completedTasks,
                 InProgressTasks = inProgressTasks,
                 JoinedAt = member.CreatedAt,
+                RepositoryUrl = project.RepositoryUrl,
+                DocumentationUrl = project.DocumentationUrl,
                 Milestones = milestones
             };
 

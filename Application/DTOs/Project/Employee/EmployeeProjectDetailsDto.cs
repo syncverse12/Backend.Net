@@ -14,6 +14,8 @@ namespace SyncVerse.Application.DTOs.Project.Employee
         public int CompletedTasks { get; set; }
         public int InProgressTasks { get; set; }
         public DateTime JoinedAt { get; set; }
+        public string? RepositoryUrl { get; set; }
+        public string? DocumentationUrl { get; set; }
         public List<MilestoneResponseDto> Milestones { get; set; } = new();
     }
 }
