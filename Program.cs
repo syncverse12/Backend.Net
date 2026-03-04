@@ -6,12 +6,16 @@ using SyncVerse.API.Hubs;
 using SyncVerse.API.JwtFeatuers;
 using SyncVerse.API.Middleware;
 using SyncVerse.Application.Interfaces;
+using SyncVerse.Application.Interfaces.Attachments;
 using SyncVerse.Application.Interfaces.Identity;
 using SyncVerse.Application.Interfaces.Notifications;
 using SyncVerse.Application.Interfaces.Persistence;
+using SyncVerse.Application.Interfaces.Storage;
 using SyncVerse.Application.Interfaces.Task.Manager;
 using SyncVerse.Application.Interfaces.Tasks.Comments;
+using SyncVerse.Application.Interfaces.Tasks.Employee;
 using SyncVerse.Application.Interfaces.Tasks.TimeTracking;
+using SyncVerse.Application.Services.Attachments;
 using SyncVerse.Application.Services.Identity;
 using SyncVerse.Application.Services.Milestones;
 using SyncVerse.Application.Services.Notifications;
@@ -19,6 +23,7 @@ using SyncVerse.Application.Services.Project.Employee;
 using SyncVerse.Application.Services.Task.Manager;
 using SyncVerse.Application.Services.Tasks.Comments;
 using SyncVerse.Application.Services.Tasks.TimeTracking;
+using SyncVerse.Application.Services.Task.Employee;
 using SyncVerse.Domain.Entities;
 using SyncVerse.Infrastructure.Data;
 using SyncVerse.Infrastructure.Persistence;
@@ -26,6 +31,7 @@ using SyncVerse.Infrastructure.Persistence.Repositories;
 using SyncVerse.Infrastructure.Realtime;
 using SyncVerse.Infrastructure.SeedConfiguration;
 using SyncVerse.Infrastructure.Services.Email;
+using SyncVerse.Infrastructure.Storage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -107,6 +113,13 @@ builder.Services.AddScoped<ITimeLogService, TimeLogService>();
 builder.Services.AddScoped<IRealtimeNotificationService, SignalRNotificationService>();  
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEmployeeProjectService, EmployeeProjectService>();
+builder.Services.AddScoped<IEmployeeTaskService, EmployeeTaskService>();
+
+// ✅ File Storage - Local only (Development)
+// For production, switch to cloud storage (Azure/AWS)
+builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+builder.Services.AddScoped<IProjectAttachmentService, ProjectAttachmentService>();
+builder.Services.AddScoped<ITaskAttachmentService, TaskAttachmentService>();
 
 builder.Services.AddScoped<IAuthorizationHandler, ManagerAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TaskOwnerAuthorizationHandler>();
@@ -147,16 +160,32 @@ builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
 {
-    opt.SwaggerDoc("v1", new OpenApiInfo { Title = "Project Management API", Version = "v1" });
+    opt.SwaggerDoc("v1", new OpenApiInfo 
+    { 
+        Title = "SyncVerse API", 
+        Version = "v1",
+        Description = "Project Management System API"
+    });
+
+    // Custom OperationId to avoid conflicts
+    opt.CustomOperationIds(apiDesc =>
+    {
+        var controllerName = apiDesc.ActionDescriptor.RouteValues["controller"];
+        var actionName = apiDesc.ActionDescriptor.RouteValues["action"];
+        return $"{controllerName}_{actionName}";
+    });
+
+    // JWT Bearer configuration
     opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
-        Description = "Please enter token",
+        Description = "Please enter JWT Bearer token",
         Name = "Authorization",
         Type = SecuritySchemeType.Http,
         BearerFormat = "JWT",
         Scheme = "bearer"
     });
+
     opt.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -164,8 +193,8 @@ builder.Services.AddSwaggerGen(opt =>
             {
                 Reference = new OpenApiReference
                 {
-                    Type=ReferenceType.SecurityScheme,
-                    Id="Bearer"
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
                 }
             },
             new string[]{}
@@ -183,6 +212,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles(); // For serving uploaded files
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();

@@ -8,7 +8,7 @@ namespace SyncVerse.API.Controllers.Tasks.Employee
 {
     [Authorize]
     [ApiController]
-    [Route("api/tasks/{taskId}/comments")]
+    [Route("api/task-comments")]
     public class TaskCommentsController : ControllerBase
     {
         private readonly ITaskCommentService _commentService;
@@ -18,7 +18,7 @@ namespace SyncVerse.API.Controllers.Tasks.Employee
             _commentService = commentService;
         }
 
-        [HttpPost]
+        [HttpPost("{taskId}")]
         public async Task<IActionResult> AddComment(string taskId, [FromBody] CreateCommentDto dto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -26,7 +26,7 @@ namespace SyncVerse.API.Controllers.Tasks.Employee
             return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
 
-        [HttpGet]
+        [HttpGet("{taskId}")]
         public async Task<IActionResult> GetComments(string taskId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;

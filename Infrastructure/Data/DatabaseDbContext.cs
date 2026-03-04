@@ -33,6 +33,8 @@ namespace SyncVerse.Infrastructure.Data
         public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<ProjectInvitation> ProjectInvitations { get; set; }
         public DbSet<ProjectMember> ProjectMembers { get; set; }
+        public DbSet<ProjectAttachment> ProjectAttachments { get; set; }
+        public DbSet<TaskAttachment> TaskAttachments { get; set; }
 
         public override int SaveChanges()
         {
