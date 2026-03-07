@@ -105,7 +105,22 @@ A **production-ready**, **enterprise-level** project management system built wit
 
 This project follows **Clean Architecture** principles with clear separation of concerns
 
-┌─────────────────────────────────────────┐ │         Presentation Layer (API)        │ │  Controllers, Hubs, Middleware          │ └─────────────────┬───────────────────────┘ │ ┌─────────────────▼───────────────────────┐ │        Application Layer                │ │  Services, DTOs, Interfaces, Validators │ └─────────────────┬───────────────────────┘ │ ┌─────────────────▼───────────────────────┐ │           Domain Layer                  │ │  Entities, Value Objects, Domain Logic  │ └─────────────────┬───────────────────────┘ │ ┌─────────────────▼───────────────────────┐ │       Infrastructure Layer              │ │  DbContext, Repositories, External APIs │ └─────────────────────────────────────────┘
+┌─────────────────────────────────────────┐ 
+│         Presentation Layer (API)        │
+│  Controllers, Hubs, Middleware          │ 
+└─────────────────┬───────────────────────┘ 
+┌─────────────────▼───────────────────────┐
+│        Application Layer                │  
+│ Services, DTOs, Interfaces, Validators  │  
+└─────────────────┬───────────────────────┘
+┌─────────────────▼───────────────────────┐ 
+│           Domain Layer                  │ 
+│  Entities, Value Objects, Domain Logic  │ 
+└─────────────────┬───────────────────────┘ 
+┌─────────────────▼───────────────────────┐
+│       Infrastructure Layer              │  
+│ DbContext, Repositories, External APIs  │
+└─────────────────────────────────────────┘
 
 **Benefits:** Testable, Flexible, No layer violations, SOLID principles
 
