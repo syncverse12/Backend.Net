@@ -105,50 +105,7 @@ A **production-ready**, **enterprise-level** project management system built wit
 
 This project follows **Clean Architecture** principles with clear separation of concerns
 
-subgraph "📋 Application Layer"
-    Services[Business Services]
-    DTOs[Data Transfer Objects]
-    Interfaces[Service Interfaces]
-    Validators[FluentValidation]
-end
-
-subgraph "🏛️ Domain Layer"
-    Entities[Domain Entities]
-    Common[Base Entity & Common Types]
-end
-
-subgraph "🔧 Infrastructure Layer"
-    DbContext[EF Core DbContext]
-    Repositories[Generic Repository]
-    UnitOfWork[Unit of Work]
-    Email[Email Service]
-    Storage[File Storage]
-    Realtime[SignalR Service]
-end
-
-subgraph "⚙️ Cross-Cutting"
-    JWT[JWT Authentication]
-    Authorization[Authorization Handlers]
-    Middleware[Exception Middleware]
-    AutoMapper[AutoMapper]
-end
-
-API --> Services
-Services --> Interfaces
-Services --> UnitOfWork
-UnitOfWork --> Repositories
-Repositories --> DbContext
-DbContext --> Entities
-Services --> DTOs
-API --> JWT
-API --> Authorization
-API --> Middleware
-
-style API fill:#e1f5ff
-style Services fill:#e8f5e9
-style Entities fill:#f3e5f5
-style DbContext fill:#fff3e0
-
+┌─────────────────────────────────────────┐ │         Presentation Layer (API)        │ │  Controllers, Hubs, Middleware          │ └─────────────────┬───────────────────────┘ │ ┌─────────────────▼───────────────────────┐ │        Application Layer                │ │  Services, DTOs, Interfaces, Validators │ └─────────────────┬───────────────────────┘ │ ┌─────────────────▼───────────────────────┐ │           Domain Layer                  │ │  Entities, Value Objects, Domain Logic  │ └─────────────────┬───────────────────────┘ │ ┌─────────────────▼───────────────────────┐ │       Infrastructure Layer              │ │  DbContext, Repositories, External APIs │ └─────────────────────────────────────────┘
 
 **Benefits:** Testable, Flexible, No layer violations, SOLID principles
 
