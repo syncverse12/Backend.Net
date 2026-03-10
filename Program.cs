@@ -93,6 +93,34 @@ builder.Services.AddAuthentication(opt =>
     };
 });
 
+// ✅ CORS Configuration - Allow Frontend, Flutter, Unity
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+
+    options.AddPolicy("ProductionPolicy", policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:3000",      // React/Next.js Dev
+                "http://localhost:4200",      // Angular Dev
+                "http://localhost:8080",      // Vue.js Dev
+                "http://localhost:5173",      // Vite Dev
+                "https://yourdomain.com",     // Production Frontend
+                "capacitor://localhost",      // Capacitor/Flutter
+                "ionic://localhost"           // Ionic
+              )
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials()
+              .WithExposedHeaders("Content-Disposition"); // For file downloads
+    });
+});
+
 // ✅ Services Registration
 builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -210,6 +238,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// ✅ CORS - Must be before Authentication/Authorization
+app.UseCors(app.Environment.IsDevelopment() ? "AllowAll" : "ProductionPolicy");
 
 app.UseHttpsRedirection();
 app.UseStaticFiles(); // For serving uploaded files
