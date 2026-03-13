@@ -32,9 +32,12 @@ namespace SyncVerse.Infrastructure.Data
         public DbSet<TaskComment> TaskComments => Set<TaskComment>();
         public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<ProjectInvitation> ProjectInvitations { get; set; }
-        public DbSet<ProjectMember> ProjectMembers { get; set; }
+        public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();
         public DbSet<ProjectAttachment> ProjectAttachments { get; set; }
         public DbSet<TaskAttachment> TaskAttachments { get; set; }
+        public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
+        public DbSet<Team> Teams => Set<Team>();
+        public DbSet<CompanyInvitation> CompanyInvitations => Set<CompanyInvitation>();
 
         public override int SaveChanges()
         {
@@ -68,7 +71,11 @@ namespace SyncVerse.Infrastructure.Data
 
             foreach (var entityType in builder.Model.GetEntityTypes())
             {
-                if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
+                // نطبق الفلتر فقط على الكلاسات اللي بترث من BaseEntity 
+                // ونستبعد جداول الـ Identity تماماً
+                if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType) &&
+                    !entityType.ClrType.Name.Contains("User") &&
+                    !entityType.ClrType.Name.Contains("Role"))
                 {
                     var parameter = Expression.Parameter(entityType.ClrType, "e");
                     var propertyMethodInfo = typeof(EF).GetMethod("Property")?.MakeGenericMethod(typeof(bool));

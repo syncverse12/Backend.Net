@@ -1,142 +1,162 @@
 ﻿using SyncVerse.Application.Common.Results;
-using SyncVerse.Application.Interfaces;
+using SyncVerse.Application.DTOs.Team;
 using SyncVerse.Application.Interfaces.Persistence;
+using SyncVerse.Application.Interfaces.Team;
 using SyncVerse.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
 
-namespace SyncVerse.Application.Services
+namespace SyncVerse.Application.Services.Team
 {
     public class TeamService : ITeamService
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IInvitationService _invitationService;
 
-        public TeamService(
-            IUnitOfWork unitOfWork,
-            IInvitationService invitationService)
+        public TeamService(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
-            _invitationService = invitationService;
         }
 
-        public async Task<Result<List<TeamMemberResponseDto>>> GetProjectTeamMembersAsync(string projectId,string managerId)
+        public async Task<Result<TeamResponseDto>> CreateTeamAsync(CreateTeamDto dto, string managerId)
         {
-            var project = await _unitOfWork.Repository<Domain.Entities.Project>()
-                .GetByIdAsync(projectId);
-
-            if (project == null)
-                return Result<List<TeamMemberResponseDto>>.Failure("Project not found");
-
-            if (project.CreatedByUserId != managerId)
-                return Result<List<TeamMemberResponseDto>>.Failure("Unauthorized");
-
-            var members = await _unitOfWork.Repository<TeamMember>()
-                 .Query() 
-                 .Include(m => m.User) 
-                 .Where(m => m.ProjectId == projectId)
-                 .ToListAsync();
-
-            var result = members.Select(m => new TeamMemberResponseDto
+            var team = new Domain.Entities.Team
             {
-                TeamMemberId = m.Id,
-                UserId = m.UserId,
-                UserEmail = m.User?.Email ?? "N/A", 
-                Role = m.Role,
-                IsActive = m.IsActive
-            }).ToList();
-
-            return Result<List<TeamMemberResponseDto>>.Success(result);
-        }
-
-
-        public async Task<Result<bool>> InviteMemberAsync(
-            InviteTeamMemberDto dto,
-            string managerId)
-        {
-            var project = await _unitOfWork.Repository<Domain.Entities.Project>()
-                .GetByIdAsync(dto.ProjectId);
-
-            if (project == null)
-                return Result<bool>.Failure("Project not found");
-
-            if (project.CreatedByUserId != managerId)
-                return Result<bool>.Failure("Unauthorized");
-
-            var user = await _unitOfWork.Repository<User>()
-                .FindAsync(u => u.Email == dto.UserEmail);
-
-            if (user == null)
-                return Result<bool>.Failure("User not found");
-
-            var isAlreadyMember = await _unitOfWork.Repository<TeamMember>()
-                .FindAsync(m => m.ProjectId == dto.ProjectId && m.UserId == user.Id);
-
-            if (isAlreadyMember != null)
-                return Result<bool>.Failure("User is already a member of this project");
-
-            var member = new TeamMember
-            {
-                ProjectId = dto.ProjectId,
-                UserId = user.Id, 
-                Role = dto.Role,
-                IsActive = false
+                Name = dto.Name,
+                Description = dto.Description,
+                Specialization = dto.Specialization,
+                Department = dto.Department,
+                CreatedByManagerId = managerId
             };
 
-            await _unitOfWork.Repository<TeamMember>().AddAsync(member);
+            await _unitOfWork.Repository<Domain.Entities.Team>().AddAsync(team);
             await _unitOfWork.SaveChangesAsync();
 
-            await _invitationService.SendInvitationAsync(
-                dto.UserEmail,
-                project.Name);
+            var response = new TeamResponseDto
+            {
+                Id = team.Id,
+                Name = team.Name,
+                Description = team.Description,
+                Specialization = team.Specialization,
+                Department = team.Department,
+                DepartmentDisplay = team.Department.ToString(), 
+                CreatedAt = team.CreatedAt,
+                MembersCount = 0
+            };
 
-            return Result<bool>.Success(true, "Invitation sent successfully");
+            return Result<TeamResponseDto>.Success(response, "Team created successfully");
         }
 
-        public async Task<Result<bool>> UpdateMemberRoleAsync(
-            UpdateTeamMemberRoleDto dto,
-            string managerId)
+        public async Task<Result<List<TeamResponseDto>>> GetMyTeamsAsync(string managerId)
         {
-            var member = await _unitOfWork.Repository<TeamMember>()
+            var teams = await _unitOfWork.Repository<Domain.Entities.Team>()
                 .Query()
-                .Include(m => m.Project)
-                .FirstOrDefaultAsync(m => m.Id == dto.TeamMemberId);
+                .Include(t => t.CreatedByManager)
+                .Where(t => t.CreatedByManagerId == managerId)
+                .ToListAsync();
 
-            if (member == null)
-                return Result<bool>.Failure("Team member not found");
+            var result = teams.Select(t => new TeamResponseDto
+            {
+                Id = t.Id,
+                Name = t.Name,
+                Description = t.Description,
+                Specialization = t.Specialization,
+                Department = t.Department,
+                DepartmentDisplay = t.Department.ToString(), 
+                ManagerName = $"{t.CreatedByManager.FirstName} {t.CreatedByManager.LastName}",
+                CreatedAt = t.CreatedAt,
+                MembersCount = 0
+            }).ToList();
 
-            if (member.Project.CreatedByUserId != managerId)
+            return Result<List<TeamResponseDto>>.Success(result);
+        }
+
+        public async Task<Result<TeamResponseDto>> GetTeamByIdAsync(string teamId, string managerId)
+        {
+            var team = await _unitOfWork.Repository<Domain.Entities.Team>()
+                .Query()
+                .Include(t => t.CreatedByManager)
+                .FirstOrDefaultAsync(t => t.Id == teamId);
+
+            if (team == null)
+                return Result<TeamResponseDto>.Failure("Team not found");
+
+            if (team.CreatedByManagerId != managerId)
+                return Result<TeamResponseDto>.Failure("Unauthorized");
+
+            var response = new TeamResponseDto
+            {
+                Id = team.Id,
+                Name = team.Name,
+                Description = team.Description,
+                Specialization = team.Specialization,
+                Department = team.Department,
+                DepartmentDisplay = team.Department.ToString(), 
+                ManagerName = $"{team.CreatedByManager.FirstName} {team.CreatedByManager.LastName}",
+                CreatedAt = team.CreatedAt,
+                MembersCount = 0
+            };
+
+            return Result<TeamResponseDto>.Success(response);
+        }
+
+        public async Task<Result<bool>> UpdateTeamAsync(UpdateTeamDto dto, string managerId)
+        {
+            var team = await _unitOfWork.Repository<Domain.Entities.Team>().GetByIdAsync(dto.TeamId);
+            if (team == null)
+                return Result<bool>.Failure("Team not found");
+
+            if (team.CreatedByManagerId != managerId)
                 return Result<bool>.Failure("Unauthorized");
 
-            member.Role = dto.Role;
+            team.Name = dto.Name;
+            team.Description = dto.Description;
+            team.Specialization = dto.Specialization;
+            team.Department = dto.Department;
 
-            _unitOfWork.Repository<TeamMember>().Update(member);
+            _unitOfWork.Repository<Domain.Entities.Team>().Update(team);
             await _unitOfWork.SaveChangesAsync();
 
-            return Result<bool>.Success(true, "Role updated successfully");
+            return Result<bool>.Success(true, "Team updated successfully");
         }
 
-        public async Task<Result<bool>> RemoveMemberAsync(
-             RemoveTeamMemberDto dto,
-             string managerId)
+        public async Task<Result<bool>> DeleteTeamAsync(string teamId, string managerId)
         {
-            var member = await _unitOfWork.Repository<TeamMember>()
-                .Query()
-                .Include(m => m.Project)
-                .FirstOrDefaultAsync(m => m.Id == dto.TeamMemberId);
+            var team = await _unitOfWork.Repository<Domain.Entities.Team>().GetByIdAsync(teamId);
+            if (team == null)
+                return Result<bool>.Failure("Team not found");
 
-            if (member == null)
-                return Result<bool>.Failure("Team member not found");
-
-            if (member.Project.CreatedByUserId != managerId)
+            if (team.CreatedByManagerId != managerId)
                 return Result<bool>.Failure("Unauthorized");
 
-            _unitOfWork.Repository<TeamMember>().Delete(member);
+            team.IsDeleted = true;
+            
+            _unitOfWork.Repository<Domain.Entities.Team>().Update(team);
             await _unitOfWork.SaveChangesAsync();
 
-            return Result<bool>.Success(true, "Team member removed successfully");
+            return Result<bool>.Success(true, "Team deleted successfully");
         }
 
+        public async Task<Result<bool>> RestoreTeamAsync(string teamId, string managerId)
+        {
+            var team = await _unitOfWork.Repository<Domain.Entities.Team>()
+                .Query()
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(t => t.Id == teamId);
 
+            if (team == null)
+                return Result<bool>.Failure("Team not found");
+
+            if (team.CreatedByManagerId != managerId)
+                return Result<bool>.Failure("Unauthorized");
+
+            if (!team.IsDeleted)
+                return Result<bool>.Failure("Team is already active and not deleted");
+
+            team.IsDeleted = false;
+            
+            _unitOfWork.Repository<Domain.Entities.Team>().Update(team);
+            await _unitOfWork.SaveChangesAsync();
+
+            return Result<bool>.Success(true, "Team restored successfully");
+        }
     }
 }

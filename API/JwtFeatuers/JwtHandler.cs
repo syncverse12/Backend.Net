@@ -17,7 +17,7 @@ namespace SyncVerse.API.JwtFeatuers
             _configuration = configuration;
         }
 
-        public (string Token, DateTime Expiration) GenerateToken(User user, IList<string> roles)
+        public (string Token, DateTime Expiration) GenerateToken(User user, IList<string> roles, IEnumerable<Claim>? userClaims = null)
         {
             var jwtSettings = _configuration.GetSection("JwtSettings");
             var securityKey = new SymmetricSecurityKey(
@@ -37,6 +37,11 @@ namespace SyncVerse.API.JwtFeatuers
             foreach (var role in roles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+            if (userClaims != null)
+            {
+                claims.AddRange(userClaims);
             }
 
             var expirationMinutes = int.Parse(jwtSettings["ExpirationMinutes"] ?? "60");

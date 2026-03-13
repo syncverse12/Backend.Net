@@ -1,7 +1,10 @@
-﻿using SyncVerse.Application.DTOs.Auth;
-using SyncVerse.Application.Interfaces.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
+using System.Security.Claims;
+using SyncVerse.Application.Interfaces.WorkspaceInvitation;
+using SyncVerse.Application.DTOs.WorkspaceInvitation;
+using SyncVerse.Application.DTOs.Auth;
+using SyncVerse.Application.Interfaces.Identity;
 
 namespace SyncVerse.API.Controllers
 {
@@ -23,7 +26,7 @@ namespace SyncVerse.API.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
             var result = await _authService.RegisterAsync(dto);
-            
+
             if (!result.IsSuccess)
                 return BadRequest(result);
 
@@ -37,7 +40,7 @@ namespace SyncVerse.API.Controllers
         public async Task<IActionResult> VerifyEmail(string userId, [FromBody] VerifyEmailDto dto)
         {
             var result = await _authService.VerifyEmailAsync(dto, userId);
-            
+
             if (!result.IsSuccess)
                 return BadRequest(result);
 
@@ -51,7 +54,7 @@ namespace SyncVerse.API.Controllers
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
             var result = await _authService.LoginAsync(dto);
-            
+
             if (!result.IsSuccess)
                 return Unauthorized(result);
 
@@ -65,7 +68,7 @@ namespace SyncVerse.API.Controllers
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
         {
             var result = await _authService.ForgotPasswordAsync(dto);
-            
+
             if (!result.IsSuccess)
                 return BadRequest(result);
 
@@ -79,7 +82,7 @@ namespace SyncVerse.API.Controllers
         public async Task<IActionResult> VerifyResetOtp(string userId, [FromBody] VerifyOtpDto dto)
         {
             var result = await _authService.VerifyForgotPasswordOtpAsync(dto, userId);
-            
+
             if (!result.IsSuccess)
                 return BadRequest(result);
 
@@ -93,7 +96,7 @@ namespace SyncVerse.API.Controllers
         public async Task<IActionResult> ResetPassword(string userId, [FromBody] ResetPasswordDto dto)
         {
             var result = await _authService.ResetPasswordAsync(dto, userId);
-            
+
             if (!result.IsSuccess)
                 return BadRequest(result);
 
@@ -107,7 +110,7 @@ namespace SyncVerse.API.Controllers
         public async Task<IActionResult> ResendOtp([FromBody] ForgotPasswordDto dto)
         {
             var result = await _authService.ResendVerificationOtpAsync(dto.Email);
-            
+
             if (!result.IsSuccess)
                 return BadRequest(result);
 

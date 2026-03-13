@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using SyncVerse.Domain.Enums;
 
 namespace SyncVerse.Domain.Entities
 {
@@ -6,7 +7,11 @@ namespace SyncVerse.Domain.Entities
     {
         public string FirstName { get; set; } = null!;
         public string LastName { get; set; } = null!;
-        
+
+        public SeniorityLevel SeniorityLevel { get; set; } 
+
+        public Department Department { get; set; } 
+
         // ✅ NEW: OTP Fields
         public string? OtpCodeHash { get; set; }
         public DateTime? OtpExpirationDate { get; set; }

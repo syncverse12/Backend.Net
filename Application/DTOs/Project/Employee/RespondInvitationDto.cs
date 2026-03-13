@@ -1,4 +1,6 @@
-﻿namespace SyncVerse.Application.DTOs.Project.Employee
+﻿using SyncVerse.Domain.Enums;
+
+namespace SyncVerse.Application.DTOs.Project.Employee
 {
     public class RespondInvitationDto
     {

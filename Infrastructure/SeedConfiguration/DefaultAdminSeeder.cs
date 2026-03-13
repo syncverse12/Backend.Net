@@ -1,6 +1,6 @@
 ﻿using SyncVerse.Domain.Entities;
+using SyncVerse.Domain.Enums;
 using Microsoft.AspNetCore.Identity;
-using System.Threading.Tasks;
 
 namespace SyncVerse.Infrastructure.SeedConfiguration
 {
@@ -8,8 +8,19 @@ namespace SyncVerse.Infrastructure.SeedConfiguration
     {
         public static async Task SeedAsync(UserManager<User> userManager, RoleManager<Role> roleManager)
         {
-            string[] roleNames = { "Admin", "Manager", "Employee" };
-
+            string[] roleNames = { 
+                "Admin", 
+                "HR", 
+                "Manager", 
+                "Employee", 
+                "ProjectManager", 
+                "TeamLeader", 
+                "TeamMember", 
+                "Reviewer", 
+                "QA", 
+                "Observer" 
+            };
+            
             foreach (var roleName in roleNames)
             {
                 if (!await roleManager.RoleExistsAsync(roleName))
@@ -18,38 +29,67 @@ namespace SyncVerse.Infrastructure.SeedConfiguration
                     {
                         Name = roleName,
                         NormalizedName = roleName.ToUpper(),
-                        Description = $"{roleName} role for SyncVerse system"  
+                        Description = $"{roleName} role"
                     });
                 }
             }
 
-            await CreateUserAsync(userManager, "admin@domain.com", "Admin", "Admin123!");
-
-            await CreateUserAsync(userManager, "manager@domain.com", "Manager", "Manager123!");
-
-            await CreateUserAsync(userManager, "employee@domain.com", "Employee", "Employee123!");
+            await CreateOrUpdateUserAsync(userManager, "admin@syncverse.com", "Admin", "Admin@123!", Department.Engineering, SeniorityLevel.Lead);
+            await CreateOrUpdateUserAsync(userManager, "hr@syncverse.com", "HR", "Hr@123!", Department.HR, SeniorityLevel.Senior);
+            await CreateOrUpdateUserAsync(userManager, "pm@syncverse.com", "ProjectManager", "Pm@123!", Department.Engineering, SeniorityLevel.Senior);
+            await CreateOrUpdateUserAsync(userManager, "manager@syncverse.com", "Manager", "Manager@123!", Department.Engineering, SeniorityLevel.Senior);
         }
 
-        private static async Task CreateUserAsync(UserManager<User> userManager, string email, string role, string password)
+        private static async Task CreateOrUpdateUserAsync(UserManager<User> userManager, string email, string role, string password, Department dept, SeniorityLevel level)
         {
             var user = await userManager.FindByEmailAsync(email);
+
             if (user == null)
             {
                 var newUser = new User
                 {
                     FirstName = "Default",
-                    LastName = role, 
+                    LastName = role,
                     Email = email,
                     UserName = email,
-                    EmailConfirmed = true
+                    Department = dept,
+                    SeniorityLevel = level,
+                    EmailConfirmed = true,
+                    IsEmailVerified = true,
+                    CreatedAt = DateTime.UtcNow
                 };
 
                 var result = await userManager.CreateAsync(newUser, password);
-
                 if (result.Succeeded)
                 {
                     await userManager.AddToRoleAsync(newUser, role);
+                    Console.WriteLine($"✅ Successfully Created: {email}");
                 }
+                else
+                {
+                    Console.WriteLine($"❌ Error creating {email}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                }
+            }
+            else
+            {
+                user.FirstName = "Default";
+                user.LastName = role;
+                user.Department = dept;
+                user.SeniorityLevel = level;
+                user.EmailConfirmed = true;
+                user.IsEmailVerified = true;
+
+                var updateResult = await userManager.UpdateAsync(user);
+
+                var resetToken = await userManager.GeneratePasswordResetTokenAsync(user);
+                await userManager.ResetPasswordAsync(user, resetToken, password);
+
+                if (!await userManager.IsInRoleAsync(user, role))
+                {
+                    await userManager.AddToRoleAsync(user, role);
+                }
+
+                Console.WriteLine($"✅ Successfully Updated: {email}");
             }
         }
     }

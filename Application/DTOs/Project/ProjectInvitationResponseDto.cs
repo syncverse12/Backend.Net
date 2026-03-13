@@ -1,4 +1,5 @@
 ﻿using SyncVerse.Domain.Common;
+using SyncVerse.Domain.Enums;
 
 namespace SyncVerse.Application.DTOs.Project
 {

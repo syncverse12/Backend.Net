@@ -1,26 +1,15 @@
 ﻿using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Team;
 
-namespace SyncVerse.Application.Interfaces
+namespace SyncVerse.Application.Interfaces.Team
 {
     public interface ITeamService
     {
-        Task<Result<bool>> InviteMemberAsync(
-            InviteTeamMemberDto dto,
-            string managerId);
-
-        Task<Result<List<TeamMemberResponseDto>>> GetProjectTeamMembersAsync(
-            string projectId,
-            string managerId);
-
-        Task<Result<bool>> UpdateMemberRoleAsync(
-            UpdateTeamMemberRoleDto dto,
-            string managerId);
-
-        Task<Result<bool>> RemoveMemberAsync(
-            RemoveTeamMemberDto dto,
-            string managerId);
-
-
-
+        Task<Result<TeamResponseDto>> CreateTeamAsync(CreateTeamDto dto, string managerId);
+        Task<Result<List<TeamResponseDto>>> GetMyTeamsAsync(string managerId);
+        Task<Result<TeamResponseDto>> GetTeamByIdAsync(string teamId, string managerId);
+        Task<Result<bool>> UpdateTeamAsync(UpdateTeamDto dto, string managerId);
+        Task<Result<bool>> DeleteTeamAsync(string teamId, string managerId);
+        Task<Result<bool>> RestoreTeamAsync(string teamId, string managerId);
     }
 }

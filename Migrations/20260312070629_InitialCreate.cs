@@ -35,6 +35,8 @@ namespace SyncVerse.Migrations
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SeniorityLevel = table.Column<int>(type: "int", nullable: false),
+                    Department = table.Column<int>(type: "int", nullable: false),
                     OtpCodeHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     OtpExpirationDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     OtpFailedAttempts = table.Column<int>(type: "int", nullable: false),
@@ -186,14 +188,16 @@ namespace SyncVerse.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ProjectMembers",
+                name: "Teams",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ProjectId = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Role = table.Column<int>(type: "int", nullable: false),
-                    JoinedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Specialization = table.Column<int>(type: "int", nullable: false),
+                    Department = table.Column<int>(type: "int", nullable: false),
+                    CreatedByManagerId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TeamLeaderId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -202,13 +206,18 @@ namespace SyncVerse.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ProjectMembers", x => x.Id);
+                    table.PrimaryKey("PK_Teams", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ProjectMembers_AspNetUsers_UserId",
-                        column: x => x.UserId,
+                        name: "FK_Teams_AspNetUsers_CreatedByManagerId",
+                        column: x => x.CreatedByManagerId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Teams_AspNetUsers_TeamLeaderId",
+                        column: x => x.TeamLeaderId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -237,6 +246,44 @@ namespace SyncVerse.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CompanyInvitations",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    TeamId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    SeniorityLevel = table.Column<int>(type: "int", nullable: false),
+                    Role = table.Column<int>(type: "int", nullable: false),
+                    InvitationToken = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    SentByHRId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    SentAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    AcceptedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CompanyInvitations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CompanyInvitations_AspNetUsers_SentByHRId",
+                        column: x => x.SentByHRId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_CompanyInvitations_Teams_TeamId",
+                        column: x => x.TeamId,
+                        principalTable: "Teams",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Projects",
                 columns: table => new
                 {
@@ -247,6 +294,8 @@ namespace SyncVerse.Migrations
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Budget = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    RepositoryUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DocumentationUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -300,6 +349,41 @@ namespace SyncVerse.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ProjectAttachments",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ProjectId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    FileName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FilePath = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ContentType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FileSize = table.Column<long>(type: "bigint", nullable: false),
+                    UploadedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UploadedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProjectAttachments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProjectAttachments_AspNetUsers_UploadedByUserId",
+                        column: x => x.UploadedByUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ProjectAttachments_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ProjectInvitations",
                 columns: table => new
                 {
@@ -323,6 +407,42 @@ namespace SyncVerse.Migrations
                     table.PrimaryKey("PK_ProjectInvitations", x => x.Id);
                     table.ForeignKey(
                         name: "FK_ProjectInvitations_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProjectMembers",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ProjectId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Role = table.Column<int>(type: "int", nullable: false),
+                    JoinedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CanAssignTasks = table.Column<bool>(type: "bit", nullable: false),
+                    CanReviewTasks = table.Column<bool>(type: "bit", nullable: false),
+                    CanEditProject = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProjectMembers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProjectMembers_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ProjectMembers_Projects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "Projects",
                         principalColumn: "Id",
@@ -366,7 +486,7 @@ namespace SyncVerse.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TeamMember",
+                name: "TeamMembers",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
@@ -382,15 +502,15 @@ namespace SyncVerse.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TeamMember", x => x.Id);
+                    table.PrimaryKey("PK_TeamMembers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TeamMember_AspNetUsers_UserId",
+                        name: "FK_TeamMembers_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_TeamMember_Projects_ProjectId",
+                        name: "FK_TeamMembers_Projects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "Projects",
                         principalColumn: "Id",
@@ -514,6 +634,41 @@ namespace SyncVerse.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "TaskAttachments",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TaskId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    FileName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FilePath = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ContentType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FileSize = table.Column<long>(type: "bigint", nullable: false),
+                    UploadedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UploadedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TaskAttachments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TaskAttachments_AspNetUsers_UploadedByUserId",
+                        column: x => x.UploadedByUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_TaskAttachments_Tasks_TaskId",
+                        column: x => x.TaskId,
+                        principalTable: "Tasks",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "TaskComments",
                 columns: table => new
                 {
@@ -620,16 +775,6 @@ namespace SyncVerse.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.InsertData(
-                table: "AspNetRoles",
-                columns: new[] { "Id", "ConcurrencyStamp", "Description", "Name", "NormalizedName" },
-                values: new object[,]
-                {
-                    { "3f4c2b89-8ad1-4dfe-b61e-e3cbdf9a9d5c", null, "The Manager Role For The User", "Manager", "MANAGER" },
-                    { "8e91d7bb-5c44-4c0a-9cd1-2730d1baf6a4", null, "The Admin Role For The User", "Admin", "ADMIN" },
-                    { "c4a8f0c1-3be2-4e35-9b7f-2ef45a6cb912", null, "The Employee Role For The User", "Employee", "EMPLOYEE" }
-                });
-
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -663,11 +808,42 @@ namespace SyncVerse.Migrations
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_Department",
+                table: "AspNetUsers",
+                column: "Department");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_SeniorityLevel",
+                table: "AspNetUsers",
+                column: "SeniorityLevel");
+
+            migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CompanyInvitations_Email",
+                table: "CompanyInvitations",
+                column: "Email");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CompanyInvitations_InvitationToken",
+                table: "CompanyInvitations",
+                column: "InvitationToken",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CompanyInvitations_SentByHRId",
+                table: "CompanyInvitations",
+                column: "SentByHRId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CompanyInvitations_TeamId",
+                table: "CompanyInvitations",
+                column: "TeamId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Milestones_ProjectId",
@@ -700,9 +876,25 @@ namespace SyncVerse.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ProjectAttachments_ProjectId",
+                table: "ProjectAttachments",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectAttachments_UploadedByUserId",
+                table: "ProjectAttachments",
+                column: "UploadedByUserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ProjectInvitations_ProjectId",
                 table: "ProjectInvitations",
                 column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectMembers_ProjectId_UserId",
+                table: "ProjectMembers",
+                columns: new[] { "ProjectId", "UserId" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProjectMembers_UserId",
@@ -718,6 +910,16 @@ namespace SyncVerse.Migrations
                 name: "IX_Projects_WorkspaceId",
                 table: "Projects",
                 column: "WorkspaceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaskAttachments_TaskId",
+                table: "TaskAttachments",
+                column: "TaskId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaskAttachments_UploadedByUserId",
+                table: "TaskAttachments",
+                column: "UploadedByUserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TaskComments_ParentCommentId",
@@ -785,14 +987,34 @@ namespace SyncVerse.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TeamMember_ProjectId",
-                table: "TeamMember",
+                name: "IX_TeamMembers_ProjectId",
+                table: "TeamMembers",
                 column: "ProjectId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TeamMember_UserId",
-                table: "TeamMember",
+                name: "IX_TeamMembers_UserId",
+                table: "TeamMembers",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Teams_CreatedByManagerId",
+                table: "Teams",
+                column: "CreatedByManagerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Teams_Department",
+                table: "Teams",
+                column: "Department");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Teams_Name",
+                table: "Teams",
+                column: "Name");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Teams_TeamLeaderId",
+                table: "Teams",
+                column: "TeamLeaderId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TimeLogs_TaskEmployeeId",
@@ -834,7 +1056,13 @@ namespace SyncVerse.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "CompanyInvitations");
+
+            migrationBuilder.DropTable(
                 name: "Notifications");
+
+            migrationBuilder.DropTable(
+                name: "ProjectAttachments");
 
             migrationBuilder.DropTable(
                 name: "ProjectInvitations");
@@ -843,19 +1071,25 @@ namespace SyncVerse.Migrations
                 name: "ProjectMembers");
 
             migrationBuilder.DropTable(
+                name: "TaskAttachments");
+
+            migrationBuilder.DropTable(
                 name: "TaskComments");
 
             migrationBuilder.DropTable(
                 name: "TaskDependencies");
 
             migrationBuilder.DropTable(
-                name: "TeamMember");
+                name: "TeamMembers");
 
             migrationBuilder.DropTable(
                 name: "TimeLogs");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "Teams");
 
             migrationBuilder.DropTable(
                 name: "TaskEmployees");

@@ -161,10 +161,13 @@ namespace SyncVerse.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("ProjectMember", b =>
+            modelBuilder.Entity("SyncVerse.Domain.Entities.CompanyInvitation", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("AcceptedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -172,18 +175,41 @@ namespace SyncVerse.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("InvitationToken")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime>("JoinedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ProjectId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("Role")
                         .HasColumnType("int");
+
+                    b.Property<int>("SeniorityLevel")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SentByHRId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TeamId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -191,15 +217,18 @@ namespace SyncVerse.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("Email");
 
-                    b.ToTable("ProjectMembers");
+                    b.HasIndex("InvitationToken")
+                        .IsUnique();
+
+                    b.HasIndex("SentByHRId");
+
+                    b.HasIndex("TeamId");
+
+                    b.ToTable("CompanyInvitations");
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.Milestone", b =>
@@ -491,6 +520,62 @@ namespace SyncVerse.Migrations
                     b.ToTable("ProjectInvitations");
                 });
 
+            modelBuilder.Entity("SyncVerse.Domain.Entities.ProjectMember", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("CanAssignTasks")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanEditProject")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanReviewTasks")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ProjectId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ProjectId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("ProjectMembers");
+                });
+
             modelBuilder.Entity("SyncVerse.Domain.Entities.Role", b =>
                 {
                     b.Property<string>("Id")
@@ -736,6 +821,61 @@ namespace SyncVerse.Migrations
                     b.ToTable("TaskEmployees", (string)null);
                 });
 
+            modelBuilder.Entity("SyncVerse.Domain.Entities.Team", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedByManagerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Department")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Specialization")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TeamLeaderId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByManagerId");
+
+                    b.HasIndex("Department");
+
+                    b.HasIndex("Name");
+
+                    b.HasIndex("TeamLeaderId");
+
+                    b.ToTable("Teams");
+                });
+
             modelBuilder.Entity("SyncVerse.Domain.Entities.TeamMember", b =>
                 {
                     b.Property<string>("Id")
@@ -776,7 +916,7 @@ namespace SyncVerse.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TeamMember");
+                    b.ToTable("TeamMembers");
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.TimeLog", b =>
@@ -852,6 +992,9 @@ namespace SyncVerse.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("Department")
+                        .HasColumnType("int");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -908,6 +1051,9 @@ namespace SyncVerse.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("SeniorityLevel")
+                        .HasColumnType("int");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 
@@ -917,6 +1063,8 @@ namespace SyncVerse.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Department");
+
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
@@ -924,6 +1072,8 @@ namespace SyncVerse.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.HasIndex("SeniorityLevel");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -1121,13 +1271,23 @@ namespace SyncVerse.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ProjectMember", b =>
+            modelBuilder.Entity("SyncVerse.Domain.Entities.CompanyInvitation", b =>
                 {
-                    b.HasOne("SyncVerse.Domain.Entities.User", null)
-                        .WithMany("ProjectMembers")
-                        .HasForeignKey("UserId")
+                    b.HasOne("SyncVerse.Domain.Entities.User", "SentByHR")
+                        .WithMany()
+                        .HasForeignKey("SentByHRId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SyncVerse.Domain.Entities.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("SentByHR");
+
+                    b.Navigation("Team");
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.Milestone", b =>
@@ -1214,6 +1374,25 @@ namespace SyncVerse.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("SyncVerse.Domain.Entities.ProjectMember", b =>
+                {
+                    b.HasOne("SyncVerse.Domain.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SyncVerse.Domain.Entities.User", "User")
+                        .WithMany("ProjectMembers")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SyncVerse.Domain.Entities.TaskAttachment", b =>
                 {
                     b.HasOne("TaskItem", "Task")
@@ -1293,6 +1472,23 @@ namespace SyncVerse.Migrations
                     b.Navigation("AssignedUser");
 
                     b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("SyncVerse.Domain.Entities.Team", b =>
+                {
+                    b.HasOne("SyncVerse.Domain.Entities.User", "CreatedByManager")
+                        .WithMany()
+                        .HasForeignKey("CreatedByManagerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SyncVerse.Domain.Entities.User", "TeamLeader")
+                        .WithMany()
+                        .HasForeignKey("TeamLeaderId");
+
+                    b.Navigation("CreatedByManager");
+
+                    b.Navigation("TeamLeader");
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.TeamMember", b =>

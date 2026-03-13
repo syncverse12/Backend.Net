@@ -1,60 +1,76 @@
-﻿using SyncVerse.Application.Interfaces;
-using SyncVerse.Domain.Entities;
+﻿using SyncVerse.Application.DTOs.Team;
+using SyncVerse.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using SyncVerse.Application.Interfaces.Team;
 
-[Authorize(Policy = "ManagerOnly")]
-[ApiController]
-[Route("api/team")]
-public class TeamController : ControllerBase
+namespace SyncVerse.API.Controllers
 {
-    private readonly ITeamService _teamService;
-
-    public TeamController(ITeamService teamService)
+    [Authorize(Policy = "ManagerOnly")]
+    [ApiController]
+    [Route("api/teams")]
+    public class TeamController : ControllerBase
     {
-        _teamService = teamService;
+        private readonly ITeamService _teamService;
+
+        public TeamController(ITeamService teamService)
+        {
+            _teamService = teamService;
+        }
+
+        /// ✅ CREATE - Create new team
+        [HttpPost]
+        public async Task<IActionResult> CreateTeam(CreateTeamDto dto)
+        {
+            var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var result = await _teamService.CreateTeamAsync(dto, managerId);
+            return result.IsSuccess ? Ok(result) : BadRequest(result);
+        }
+
+        /// ✅ READ - Get all my teams
+        [HttpGet("my-teams")]
+        public async Task<IActionResult> GetMyTeams()
+        {
+            var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var result = await _teamService.GetMyTeamsAsync(managerId);
+            return result.IsSuccess ? Ok(result) : BadRequest(result);
+        }
+
+        /// ✅ READ - Get team by ID
+        [HttpGet("{teamId}")]
+        public async Task<IActionResult> GetTeamById(string teamId)
+        {
+            var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var result = await _teamService.GetTeamByIdAsync(teamId, managerId);
+            return result.IsSuccess ? Ok(result) : BadRequest(result);
+        }
+
+        /// ✅ UPDATE - Update team
+        [HttpPut]
+        public async Task<IActionResult> UpdateTeam(UpdateTeamDto dto)
+        {
+            var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var result = await _teamService.UpdateTeamAsync(dto, managerId);
+            return result.IsSuccess ? Ok(result) : BadRequest(result);
+        }
+
+        /// ✅ DELETE - Delete team
+        [HttpDelete("{teamId}")]
+        public async Task<IActionResult> DeleteTeam(string teamId)
+        {
+            var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var result = await _teamService.DeleteTeamAsync(teamId, managerId);
+            return result.IsSuccess ? Ok(result) : BadRequest(result);
+        }
+
+        /// ✅ RESTORE - Restore a softly deleted team
+        [HttpPut("{teamId}/restore")]
+        public async Task<IActionResult> RestoreTeam(string teamId)
+        {
+            var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var result = await _teamService.RestoreTeamAsync(teamId, managerId);
+            return result.IsSuccess ? Ok(result) : BadRequest(result);
+        }
     }
-
-    [HttpPost("invite")]
-    public async Task<IActionResult> Invite(InviteTeamMemberDto dto)
-    {
-        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var result = await _teamService.InviteMemberAsync(dto, managerId);
-        return result.IsSuccess ? Ok(result) : BadRequest(result);
-    }
-
-    [HttpGet("{projectId}/members")]
-    public async Task<IActionResult> GetTeamMembers(string projectId)
-    {
-        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-
-        var result = await _teamService
-            .GetProjectTeamMembersAsync(projectId, managerId);
-
-        return result.IsSuccess ? Ok(result) : BadRequest(result);
-    }
-
-    [HttpPut("role")]
-    public async Task<IActionResult> UpdateRole(UpdateTeamMemberRoleDto dto)
-    {
-        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-
-        var result = await _teamService.UpdateMemberRoleAsync(dto, managerId);
-
-        return result.IsSuccess ? Ok(result) : BadRequest(result);
-    }
-
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Remove(string id)
-    {
-        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-
-        var result = await _teamService.RemoveMemberAsync(
-            new RemoveTeamMemberDto { TeamMemberId = id },
-            managerId);
-
-        return result.IsSuccess ? Ok(result) : BadRequest(result);
-    }
-
 }

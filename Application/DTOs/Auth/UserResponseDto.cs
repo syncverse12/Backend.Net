@@ -1,4 +1,6 @@
-﻿namespace SyncVerse.Application.DTOs.Auth
+﻿using SyncVerse.Domain.Enums;
+
+namespace SyncVerse.Application.DTOs.Auth
 {
     public class UserResponseDto
     {
@@ -6,6 +8,8 @@
         public string Email { get; set; } = null!;
         public string FirstName { get; set; } = null!;
         public string LastName { get; set; } = null!;
+        public Department Department { get; set; }
+        public SeniorityLevel SeniorityLevel { get; set; }
         public List<string> Roles { get; set; } = new();
     }
 }

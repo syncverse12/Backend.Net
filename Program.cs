@@ -15,6 +15,8 @@ using SyncVerse.Application.Interfaces.Task.Manager;
 using SyncVerse.Application.Interfaces.Tasks.Comments;
 using SyncVerse.Application.Interfaces.Tasks.Employee;
 using SyncVerse.Application.Interfaces.Tasks.TimeTracking;
+using SyncVerse.Application.Interfaces.Team; 
+using SyncVerse.Application.Interfaces.WorkspaceInvitation; 
 using SyncVerse.Application.Services.Attachments;
 using SyncVerse.Application.Services.Identity;
 using SyncVerse.Application.Services.Milestones;
@@ -24,7 +26,10 @@ using SyncVerse.Application.Services.Task.Manager;
 using SyncVerse.Application.Services.Tasks.Comments;
 using SyncVerse.Application.Services.Tasks.TimeTracking;
 using SyncVerse.Application.Services.Task.Employee;
+using SyncVerse.Application.Services.Team;
+using SyncVerse.Application.Services.WorkspaceInvitation; 
 using SyncVerse.Domain.Entities;
+using SyncVerse.Domain.Enums;
 using SyncVerse.Infrastructure.Data;
 using SyncVerse.Infrastructure.Persistence;
 using SyncVerse.Infrastructure.Persistence.Repositories;
@@ -41,7 +46,6 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json.Serialization;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 // --- 1. Register Services ---
@@ -50,7 +54,21 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddDbContext<DatabaseDbContext>(opts =>
         opts.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
-builder.Services.AddIdentity<User, Role>()
+builder.Services.AddIdentity<User, Role>(options =>
+{
+    // Password settings (للتطوير - يمكن تشديدها في Production)
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequiredLength = 6;
+    
+    // User settings
+    options.User.RequireUniqueEmail = true;
+    
+    // SignIn settings
+    options.SignIn.RequireConfirmedEmail = false; // للتطوير
+})
     .AddEntityFrameworkStores<DatabaseDbContext>()
     .AddDefaultTokenProviders();
 
@@ -75,7 +93,6 @@ builder.Services.AddAuthentication(opt =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey))
     };
     
-    // ✅ SignalR authentication
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
@@ -134,7 +151,6 @@ builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ICategoryTaskService, CategoryTaskService>();
 builder.Services.AddScoped<IWorkspaceService, WorkspaceService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
-builder.Services.AddScoped<IInvitationService, MockInvitationService>();
 builder.Services.AddScoped<IMilestoneService, MilestoneService>();
 builder.Services.AddScoped<ITaskCommentService, TaskCommentService>();
 builder.Services.AddScoped<ITimeLogService, TimeLogService>();
@@ -142,9 +158,9 @@ builder.Services.AddScoped<IRealtimeNotificationService, SignalRNotificationServ
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEmployeeProjectService, EmployeeProjectService>();
 builder.Services.AddScoped<IEmployeeTaskService, EmployeeTaskService>();
+builder.Services.AddScoped<ITeamService, TeamService>();
+builder.Services.AddScoped<ICompanyInvitationService, CompanyInvitationService>(); 
 
-// ✅ File Storage - Local only (Development)
-// For production, switch to cloud storage (Azure/AWS)
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddScoped<IProjectAttachmentService, ProjectAttachmentService>();
 builder.Services.AddScoped<ITaskAttachmentService, TaskAttachmentService>();
@@ -153,7 +169,6 @@ builder.Services.AddScoped<IAuthorizationHandler, ManagerAuthorizationHandler>()
 builder.Services.AddScoped<IAuthorizationHandler, TaskOwnerAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ReviewTaskAuthorizationHandler>();
 
-// SignalR
 builder.Services.AddSignalR();
 
 builder.Services.AddControllers()
@@ -164,6 +179,15 @@ builder.Services.AddControllers()
 
 builder.Services.AddAuthorization(options =>
 {
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireRole("Admin", "HR"));
+
+    options.AddPolicy("ProjectManagerOnly", policy =>
+        policy.RequireRole("ProjectManager", "Admin"));
+
+    options.AddPolicy("TeamLeaderOnly", policy =>
+        policy.RequireRole("TeamLeader", "ProjectManager", "Admin"));
+
     options.AddPolicy("ManagerOnly", policy =>
         policy.Requirements.Add(new ManagerRequirement()));
 
@@ -177,13 +201,9 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("Employee"));
 });
 
-
-
-// FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<IAuthService>();
 builder.Services.AddFluentValidationClientsideAdapters();
-
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
@@ -195,7 +215,6 @@ builder.Services.AddSwaggerGen(opt =>
         Description = "Project Management System API"
     });
 
-    // Custom OperationId to avoid conflicts
     opt.CustomOperationIds(apiDesc =>
     {
         var controllerName = apiDesc.ActionDescriptor.RouteValues["controller"];
@@ -203,7 +222,6 @@ builder.Services.AddSwaggerGen(opt =>
         return $"{controllerName}_{actionName}";
     });
 
-    // JWT Bearer configuration
     opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -257,7 +275,6 @@ using (var scope = app.Services.CreateScope())
     {
         var context = scope.ServiceProvider.GetRequiredService<DatabaseDbContext>();
 
-        // ✅ تطبيق الـ migrations بدلاً من EnsureCreated
         await context.Database.MigrateAsync();
 
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
