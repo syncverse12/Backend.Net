@@ -39,7 +39,7 @@ namespace SyncVerse.API.Controllers
         /// Complete Profile & Connect User To Company (Requires Login)
         [Authorize] 
         [HttpPost("complete-profile")]
-        public async Task<IActionResult> CompleteProfile(CompleteProfileDto dto)
+        public async Task<IActionResult> CompleteProfile([FromForm] CompleteProfileDto dto) // ✅ Note the [FromForm] Data Annotation here
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             var result = await _invitationService.CompleteProfileAsync(dto, userId);

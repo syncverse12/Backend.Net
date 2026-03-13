@@ -12,6 +12,7 @@ using System.Security.Cryptography;
 using SyncVerse.Application.DTOs.WorkspaceInvitation;
 using System.Security.Claims;
 using Microsoft.Extensions.Configuration;
+using SyncVerse.Application.Interfaces.Storage; // ✅ Needed for file upload
 using System.Threading.Tasks;
 
 namespace SyncVerse.Application.Services.WorkspaceInvitation
@@ -23,19 +24,22 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
         private readonly UserManager<User> _userManager;
         private readonly JwtHandler _jwtHandler;
         private readonly IConfiguration _configuration;
+        private readonly IFileStorageService _fileStorageService; // ✅ Inject the FileStorageService
 
         public CompanyInvitationService(
             IUnitOfWork unitOfWork,
             IEmailService emailService,
             UserManager<User> userManager,
             JwtHandler jwtHandler,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IFileStorageService fileStorageService)
         {
             _unitOfWork = unitOfWork;
             _emailService = emailService;
             _userManager = userManager;
             _jwtHandler = jwtHandler;
             _configuration = configuration;
+            _fileStorageService = fileStorageService;
         }
 
         public async Task<Result<bool>> SendInvitationAsync(SendCompanyInvitationDto dto, string hrId)
@@ -169,7 +173,21 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
             if (invitation == null) return Result<AuthResponseDto>.Failure("Invalid invitation token");
             if (invitation.Status != InvitationStatus.Pending) return Result<AuthResponseDto>.Failure("Invitation already used or expired");
 
+            // ✅ Map Normal Properties
             if (!string.IsNullOrEmpty(dto.PhoneNumber)) user.PhoneNumber = dto.PhoneNumber;
+            if (!string.IsNullOrEmpty(dto.Skills)) user.Skills = dto.Skills;
+            if (!string.IsNullOrEmpty(dto.Address)) user.Address = dto.Address;
+
+            // ✅ Logic to Handle Attachment Upload
+            if (dto.ProfilePicture != null)
+            {
+                using var stream = dto.ProfilePicture.OpenReadStream();
+                var fileName = $"{Guid.NewGuid()}_{dto.ProfilePicture.FileName}";
+                
+                // You can change "profiles" to any folder name you want inside your 'uploads' folder mapping
+                var fileUrl = await _fileStorageService.UploadFileAsync(stream, fileName, "profiles"); 
+                user.ProfilePictureUrl = fileUrl;
+            }
 
             user.SeniorityLevel = invitation.SeniorityLevel;
             user.Department = invitation.Team.Department;
@@ -199,12 +217,16 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
                     Email = user.Email!,
                     FirstName = user.FirstName,
                     LastName = user.LastName,
+                    PhoneNumber = user.PhoneNumber, // Include new properties mapped here
+                    Skills = user.Skills,
+                    Address = user.Address,
+                    ProfilePictureUrl = user.ProfilePictureUrl,
                     Roles = roles.ToList()
                 },
                 Message = "Profile completed and workspace assigned successfully"
             });
         }
-
+        
         private string GenerateSecureToken()
         {
             var randomBytes = new byte[32];
