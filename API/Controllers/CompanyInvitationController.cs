@@ -17,9 +17,7 @@ namespace SyncVerse.API.Controllers
             _invitationService = invitationService;
         }
 
-        /// <summary>
         /// HR sends company invitation
-        /// </summary>
         [Authorize(Policy = "AdminOnly")]
         [HttpPost("send")]
         public async Task<IActionResult> SendInvitation(SendCompanyInvitationDto dto)
@@ -29,9 +27,7 @@ namespace SyncVerse.API.Controllers
             return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
 
-        /// <summary>
         /// Get invitation details by token (Public)
-        /// </summary>
         [AllowAnonymous]
         [HttpGet("details/{token}")]
         public async Task<IActionResult> GetInvitationDetails(string token)
@@ -40,10 +36,8 @@ namespace SyncVerse.API.Controllers
             return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
 
-        /// <summary>
-        /// ✅ Complete Profile & Connect User To Company (Requires Login)
-        /// </summary>
-        [Authorize] // يجب أن يكون مسجل دخول
+        /// Complete Profile & Connect User To Company (Requires Login)
+        [Authorize] 
         [HttpPost("complete-profile")]
         public async Task<IActionResult> CompleteProfile(CompleteProfileDto dto)
         {

@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using SyncVerse.Application.DTOs.WorkspaceInvitation;
 using System.Security.Claims;
+using Microsoft.Extensions.Configuration;
 using System.Threading.Tasks;
 
 namespace SyncVerse.Application.Services.WorkspaceInvitation
@@ -64,11 +65,53 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
             await _unitOfWork.SaveChangesAsync();
 
             var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:3000";
-            
-            // ✅ توجيه المستخدم لصفحة الـ Register بدلاً من Join-Company
             var invitationLink = $"{frontendUrl}/register?token={token}&email={dto.Email}";
 
-            var emailBody = $"<a href='{invitationLink}' class='btn'>Complete Registration</a>"; // تفاصيل الإيميل كما هي لديك
+            var emailBody = $@"
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #f4f4f4; background-color: #1a1a1a; padding: 20px; border-radius: 8px;'>
+                <div style='text-align: center; border-bottom: 1px solid #444; padding-bottom: 20px; margin-bottom: 20px;'>
+                    <h1 style='color: #ffffff; margin: 0;'>Welcome to SyncVerse</h1>
+                </div>
+
+                <p style='font-size: 16px; color: #dddddd;'>Dear Candidate,</p>
+                
+                <p style='font-size: 15px; color: #bbbbbb; line-height: 1.6;'>
+                    We are pleased to inform you that you have been invited to join <strong>SyncVerse</strong> as a member of our team. 
+                    This invitation has been initiated by <strong>{hr.FirstName} {hr.LastName}</strong> from the Human Resources Department.
+                </p>
+
+                <div style='background-color: #252525; padding: 20px; border-radius: 6px; margin: 25px 0;'>
+                    <p style='margin-top: 0; font-weight: bold; color: #ffffff; border-bottom: 1px solid #444; padding-bottom: 10px;'>Assignment Details</p>
+                    <p style='margin: 10px 0;'>You will be joining the <strong>{team.Name}</strong> team within the <strong>{team.Department}</strong> department. 
+                    Your position is designated at the <strong>{dto.SeniorityLevel}</strong> level, where you will be serving in the role of <strong>{dto.Role}</strong>.</p>
+                </div>
+
+                <p style='color: #dddddd;'>To complete your registration and access your workspace, please click the button below:</p>
+
+                <div style='text-align: center; margin: 30px 0;'>
+                    <a href='{invitationLink}' style='background-color: #314357; color: #ffffff; text-decoration: none; padding: 14px 25px; font-weight: bold; border-radius: 4px; display: inline-block;'>
+                        Complete Registration
+                    </a>
+                </div>
+
+                <div style='background-color: #2c2100; border-left: 4px solid #ffcc00; padding: 15px; margin: 20px 0;'>
+                    <p style='margin: 0; font-size: 13px; color: #ffcc00;'>
+                        <strong>Security Notice:</strong> This is a personal invitation link intended only for you. 
+                        Please do not share this link with others for security reasons.
+                    </p>
+                </div>
+
+                <p style='font-size: 12px; color: #888; text-align: center;'>
+                    This invitation will expire on <strong>{invitation.ExpiresAt.ToString("MMMM dd, yyyy")}</strong>.
+                </p>
+                
+                <hr style='border: none; border-top: 1px solid #333; margin-top: 40px;'/>
+                <p style='font-size: 11px; color: #666; text-align: center;'>
+                    © 2026 SyncVerse. All rights reserved.<br/>
+                    This email was sent from an automated system. Please do not reply.
+                </p>
+            </div>";
+
             await _emailService.SendAsync(dto.Email, "Invitation to Join SyncVerse", emailBody);
 
             return Result<bool>.Success(true, "Company invitation sent successfully");
@@ -95,31 +138,24 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
                 return Result<InvitationDetailsDto>.Failure("This invitation has expired");
             }
 
-            var details = new InvitationDetailsDto
+            return Result<InvitationDetailsDto>.Success(new InvitationDetailsDto
             {
                 Email = invitation.Email,
                 TeamId = invitation.TeamId,
                 TeamName = invitation.Team.Name,
                 TeamDescription = invitation.Team.Description,
-                
                 Department = invitation.Team.Department,
                 DepartmentDisplay = invitation.Team.Department.ToString(),
-                
                 SeniorityLevel = invitation.SeniorityLevel,
                 SeniorityLevelDisplay = invitation.SeniorityLevel.ToString(),
-                
-                Role = invitation.Role,  
+                Role = invitation.Role,
                 RoleDisplay = invitation.Role.ToString(),
-                
                 HRName = $"{invitation.SentByHR.FirstName} {invitation.SentByHR.LastName}",
                 ExpiresAt = invitation.ExpiresAt,
                 IsValid = true
-            };
-
-            return Result<InvitationDetailsDto>.Success(details);
+            });
         }
 
-        // ✅ استكمال الملف للمستخدم وتسجيله في الفريق وتفعيل صلاحياته
         public async Task<Result<AuthResponseDto>> CompleteProfileAsync(CompleteProfileDto dto, string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
@@ -130,30 +166,28 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
                 .Include(i => i.Team)
                 .FirstOrDefaultAsync(i => i.InvitationToken == dto.Token);
 
-            if (invitation == null) return Result<AuthResponseDto>.Failure("Invalid invitation link");
+            if (invitation == null) return Result<AuthResponseDto>.Failure("Invalid invitation token");
             if (invitation.Status != InvitationStatus.Pending) return Result<AuthResponseDto>.Failure("Invitation already used or expired");
 
-            // تحديث بيانات الموظف
-            if (!string.IsNullOrEmpty(dto.PhoneNumber))
-                user.PhoneNumber = dto.PhoneNumber;
+            if (!string.IsNullOrEmpty(dto.PhoneNumber)) user.PhoneNumber = dto.PhoneNumber;
 
             user.SeniorityLevel = invitation.SeniorityLevel;
             user.Department = invitation.Team.Department;
-            await _userManager.UpdateAsync(user);
 
-            // منح الرتب والأدوار
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded) return Result<AuthResponseDto>.Failure("Failed to update user profile");
+
             await _userManager.AddToRoleAsync(user, invitation.Role.ToString());
             await ReplaceUserClaimAsync(user, "Department", user.Department.ToString());
             await ReplaceUserClaimAsync(user, "SeniorityLevel", user.SeniorityLevel.ToString());
 
-            // إكمال الدعوة
             invitation.Status = InvitationStatus.Accepted;
             invitation.AcceptedAt = DateTime.UtcNow;
             await _unitOfWork.SaveChangesAsync();
 
-            // توليد توكن جديد للمستخدم بالصلاحيات المضافة
             var roles = await _userManager.GetRolesAsync(user);
-            var tokenInfo = _jwtHandler.GenerateToken(user, roles);
+            var claims = await _userManager.GetClaimsAsync(user);
+            var tokenInfo = _jwtHandler.GenerateToken(user, roles, claims);
 
             return Result<AuthResponseDto>.Success(new AuthResponseDto
             {
@@ -167,7 +201,7 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
                     LastName = user.LastName,
                     Roles = roles.ToList()
                 },
-                Message = "Profile completed and assigned to the team successfully"
+                Message = "Profile completed and workspace assigned successfully"
             });
         }
 
@@ -179,7 +213,6 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
             return Convert.ToBase64String(randomBytes).Replace("+", "-").Replace("/", "_").TrimEnd('=');
         }
 
-        // ✅ هنا تحديد نوع الإرجاع كـ Task صريح بدلاً من خطأ الخلط بين Task الخاصة بكيان آخر (إن وجدت)
         private async System.Threading.Tasks.Task ReplaceUserClaimAsync(User user, string claimType, string claimValue)
         {
             var claims = await _userManager.GetClaimsAsync(user);
