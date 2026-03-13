@@ -29,12 +29,14 @@ namespace SyncVerse.Application.Services.Attachments
             if (project == null)
                 return Result<AttachmentResponseDto>.Failure("Project not found");
 
-            // Validate user is member
+            // Validate user is member (any role) or project owner
             var isMember = await _unitOfWork.Repository<ProjectMember>()
                 .Query()
-                .AnyAsync(m => m.ProjectId == projectId && m.UserId == userId);
+                .AnyAsync(m => m.ProjectId == projectId && m.UserId == userId && m.IsActive);
 
-            if (!isMember)
+            var isProjectOwner = project.CreatedByUserId == userId;
+
+            if (!isMember && !isProjectOwner)
                 return Result<AttachmentResponseDto>.Failure("You are not a member of this project");
 
             // Validate file
@@ -131,14 +133,16 @@ namespace SyncVerse.Application.Services.Attachments
             if (attachment == null)
                 return Result<bool>.Failure("Attachment not found");
 
-            // Check if user is project manager or the uploader
-            var isManager = await _unitOfWork.Repository<ProjectMember>()
+            // Allow delete for all active project members regardless of role (and project owner)
+            var isMember = await _unitOfWork.Repository<ProjectMember>()
                 .Query()
                 .AnyAsync(m => m.ProjectId == attachment.ProjectId && 
                               m.UserId == userId && 
-                              m.Role == Domain.Enums.ProjectRole.ProjectManager);
+                              m.IsActive);
 
-            if (attachment.UploadedByUserId != userId && !isManager)
+            var isProjectOwner = attachment.Project.CreatedByUserId == userId;
+
+            if (!isMember && !isProjectOwner)
                 return Result<bool>.Failure("Unauthorized to delete this attachment");
 
             // Delete from storage

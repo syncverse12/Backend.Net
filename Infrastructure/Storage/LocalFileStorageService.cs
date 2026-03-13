@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using SyncVerse.Application.Interfaces.Storage;
 
 namespace SyncVerse.Infrastructure.Storage
@@ -6,11 +7,13 @@ namespace SyncVerse.Infrastructure.Storage
     public class LocalFileStorageService : IFileStorageService
     {
         private readonly IWebHostEnvironment _environment;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly string _uploadsFolder;
 
-        public LocalFileStorageService(IWebHostEnvironment environment)
+        public LocalFileStorageService(IWebHostEnvironment environment, IHttpContextAccessor httpContextAccessor)
         {
             _environment = environment;
+            _httpContextAccessor = httpContextAccessor;
             _uploadsFolder = Path.Combine(_environment.WebRootPath ?? _environment.ContentRootPath, "uploads");
             
             if (!Directory.Exists(_uploadsFolder))
@@ -80,7 +83,15 @@ namespace SyncVerse.Infrastructure.Storage
 
         public Task<string> GetFileUrlAsync(string filePath)
         {
-            return Task.FromResult($"/uploads/{filePath}");
+            var normalizedPath = filePath.Replace("\\", "/");
+            var relativePath = $"/uploads/{normalizedPath}";
+
+            var request = _httpContextAccessor.HttpContext?.Request;
+            if (request == null)
+                return Task.FromResult(relativePath);
+
+            var absoluteUrl = $"{request.Scheme}://{request.Host}{relativePath}";
+            return Task.FromResult(absoluteUrl);
         }
 
         public Task<bool> FileExistsAsync(string filePath)

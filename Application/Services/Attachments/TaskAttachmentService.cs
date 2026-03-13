@@ -32,9 +32,20 @@ namespace SyncVerse.Application.Services.Attachments
             if (task == null)
                 return Result<AttachmentResponseDto>.Failure("Task not found");
 
-            // Validate user is assigned to task or is manager
-            if (task.AssignedToUserId != userId && task.CreatedByUserId != userId)
+            // Validate user can upload (all project members regardless of role)
+            if (!string.IsNullOrWhiteSpace(task.ProjectId))
+            {
+                var isProjectMember = await _unitOfWork.Repository<ProjectMember>()
+                    .Query()
+                    .AnyAsync(m => m.ProjectId == task.ProjectId && m.UserId == userId && m.IsActive);
+
+                if (!isProjectMember)
+                    return Result<AttachmentResponseDto>.Failure("You are not a member of this project");
+            }
+            else if (task.AssignedToUserId != userId && task.CreatedByUserId != userId)
+            {
                 return Result<AttachmentResponseDto>.Failure("You are not authorized to upload files to this task");
+            }
 
             // Validate file
             if (file == null || file.Length == 0)
@@ -130,9 +141,22 @@ namespace SyncVerse.Application.Services.Attachments
             if (attachment == null)
                 return Result<bool>.Failure("Attachment not found");
 
-            // Check if user is task creator or the uploader
-            if (attachment.UploadedByUserId != userId && attachment.Task.CreatedByUserId != userId)
+            // Allow delete for all project members regardless of role
+            if (!string.IsNullOrWhiteSpace(attachment.Task.ProjectId))
+            {
+                var isProjectMember = await _unitOfWork.Repository<ProjectMember>()
+                    .Query()
+                    .AnyAsync(m => m.ProjectId == attachment.Task.ProjectId && m.UserId == userId && m.IsActive);
+
+                if (!isProjectMember)
+                    return Result<bool>.Failure("Unauthorized to delete this attachment");
+            }
+            else if (attachment.UploadedByUserId != userId &&
+                     attachment.Task.CreatedByUserId != userId &&
+                     attachment.Task.AssignedToUserId != userId)
+            {
                 return Result<bool>.Failure("Unauthorized to delete this attachment");
+            }
 
             // Delete from storage
             await _fileStorageService.DeleteFileAsync(attachment.FilePath);
