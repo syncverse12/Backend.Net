@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Dashboard;
+using SyncVerse.Application.Interfaces.Dashboard;
 
 namespace SyncVerse.API.Controllers
 {
@@ -8,11 +11,19 @@ namespace SyncVerse.API.Controllers
     [Authorize(Roles = "Admin")]
     public class AdminController : ControllerBase
     {
+        private readonly IDashboardService _dashboardService;
+
+        public AdminController(IDashboardService dashboardService)
+        {
+            _dashboardService = dashboardService;
+        }
+
         [Authorize(Policy = "AdminOnly")]
         [HttpGet("dashboard")]
-        public IActionResult Dashboard()
+        public async Task<ActionResult<Result<AdminDashboardDto>>> Dashboard()
         {
-            return Ok("----Welcome Admin----");
+            var result = await _dashboardService.GetAdminDashboardAsync();
+            return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
     }
 }
