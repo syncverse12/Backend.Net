@@ -1,5 +1,11 @@
 ﻿using FluentValidation;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using SyncVerse.API.Authorization.Handlers;
 using SyncVerse.API.Authorization.Requirements;
 using SyncVerse.API.Hubs;
@@ -10,6 +16,7 @@ using SyncVerse.Application.Interfaces.Attachments;
 using SyncVerse.Application.Interfaces.Identity;
 using SyncVerse.Application.Interfaces.Notifications;
 using SyncVerse.Application.Interfaces.Persistence;
+using SyncVerse.Application.Interfaces.Profile;
 using SyncVerse.Application.Interfaces.Storage;
 using SyncVerse.Application.Interfaces.Task.Manager;
 using SyncVerse.Application.Interfaces.Tasks.Comments;
@@ -21,11 +28,12 @@ using SyncVerse.Application.Services.Attachments;
 using SyncVerse.Application.Services.Identity;
 using SyncVerse.Application.Services.Milestones;
 using SyncVerse.Application.Services.Notifications;
+using SyncVerse.Application.Services.Profile;
 using SyncVerse.Application.Services.Project.Employee;
+using SyncVerse.Application.Services.Task.Employee;
 using SyncVerse.Application.Services.Task.Manager;
 using SyncVerse.Application.Services.Tasks.Comments;
 using SyncVerse.Application.Services.Tasks.TimeTracking;
-using SyncVerse.Application.Services.Task.Employee;
 using SyncVerse.Application.Services.Team;
 using SyncVerse.Application.Services.WorkspaceInvitation; 
 using SyncVerse.Domain.Entities;
@@ -37,12 +45,6 @@ using SyncVerse.Infrastructure.Realtime;
 using SyncVerse.Infrastructure.SeedConfiguration;
 using SyncVerse.Infrastructure.Services.Email;
 using SyncVerse.Infrastructure.Storage;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -56,7 +58,7 @@ builder.Services.AddDbContext<DatabaseDbContext>(opts =>
 
 builder.Services.AddIdentity<User, Role>(options =>
 {
-    // Password settings (للتطوير - يمكن تشديدها في Production)
+    // Password settings 
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
     options.Password.RequireUppercase = true;
@@ -164,6 +166,7 @@ builder.Services.AddScoped<ICompanyInvitationService, CompanyInvitationService>(
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddScoped<IProjectAttachmentService, ProjectAttachmentService>();
 builder.Services.AddScoped<ITaskAttachmentService, TaskAttachmentService>();
+builder.Services.AddScoped<IProfileService, ProfileService>();
 
 builder.Services.AddScoped<IAuthorizationHandler, ManagerAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TaskOwnerAuthorizationHandler>();
@@ -261,7 +264,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors(app.Environment.IsDevelopment() ? "AllowAll" : "ProductionPolicy");
 
 app.UseHttpsRedirection();
-app.UseStaticFiles(); // For serving uploaded files
+app.UseStaticFiles(); 
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -288,7 +291,6 @@ using (var scope = app.Services.CreateScope())
     {
         Console.WriteLine($"❌ Error during database seeding: {ex.Message}");
         Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-        // Don't throw - let the app continue to run
     }
 }
 

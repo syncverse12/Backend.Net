@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Http; // For IFormFile
-using SyncVerse.Domain.Enums;
 
 namespace SyncVerse.Application.DTOs.WorkspaceInvitation
 {
@@ -11,9 +10,9 @@ namespace SyncVerse.Application.DTOs.WorkspaceInvitation
         public string? PhoneNumber { get; set; } 
         
         // ✅ Profile Data
-        public string? Skills { get; set; }
-        
         public string? Address { get; set; }
+        
+        public List<string>? Skills { get; set; }
         
         public IFormFile? ProfilePicture { get; set; }
     }

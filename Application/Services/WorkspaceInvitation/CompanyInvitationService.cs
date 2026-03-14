@@ -175,18 +175,20 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
 
             // ✅ Map Normal Properties
             if (!string.IsNullOrEmpty(dto.PhoneNumber)) user.PhoneNumber = dto.PhoneNumber;
-            if (!string.IsNullOrEmpty(dto.Skills)) user.Skills = dto.Skills;
             if (!string.IsNullOrEmpty(dto.Address)) user.Address = dto.Address;
+            if (dto.Skills != null && dto.Skills.Any()) user.Skills = dto.Skills;
 
             // ✅ Logic to Handle Attachment Upload
             if (dto.ProfilePicture != null)
             {
-                using var stream = dto.ProfilePicture.OpenReadStream();
-                var fileName = $"{Guid.NewGuid()}_{dto.ProfilePicture.FileName}";
+                var fileExtension = Path.GetExtension(dto.ProfilePicture.FileName);
+                var fileName = $"{Guid.NewGuid()}{fileExtension}";
                 
-                // You can change "profiles" to any folder name you want inside your 'uploads' folder mapping
-                var fileUrl = await _fileStorageService.UploadFileAsync(stream, fileName, "profiles"); 
-                user.ProfilePictureUrl = fileUrl;
+                using var stream = dto.ProfilePicture.OpenReadStream();
+                // رفع الصورة في فولدر "profile-pictures"
+                var filePath = await _fileStorageService.UploadFileAsync(stream, fileName, "profile-pictures");
+                
+                user.ProfilePictureUrl = filePath;
             }
 
             user.SeniorityLevel = invitation.SeniorityLevel;
@@ -217,7 +219,7 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
                     Email = user.Email!,
                     FirstName = user.FirstName,
                     LastName = user.LastName,
-                    PhoneNumber = user.PhoneNumber, // Include new properties mapped here
+                    PhoneNumber = user.PhoneNumber, 
                     Skills = user.Skills,
                     Address = user.Address,
                     ProfilePictureUrl = user.ProfilePictureUrl,

@@ -9,12 +9,12 @@ namespace SyncVerse.Domain.Entities
         public string LastName { get; set; } = null!;
 
         public SeniorityLevel SeniorityLevel { get; set; } 
-        public Department Department { get; set; } 
+        public Department Department { get; set; }
 
         // ✅ NEW: Profile Expansion Fields
-        public string? Skills { get; set; }
-        public string? Address { get; set; }
         public string? ProfilePictureUrl { get; set; }
+        public string? Address { get; set; }
+        public List<string> Skills { get; set; } = new List<string>(); 
 
         // ✅ NEW: OTP Fields
         public string? OtpCodeHash { get; set; }
