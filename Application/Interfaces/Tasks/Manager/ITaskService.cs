@@ -16,8 +16,6 @@ namespace SyncVerse.Application.Interfaces.Task.Manager
         Task<Result<bool>> AddDependencyAsync(AddTaskDependencyDto dto, string userId);
         Task<Result<bool>> ConfirmTaskAsync(string taskId, string managerId);
         Task<Result<bool>> RejectTaskAsync(string taskId, string managerId, string comment);
-        Task<Result<ManagerTaskDashboardDto>> GetManagerDashboardAsync(string managerId);
         Task<Result<List<TaskResponseDto>>> FilterTasksAsync(TaskFilterDto filter, string managerId);
-        Task<Result<TaskDashboardDto>> GetDashboardAsync(string projectId, string managerId);
     }
 }

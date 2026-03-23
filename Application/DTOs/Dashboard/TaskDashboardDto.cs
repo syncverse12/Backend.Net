@@ -1,6 +1,4 @@
-﻿using SyncVerse.Application.DTOs.Tasks.Manager;
-
-namespace SyncVerse.Application.DTOs.Tasks
+﻿namespace SyncVerse.Application.DTOs.Dashboard
 {
     public class TaskDashboardDto
     {

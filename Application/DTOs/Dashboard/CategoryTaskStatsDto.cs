@@ -1,4 +1,4 @@
-﻿namespace SyncVerse.Application.DTOs.Tasks.Manager
+﻿namespace SyncVerse.Application.DTOs.Dashboard
 {
     public class CategoryTaskStatsDto
     {

@@ -99,29 +99,11 @@ public class TasksController : ControllerBase
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
 
-    // MANAGER DASHBOARD
-    [HttpGet("manager/dashboard")]
-    [Authorize(Policy = "ManagerOnly")]
-    public async Task<IActionResult> GetManagerDashboard()
-    {
-        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var result = await _taskService.GetManagerDashboardAsync(managerId);
-        return result.IsSuccess ? Ok(result) : BadRequest(result);
-    }
-
     [HttpPost("filter")]
     public async Task<IActionResult> Filter(TaskFilterDto filter)
     {
         var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var result = await _taskService.FilterTasksAsync(filter, managerId);
-        return result.IsSuccess ? Ok(result) : BadRequest(result);
-    }
-
-    [HttpGet("dashboard/{projectId}")]
-    public async Task<IActionResult> Dashboard(string projectId)
-    {
-        var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var result = await _taskService.GetDashboardAsync(projectId, managerId);
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
 }

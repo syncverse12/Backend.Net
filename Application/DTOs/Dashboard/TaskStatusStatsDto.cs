@@ -1,4 +1,4 @@
-﻿namespace SyncVerse.Application.DTOs.Tasks.Manager
+﻿namespace SyncVerse.Application.DTOs.Dashboard
 {
     public class TaskStatusStatsDto
     {
@@ -9,5 +9,4 @@
         public int Completed { get; set; }
         public int Rejected { get; set; }
     }
-
 }

@@ -1,4 +1,5 @@
 ﻿using SyncVerse.Domain.Common;
+using SyncVerse.Domain.Enums;
 
 namespace SyncVerse.Domain.Entities
 {
@@ -6,6 +7,8 @@ namespace SyncVerse.Domain.Entities
     {
             public string Name { get; set; } = null!;
             public string Description { get; set; } = null!;
+
+            public ProjectStatus Status { get; set; } = ProjectStatus.Active;
 
             public string WorkspaceId { get; set; } = null!;
             public Workspace Workspace { get; set; } = null!;

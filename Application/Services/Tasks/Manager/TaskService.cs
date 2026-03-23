@@ -615,67 +615,6 @@ namespace SyncVerse.Application.Services.Task.Manager
             return Result<bool>.Success(true, "Task status set to Rejected.");
         }
 
-        // ManagerDashboard
-        public async Task<Result<ManagerTaskDashboardDto>> GetManagerDashboardAsync(string managerId)
-        {
-            var managerProjectIds = await _unitOfWork.Repository<ProjectEntity>().Query()
-                .Include(p => p.Workspace)
-                .Include(p => p.TeamMembers)
-                .Where(p => p.CreatedByUserId == managerId ||
-                            p.Workspace!.CreatedByUserId == managerId ||
-                            p.TeamMembers.Any(m => m.UserId == managerId &&
-                                             (m.Role == ProjectRole.ProjectManager || m.Role == ProjectRole.TeamLeader)))
-                .Select(p => p.Id)
-                .ToListAsync();
-
-
-            var tasks = await _unitOfWork.Repository<TaskItem>()
-                .Query()
-                .IgnoreQueryFilters() 
-                .Include(t => t.AssignedToUser)
-                .Include(t => t.Category)
-                .Where(t => t.ProjectId != null && managerProjectIds.Contains(t.ProjectId!))
-                .ToListAsync();
-
-            var statusStats = new TaskStatusStatsDto
-            {
-                Total = tasks.Count(t => !t.IsDeleted),
-                Pending = tasks.Count(t => !t.IsDeleted && t.Status == TaskStatus.Pending),
-                InProgress = tasks.Count(t => !t.IsDeleted && t.Status == TaskStatus.InProgress),
-                Submitted = tasks.Count(t => !t.IsDeleted && t.Status == TaskStatus.Submitted),
-                Completed = tasks.Count(t => !t.IsDeleted && t.Status == TaskStatus.Completed),
-                Rejected = tasks.Count(t => !t.IsDeleted && t.Status == TaskStatus.Rejected)
-            };
-
-            var tasksPerEmployee = tasks
-                .Where(t => !t.IsDeleted && !string.IsNullOrEmpty(t.AssignedToUserId))
-                .GroupBy(t => new
-                {
-                    t.AssignedToUserId,
-                    EmployeeName = t.AssignedToUser != null
-                        ? $"{t.AssignedToUser.FirstName} {t.AssignedToUser.LastName}".Trim()
-                        : "Unknown"
-                })
-                .Select(g => new EmployeeTaskStatsDto
-                {
-                    EmployeeId = g.Key.AssignedToUserId!,
-                    EmployeeName = g.Key.EmployeeName,
-                    TasksCount = g.Count()
-                })
-                .ToList();
-
-            return Result<ManagerTaskDashboardDto>.Success(new ManagerTaskDashboardDto
-            {
-                StatusStats = statusStats,
-                TasksPerEmployee = tasksPerEmployee,
-                TasksPerCategory = tasks
-                    .Where(t => t.Category != null && !t.IsDeleted) 
-                    .GroupBy(t => t.Category!.Name)
-                    .Select(g => new CategoryTaskStatsDto { CategoryName = g.Key, TasksCount = g.Count() })
-                    .ToList()
-            });
-        }
-
         //FilterTasks
         public async Task<Result<List<TaskResponseDto>>> FilterTasksAsync(TaskFilterDto filter, string currentUserId)
         {
@@ -724,48 +663,6 @@ namespace SyncVerse.Application.Services.Task.Manager
             var tasks = await query.ToListAsync();
 
             return Result<List<TaskResponseDto>>.Success(_mapper.Map<List<TaskResponseDto>>(tasks));
-        }
-
-        //Dashboard
-        public async Task<Result<TaskDashboardDto>> GetDashboardAsync(string projectId, string currentUserId)
-        {
-            var isAuthorized = await _unitOfWork.Repository<SyncVerse.Domain.Entities.Project>().Query()
-                .Include(p => p.Workspace)
-                .Include(p => p.TeamMembers)
-                .AnyAsync(p => p.Id == projectId &&
-                               (p.CreatedByUserId == currentUserId ||
-                                p.Workspace!.CreatedByUserId == currentUserId ||
-                                p.TeamMembers.Any(m => m.UserId == currentUserId &&
-                                                 (m.Role == ProjectRole.ProjectManager || m.Role == ProjectRole.TeamLeader))));
-
-            if (!isAuthorized)
-                return Result<TaskDashboardDto>.Failure("Unauthorized: You don't have permission to view this project's dashboard.");
-
-            var tasks = await _unitOfWork.Repository<TaskItem>()
-                .Query()
-                .Include(t => t.Category)
-                .Where(t => t.ProjectId == projectId && !t.IsDeleted)
-                .ToListAsync();
-
-            var dashboard = new TaskDashboardDto
-            {
-                TotalTasks = tasks.Count,
-                CompletedTasks = tasks.Count(t => t.Status == TaskStatus.Completed),
-                InProgressTasks = tasks.Count(t => t.Status == TaskStatus.InProgress),
-                OverdueTasks = tasks.Count(t =>
-                    t.DueDate.HasValue &&
-                    t.DueDate.Value < DateTime.UtcNow &&
-                    t.Status != TaskStatus.Completed),
-
-                CategoryStats = tasks
-                    .Where(t => t.Category != null)
-                    .GroupBy(t => t.Category!.Name)
-                    .Select(g => new CategoryTaskStatsDto { CategoryName = g.Key, TasksCount = g.Count() })
-                    .ToList()
-            };
-
-
-            return Result<TaskDashboardDto>.Success(dashboard);
         }
 
         // STATUS TRANSITION VALIDATION

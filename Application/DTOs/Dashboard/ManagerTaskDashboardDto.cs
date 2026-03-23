@@ -1,4 +1,4 @@
-﻿namespace SyncVerse.Application.DTOs.Tasks.Manager
+﻿namespace SyncVerse.Application.DTOs.Dashboard
 {
     public class ManagerTaskDashboardDto
     {
@@ -6,5 +6,5 @@
         public List<EmployeeTaskStatsDto> TasksPerEmployee { get; set; } = null!;
         public List<CategoryTaskStatsDto> TasksPerCategory { get; set; } = new();
     }
-
 }
+
