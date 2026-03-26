@@ -61,6 +61,27 @@
 
 ---
 
+## 🛡️ Role-Based Access Control (RBAC) Permissions Matrix
+
+| Feature / Module | Admin | HR | Manager | Project Manager | Team Leader | Employee |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **System Settings & Global Views** | ✔️ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **User & Role Management** | ✔️ | ✔️ | 🔘¹ | ❌ | ❌ | ❌ |
+| **Workspace Configuration** | ✔️ | ❌ | ✔️ | ❌ | ❌ | ❌ |
+| **Create/Delete Projects** | ✔️ | ❌ | ✔️ | ❌ | ❌ | ❌ |
+| **Manage Milestones & Deadlines** | ✔️ | ❌ | ✔️ | ✔️ | ❌ | ❌ |
+| **Assign Teams to Projects** | ✔️ | ❌ | ✔️ | ✔️ | ❌ | ❌ |
+| **Create & Assign Tasks** | ✔️ | ❌ | ✔️ | ✔️ | ✔️ | ❌ |
+| **Review Submitted Tasks** | ✔️ | ❌ | ✔️ | ✔️ | ✔️ | 🔘² |
+| **Execute Tasks & Log Time** | ✔️ | ❌ | ✔️ | ✔️ | ✔️ | ✔️ |
+| **Personal Profile & Settings** | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ |
+
+*Notes:*
+*   *¹ `Managers` can invite and manage employees specifically within their own Workspace boundaries.*
+*   *² Specific `Employees` assigned with `QA` or `Reviewer` roles inside a project can review/verify tasks.*
+
+---
+
 ## 📈 Role-Specific Dashboards (Analytics) 
 
 A major highlight of SyncVerse is its comprehensive, role-segregated analytical dashboards giving each tier of management exactly the data they need:
@@ -137,4 +158,3 @@ to view the dynamically generated Swagger UI encompassing all endpoints, models,
 
 ---
 
-*Built with ❤️ for fluid team collaboration.*
