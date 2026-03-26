@@ -10,5 +10,7 @@ namespace SyncVerse.Application.Interfaces.Profile
         Task<Result<UserProfileDto>> UpdateProfileAsync(string userId, UpdateProfileDto dto);
         Task<Result<bool>> ChangePasswordAsync(string userId, ChangePasswordDto dto);
         Task<Result<bool>> ChangeEmailAsync(string userId, ChangeEmailDto dto);
+        Task<Result<UserSettingsDto>> GetUserSettingsAsync(string userId);
+        Task<Result<UserSettingsDto>> UpdateUserSettingsAsync(string userId, UserSettingsDto dto);
     }
 }

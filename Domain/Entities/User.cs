@@ -34,5 +34,8 @@ namespace SyncVerse.Domain.Entities
         public ICollection<TaskItem> AssignedTasks { get; set; } = new List<TaskItem>();
         public ICollection<TimeLog> TimeLogs { get; set; } = new List<TimeLog>();
         public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+
+        // Navigation property for settings
+        public UserSettings? Settings { get; set; }
     }
 }

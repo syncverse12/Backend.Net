@@ -58,5 +58,25 @@ namespace SyncVerse.API.Controllers
             var result = await _profileService.ChangeEmailAsync(userId, dto);
             return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
+
+        [HttpGet("settings")]
+        public async Task<IActionResult> GetSettings()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var result = await _profileService.GetUserSettingsAsync(userId);
+            return result.IsSuccess ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpPut("settings")]
+        public async Task<IActionResult> UpdateSettings([FromBody] UserSettingsDto dto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var result = await _profileService.UpdateUserSettingsAsync(userId, dto);
+            return result.IsSuccess ? Ok(result) : BadRequest(result);
+        }
     }
 }

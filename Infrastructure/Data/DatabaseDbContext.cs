@@ -38,6 +38,7 @@ namespace SyncVerse.Infrastructure.Data
         public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
         public DbSet<Team> Teams => Set<Team>();
         public DbSet<CompanyInvitation> CompanyInvitations => Set<CompanyInvitation>();
+        public DbSet<UserSettings> UserSettings { get; set; }
 
         public override int SaveChanges()
         {
@@ -71,8 +72,6 @@ namespace SyncVerse.Infrastructure.Data
 
             foreach (var entityType in builder.Model.GetEntityTypes())
             {
-                // نطبق الفلتر فقط على الكلاسات اللي بترث من BaseEntity 
-                // ونستبعد جداول الـ Identity تماماً
                 if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType) &&
                     !entityType.ClrType.Name.Contains("User") &&
                     !entityType.ClrType.Name.Contains("Role"))
