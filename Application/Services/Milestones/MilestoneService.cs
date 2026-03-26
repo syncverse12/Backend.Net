@@ -31,11 +31,11 @@ namespace SyncVerse.Application.Services.Milestones
             if (project == null) return Result<MilestoneResponseDto>.Failure("Project not found");
 
             var isWorkspaceOwner = project.Workspace?.CreatedByUserId == currentUserId;
-            var isPM = await _unitOfWork.Repository<ProjectMember>().Query()
-                .AnyAsync(m => m.ProjectId == dto.ProjectId && m.UserId == currentUserId && m.Role == ProjectRole.ProjectManager);
+            var isAuthorizedLeader = await _unitOfWork.Repository<ProjectMember>().Query()
+                .AnyAsync(m => m.ProjectId == dto.ProjectId && m.UserId == currentUserId && (m.Role == ProjectRole.ProjectManager || m.Role == ProjectRole.TeamLeader));
 
-            if (!isWorkspaceOwner && !isPM)
-                return Result<MilestoneResponseDto>.Failure("Unauthorized: Only the Workspace Owner or Project Manager can create milestones.");
+            if (!isWorkspaceOwner && !isAuthorizedLeader)
+                return Result<MilestoneResponseDto>.Failure("Unauthorized: Only the Workspace Owner, Project Manager, or Team Leader can create milestones.");
 
             if (dto.StartDate < project.StartDate || dto.EndDate > project.EndDate)
                 return Result<MilestoneResponseDto>.Failure("Milestone dates must be within project bounds.");
@@ -56,11 +56,11 @@ namespace SyncVerse.Application.Services.Milestones
             if (milestone == null) return Result<MilestoneResponseDto>.Failure("Milestone not found");
 
             var isWorkspaceOwner = milestone.Project.Workspace?.CreatedByUserId == currentUserId;
-            var isPM = await _unitOfWork.Repository<ProjectMember>().Query()
-                .AnyAsync(m => m.ProjectId == milestone.ProjectId && m.UserId == currentUserId && m.Role == ProjectRole.ProjectManager);
+            var isAuthorizedLeader = await _unitOfWork.Repository<ProjectMember>().Query()
+                .AnyAsync(m => m.ProjectId == milestone.ProjectId && m.UserId == currentUserId && (m.Role == ProjectRole.ProjectManager || m.Role == ProjectRole.TeamLeader));
 
-            if (!isWorkspaceOwner && !isPM)
-                return Result<MilestoneResponseDto>.Failure("Unauthorized: Only Workspace Owners or PMs can modify milestones.");
+            if (!isWorkspaceOwner && !isAuthorizedLeader)
+                return Result<MilestoneResponseDto>.Failure("Unauthorized: Only Workspace Owners, PMs, or Team Leaders can modify milestones.");
 
             _mapper.Map(dto, milestone);
             _unitOfWork.Repository<Milestone>().Update(milestone);
@@ -78,11 +78,11 @@ namespace SyncVerse.Application.Services.Milestones
             if (milestone == null) return Result<bool>.Failure("Milestone not found");
 
             var isWorkspaceOwner = milestone.Project.Workspace?.CreatedByUserId == currentUserId;
-            var isPM = await _unitOfWork.Repository<ProjectMember>().Query()
-                .AnyAsync(pm => pm.ProjectId == milestone.ProjectId && pm.UserId == currentUserId && pm.Role == ProjectRole.ProjectManager);
+            var isAuthorizedLeader = await _unitOfWork.Repository<ProjectMember>().Query()
+                .AnyAsync(pm => pm.ProjectId == milestone.ProjectId && pm.UserId == currentUserId && (pm.Role == ProjectRole.ProjectManager || pm.Role == ProjectRole.TeamLeader));
 
-            if (!isWorkspaceOwner && !isPM)
-                return Result<bool>.Failure("Unauthorized: Only Workspace Owners or PMs can delete milestones.");
+            if (!isWorkspaceOwner && !isAuthorizedLeader)
+                return Result<bool>.Failure("Unauthorized: Only Workspace Owners, PMs, or Team Leaders can delete milestones.");
 
             milestone.IsDeleted = true;
 
@@ -148,10 +148,10 @@ namespace SyncVerse.Application.Services.Milestones
             if (milestone == null) return Result<bool>.Failure("Milestone not found");
 
             var isWorkspaceOwner = milestone.Project.Workspace?.CreatedByUserId == currentUserId;
-            var isPM = await _unitOfWork.Repository<ProjectMember>().Query()
-                .AnyAsync(pm => pm.ProjectId == milestone.ProjectId && pm.UserId == currentUserId && pm.Role == ProjectRole.ProjectManager);
+            var isAuthorizedLeader = await _unitOfWork.Repository<ProjectMember>().Query()
+                .AnyAsync(pm => pm.ProjectId == milestone.ProjectId && pm.UserId == currentUserId && (pm.Role == ProjectRole.ProjectManager || pm.Role == ProjectRole.TeamLeader));
 
-            if (!isWorkspaceOwner && !isPM)
+            if (!isWorkspaceOwner && !isAuthorizedLeader)
                 return Result<bool>.Failure("Unauthorized.");
 
             if (milestone.Project.IsDeleted)

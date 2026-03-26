@@ -68,8 +68,8 @@
 | **System Settings & Global Views** | ✔️ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **User & Role Management** | ✔️ | ✔️ | 🔘¹ | ❌ | ❌ | ❌ |
 | **Workspace Configuration** | ✔️ | ❌ | ✔️ | ❌ | ❌ | ❌ |
-| **Create/Delete Projects** | ✔️ | ❌ | ✔️ | ❌ | ❌ | ❌ |
-| **Manage Milestones & Deadlines** | ✔️ | ❌ | ✔️ | ✔️ | ❌ | ❌ |
+| **Create/Delete Projects** | ✔️ | ❌ | ✔️ | ✔️ | ❌ | ❌ |
+| **Manage Milestones & Deadlines** | ✔️ | ❌ | ✔️ | ✔️ | ✔️ | ❌ |
 | **Assign Teams to Projects** | ✔️ | ❌ | ✔️ | ✔️ | ❌ | ❌ |
 | **Create & Assign Tasks** | ✔️ | ❌ | ✔️ | ✔️ | ✔️ | ❌ |
 | **Review Submitted Tasks** | ✔️ | ❌ | ✔️ | ✔️ | ✔️ | 🔘² |

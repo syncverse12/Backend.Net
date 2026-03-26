@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-[Authorize(Policy = "ManagerOnly")]
+[Authorize(Roles = "Manager,ProjectManager,Admin,TeamLeader")]
 [ApiController]
 [Route("api/milestones")]
 public class MilestonesController : ControllerBase

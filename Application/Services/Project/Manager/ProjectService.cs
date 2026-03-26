@@ -42,11 +42,13 @@ public class ProjectService : IProjectService
         if(user == null)
             return Result<ProjectResponseDto>.Failure("User not found.");
 
-        var isManagerRole = await _userManager.IsInRoleAsync(user, "ProjectManager");
+        var isManagerRole = await _userManager.IsInRoleAsync(user, "ProjectManager") || 
+                            await _userManager.IsInRoleAsync(user, "Manager") || 
+                            await _userManager.IsInRoleAsync(user, "Admin");
 
         if (!isWorkspaceOwner && !isManagerRole)
         {
-            return Result<ProjectResponseDto>.Failure("Unauthorized: Only Workspace Owners or Project Managers can create projects.");
+            return Result<ProjectResponseDto>.Failure("Unauthorized: Only Workspace Owners, Managers, or Project Managers can create projects.");
         }
 
         var project = _mapper.Map<Project>(dto);
@@ -149,15 +151,20 @@ public class ProjectService : IProjectService
             .Include(p => p.Workspace) 
             .Include(p => p.Milestones)
             .Include(p => p.Taskitem)
+            .Include(p => p.TeamMembers)
             .FirstOrDefaultAsync(p => p.Id == projectId && !p.IsDeleted);
 
         if (project == null) return Result<bool>.Failure("Project not found");
 
+        var isProjectManager = project.TeamMembers
+            .Any(pm => pm.UserId == currentUserId && pm.Role == ProjectRole.ProjectManager && pm.IsActive);
+
         var isAuthorized = project.Workspace?.CreatedByUserId == currentUserId ||
-                           project.CreatedByUserId == currentUserId;
+                           project.CreatedByUserId == currentUserId || 
+                           isProjectManager;
 
         if (!isAuthorized)
-            return Result<bool>.Failure("Unauthorized: Only the Workspace Owner or the Project Creator can delete this project.");
+            return Result<bool>.Failure("Unauthorized: Only the Workspace Owner, Project Creator, or Project Manager can delete this project.");
 
         project.IsDeleted = true;
 
@@ -185,13 +192,18 @@ public class ProjectService : IProjectService
             .Include(p => p.Workspace) 
             .Include(p => p.Milestones)
             .Include(p => p.Taskitem)
+            .Include(p => p.TeamMembers)
             .FirstOrDefaultAsync(p => p.Id == projectId);
 
         if (project == null)
             return Result<bool>.Failure("Project not found");
 
+        var isProjectManager = project.TeamMembers
+            .Any(pm => pm.UserId == currentUserId && pm.Role == ProjectRole.ProjectManager);
+
         var isAuthorized = project.Workspace?.CreatedByUserId == currentUserId ||
-                           project.CreatedByUserId == currentUserId;
+                           project.CreatedByUserId == currentUserId ||
+                           isProjectManager;
 
         if (!isAuthorized)
             return Result<bool>.Failure("Unauthorized to restore this project");

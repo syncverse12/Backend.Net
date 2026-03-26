@@ -1,3 +1,4 @@
+using SyncVerse.Application.DTOs.Dashboard;
 using SyncVerse.Application.DTOs.Milestones;
 
 namespace SyncVerse.Application.DTOs.Project.Employee
@@ -17,5 +18,6 @@ namespace SyncVerse.Application.DTOs.Project.Employee
         public string? RepositoryUrl { get; set; }
         public string? DocumentationUrl { get; set; }
         public List<MilestoneResponseDto> Milestones { get; set; } = new();
+        public List<ProjectTeamMemberDto> TeamMembers { get; set; } = new();
     }
 }

@@ -1,4 +1,5 @@
 ﻿using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.Dashboard;
 using SyncVerse.Application.DTOs.Milestones;
 using SyncVerse.Application.DTOs.Notifications;
 using SyncVerse.Application.DTOs.Project;
@@ -131,6 +132,7 @@ namespace SyncVerse.Application.Services.Project.Employee
             var project = await _unitOfWork.Repository<Domain.Entities.Project>()
                 .Query()
                 .Include(p => p.TeamMembers)
+                    .ThenInclude(pm => pm.User)
                 .Include(p => p.Tasks)
                 .Include(p => p.Milestones)
                 .FirstOrDefaultAsync(p => p.Id == projectId && !p.IsDeleted);
@@ -163,6 +165,15 @@ namespace SyncVerse.Application.Services.Project.Employee
                 .OrderBy(m => m.StartDate)
                 .ToList();
 
+            var teamMembers = project.TeamMembers
+                .Where(m => m.IsActive)
+                .Select(m => new ProjectTeamMemberDto
+                {
+                    UserId = m.UserId,
+                    Name = m.User != null ? m.User.FirstName + " " + m.User.LastName : string.Empty,
+                    Role = m.Role.ToString()
+                }).ToList();
+
             var details = new EmployeeProjectDetailsDto
             {
                 ProjectId = project.Id,
@@ -177,7 +188,8 @@ namespace SyncVerse.Application.Services.Project.Employee
                 JoinedAt = member.CreatedAt,
                 RepositoryUrl = project.RepositoryUrl,
                 DocumentationUrl = project.DocumentationUrl,
-                Milestones = milestones
+                Milestones = milestones,
+                TeamMembers = teamMembers
             };
 
             return Result<EmployeeProjectDetailsDto>.Success(details);

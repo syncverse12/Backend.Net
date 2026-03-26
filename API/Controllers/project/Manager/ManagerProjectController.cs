@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-[Authorize(Policy = "ManagerOnly")]
+[Authorize(Roles = "Manager,ProjectManager,Admin")]
 [ApiController]
 [Route("api/projects")]
 public class ProjectsController : ControllerBase
@@ -34,7 +34,6 @@ public class ProjectsController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [Authorize(Policy = "ManagerOnly")]
     public async Task<IActionResult> GetById(string id)
     {
         var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -43,7 +42,6 @@ public class ProjectsController : ControllerBase
     }
 
     [HttpGet("workspace/{workspaceId}")]
-    [Authorize(Policy = "ManagerOnly")]
     public async Task<IActionResult> GetByWorkspaceForManager(string workspaceId)
     {
         var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -71,7 +69,6 @@ public class ProjectsController : ControllerBase
 
     // INVITATION
     [HttpPost("{projectId}/invite")]
-    [Authorize(Policy = "ManagerOnly")]
     public async Task<IActionResult> Invite(string projectId, InviteEmployeeDto dto)
     {
         var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
