@@ -165,6 +165,7 @@ builder.Services.AddScoped<IEmployeeTaskService, EmployeeTaskService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddScoped<ICompanyInvitationService, CompanyInvitationService>(); 
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddScoped<IProjectAttachmentService, ProjectAttachmentService>();
