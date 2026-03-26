@@ -40,8 +40,9 @@
 
 ### 👥 User & Workspace Management
 * **HR / Admin Controls**: Complete user lifecycle management, role assignments, profile approvals, and account lockouts (Ban/Suspend).
-* **Workspace Setup**: Multi-workspace support allowing companies to segment whole divisions.
-* **Company & Project Invitations**: Email-backed invitations to seamlessly onboard new talent directly into their assigned workspace or project.
+* **Workspace Setup**: Multi-workspace support allowing companies to segment whole divisions. Includes specific industry categorizations for deeper analytics.
+* **Workspace Linking**: Users are securely linked to specific workspaces, ensuring strict tenant isolation and contextual data queries.
+* **Company & Workspace Invitations**: Email-backed invitations to seamlessly onboard new talent directly into their assigned workspace or project, completely integrated with RBAC roles.
 
 ### 📊 Advanced Project & Task Management
 * **Agile Tooling**: Complete hierarchical track from `Workspace` → `Project` → `Milestone` → `Task`.

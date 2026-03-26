@@ -31,16 +31,15 @@ public class ProjectService : IProjectService
         if (dto.EndDate < dto.StartDate)
             return Result<ProjectResponseDto>.Failure("End date cannot be earlier than start date.");
 
-        var workspace = await _unitOfWork.Repository<Workspace>().GetByIdAsync(dto.WorkspaceId);
+        var user = await _userManager.FindByIdAsync(currentUserId);
+        if (user == null || string.IsNullOrEmpty(user.WorkspaceId))
+            return Result<ProjectResponseDto>.Failure("User or Workspace not found.");
+
+        var workspace = await _unitOfWork.Repository<Workspace>().GetByIdAsync(user.WorkspaceId);
         if (workspace == null)
             return Result<ProjectResponseDto>.Failure("Workspace not found.");
 
         var isWorkspaceOwner = workspace.CreatedByUserId == currentUserId;
-
-        var user = await _userManager.FindByIdAsync(currentUserId);
-
-        if(user == null)
-            return Result<ProjectResponseDto>.Failure("User not found.");
 
         var isManagerRole = await _userManager.IsInRoleAsync(user, "ProjectManager") || 
                             await _userManager.IsInRoleAsync(user, "Manager") || 
@@ -52,6 +51,7 @@ public class ProjectService : IProjectService
         }
 
         var project = _mapper.Map<Project>(dto);
+        project.WorkspaceId = user.WorkspaceId;
         project.CreatedByUserId = currentUserId;
         project.CreatedAt = DateTime.UtcNow;
 
@@ -87,6 +87,10 @@ public class ProjectService : IProjectService
         if (project?.Workspace == null)
             return Result<ProjectResponseDto>.Failure("Project workspace data is missing.");
 
+        var user = await _userManager.FindByIdAsync(currentUserId);
+        if (user == null || user.WorkspaceId != project.WorkspaceId)
+            return Result<ProjectResponseDto>.Failure("Unauthorized: You do not belong to the project's workspace.");
+
         var isAuthorized = project.Workspace!.CreatedByUserId == currentUserId ||
                            await _unitOfWork.Repository<ProjectMember>().Query()
                                .AnyAsync(m => m.ProjectId == projectId &&
@@ -115,6 +119,10 @@ public class ProjectService : IProjectService
 
         if (project == null)
             return Result<ProjectResponseDto>.Failure("Project not found");
+
+        var user = await _userManager.FindByIdAsync(currentUserId);
+        if (user == null || user.WorkspaceId != project.WorkspaceId)
+            return Result<ProjectResponseDto>.Failure("Unauthorized: You do not belong to the project's workspace.");
 
         var isAuthorized = project.Workspace?.CreatedByUserId == currentUserId ||
                            await _unitOfWork.Repository<ProjectMember>().Query()
@@ -155,6 +163,10 @@ public class ProjectService : IProjectService
             .FirstOrDefaultAsync(p => p.Id == projectId && !p.IsDeleted);
 
         if (project == null) return Result<bool>.Failure("Project not found");
+
+        var user = await _userManager.FindByIdAsync(currentUserId);
+        if (user == null || user.WorkspaceId != project.WorkspaceId)
+            return Result<bool>.Failure("Unauthorized: You do not belong to the project's workspace.");
 
         var isProjectManager = project.TeamMembers
             .Any(pm => pm.UserId == currentUserId && pm.Role == ProjectRole.ProjectManager && pm.IsActive);
@@ -197,6 +209,10 @@ public class ProjectService : IProjectService
 
         if (project == null)
             return Result<bool>.Failure("Project not found");
+
+        var user = await _userManager.FindByIdAsync(currentUserId);
+        if (user == null || user.WorkspaceId != project.WorkspaceId)
+            return Result<bool>.Failure("Unauthorized: You do not belong to the project's workspace.");
 
         var isProjectManager = project.TeamMembers
             .Any(pm => pm.UserId == currentUserId && pm.Role == ProjectRole.ProjectManager);

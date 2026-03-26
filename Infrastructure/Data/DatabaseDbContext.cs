@@ -38,6 +38,7 @@ namespace SyncVerse.Infrastructure.Data
         public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
         public DbSet<Team> Teams => Set<Team>();
         public DbSet<CompanyInvitation> CompanyInvitations => Set<CompanyInvitation>();
+        public DbSet<WorkspaceInvitation> WorkspaceInvitations { get; set; }
         public DbSet<UserSettings> UserSettings { get; set; }
 
         public override int SaveChanges()
@@ -85,6 +86,14 @@ namespace SyncVerse.Infrastructure.Data
                     builder.Entity(entityType.ClrType).HasQueryFilter(lambda);
                 }
             }
+            builder.Entity<UserSettings>()
+                .HasKey(us => us.UserId);
+
+            builder.Entity<UserSettings>()
+                .HasOne(us => us.User)
+                .WithOne(u => u.Settings)
+                .HasForeignKey<UserSettings>(us => us.UserId);
+
             builder.ApplyConfigurationsFromAssembly(typeof(DatabaseDbContext).Assembly);
         }
     }

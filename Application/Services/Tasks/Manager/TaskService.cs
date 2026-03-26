@@ -11,6 +11,7 @@ using SyncVerse.Domain.Entities;
 using SyncVerse.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
+using Microsoft.AspNetCore.Identity;
 
 using ProjectEntity = SyncVerse.Domain.Entities.Project;
 
@@ -21,12 +22,14 @@ namespace SyncVerse.Application.Services.Task.Manager
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly INotificationService _notificationService;
+        private readonly UserManager<User> _userManager;
 
-        public TaskService(IUnitOfWork unitOfWork, IMapper mapper, INotificationService notificationService)
+        public TaskService(IUnitOfWork unitOfWork, IMapper mapper, INotificationService notificationService, UserManager<User> userManager)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _notificationService = notificationService;
+            _userManager = userManager;
         }
 
         //CREATE
@@ -38,6 +41,10 @@ namespace SyncVerse.Application.Services.Task.Manager
 
             if (project == null)
                 return Result<TaskResponseDto>.Failure("Project not found");
+
+            var user = await _userManager.FindByIdAsync(currentUserId);
+            if (user == null || user.WorkspaceId != project.WorkspaceId)
+                return Result<TaskResponseDto>.Failure("Unauthorized: You do not belong to the project's workspace.");
 
             var projectMember = await _unitOfWork.Repository<ProjectMember>().Query()
                 .FirstOrDefaultAsync(m => m.ProjectId == dto.ProjectId && m.UserId == currentUserId);
@@ -204,6 +211,10 @@ namespace SyncVerse.Application.Services.Task.Manager
             var projectMember = await _unitOfWork.Repository<ProjectMember>().Query()   
                 .FirstOrDefaultAsync(m => m.ProjectId == task.ProjectId && m.UserId == currentUserId);
 
+            var user = await _userManager.FindByIdAsync(currentUserId);
+            if (user == null || user.WorkspaceId != task.Project?.WorkspaceId)
+                return Result<TaskResponseDto>.Failure("Unauthorized: You do not belong to the project's workspace.");
+
             bool isWorkspaceOwner = task.Project?.Workspace?.CreatedByUserId == currentUserId;
             bool isProjectManager = task.Project?.CreatedByUserId == currentUserId;
             bool isTeamLeader = projectMember?.Role == ProjectRole.TeamLeader;
@@ -348,6 +359,10 @@ namespace SyncVerse.Application.Services.Task.Manager
             var projectMember = await _unitOfWork.Repository<ProjectMember>().Query()
                 .FirstOrDefaultAsync(m => m.ProjectId == task.ProjectId && m.UserId == userId);
 
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.WorkspaceId != task.Project?.WorkspaceId)
+                return Result<bool>.Failure("Unauthorized: You do not belong to the project's workspace.");
+
             bool isWorkspaceOwner = task.Project?.Workspace?.CreatedByUserId == userId;
             bool isProjectManager = task.Project?.CreatedByUserId == userId;
             bool isTeamLeader = projectMember?.Role == ProjectRole.TeamLeader;
@@ -387,6 +402,10 @@ namespace SyncVerse.Application.Services.Task.Manager
                 .FirstOrDefaultAsync(t => t.Id == taskId);
 
             if (task == null) return Result<bool>.Failure("Task not found");
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.WorkspaceId != task.Project?.WorkspaceId)
+                return Result<bool>.Failure("Unauthorized: You do not belong to the project's workspace.");
 
             var projectMember = await _unitOfWork.Repository<ProjectMember>().Query()
                 .FirstOrDefaultAsync(m => m.ProjectId == task.ProjectId && m.UserId == userId);

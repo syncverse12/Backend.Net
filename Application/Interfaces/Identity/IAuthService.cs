@@ -9,6 +9,9 @@ namespace SyncVerse.Application.Interfaces.Identity
         // ✅ Existing
         Task<Result<AuthResponseDto>> LoginAsync(LoginDto dto);
         
+        // ✅ NEW: Manager Registration with Workspace Creation
+        Task<Result<AuthResponseDto>> RegisterManagerAsync(RegisterManagerDto dto);
+
         // ✅ NEW: OTP-based Registration
         Task<Result<RegisterResponseDto>> RegisterAsync(RegisterDto dto);
         Task<Result<AuthResponseDto>> VerifyEmailAsync(VerifyEmailDto dto, string userId);

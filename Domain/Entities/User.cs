@@ -28,6 +28,10 @@ namespace SyncVerse.Domain.Entities
         public bool IsPasswordResetOtpVerified { get; set; } = false;
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // ✅ NEW: Link User to a specific Workspace
+        public string? WorkspaceId { get; set; }
+        public Workspace? Workspace { get; set; }
         
         // Navigation properties (existing)
         public ICollection<ProjectMember> ProjectMembers { get; set; } = new List<ProjectMember>();

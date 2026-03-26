@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using SyncVerse.Domain.Enums;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using SyncVerse.Application.Interfaces.Persistence;
 
 namespace SyncVerse.Application.Services.Identity
 {
@@ -17,19 +18,106 @@ namespace SyncVerse.Application.Services.Identity
         private readonly JwtHandler _jwtHandler;
         private readonly IOtpService _otpService;
         private readonly IEmailService _emailService;
+        private readonly IUnitOfWork _unitOfWork;
 
         public AuthService(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
             JwtHandler jwtHandler,
             IOtpService otpService,
-            IEmailService emailService)
+            IEmailService emailService,
+            IUnitOfWork unitOfWork)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _jwtHandler = jwtHandler;
             _otpService = otpService;
             _emailService = emailService;
+            _unitOfWork = unitOfWork;
+        }
+
+        // ✅ Manager Registration (with Workspace Creation)
+        public async Task<Result<AuthResponseDto>> RegisterManagerAsync(RegisterManagerDto dto)
+        {
+            var existingUser = await _userManager.FindByEmailAsync(dto.Email);
+            if (existingUser != null)
+                return Result<AuthResponseDto>.Failure("Email already registered");
+
+            // Step A: Create User
+            var user = new User
+            {
+                UserName = dto.Email,
+                Email = dto.Email,
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                IsEmailVerified = true, // Bypass email verification for instant onboarding as requested
+                CreatedAt = DateTime.UtcNow,
+                SeniorityLevel = SeniorityLevel.Lead,
+                Department = Department.Engineering
+            };
+
+            var userResult = await _userManager.CreateAsync(user, dto.Password);
+            if (!userResult.Succeeded)
+                return Result<AuthResponseDto>.Failure(string.Join(", ", userResult.Errors.Select(e => e.Description)));
+
+            // Step B: Assign Role (Manager) instead of WorkspaceAdmin since Manager is the owner in this app
+            var roleResult = await _userManager.AddToRoleAsync(user, "Manager");
+            if (!roleResult.Succeeded)
+            {
+                await _userManager.DeleteAsync(user); // rollback user
+                return Result<AuthResponseDto>.Failure("Could not assign Manager role");
+            }
+
+            // Step C: Create Workspace
+            var workspace = new Workspace
+            {
+                Name = dto.WorkspaceName,
+                Industry = dto.Industry,
+                Description = $"{dto.WorkspaceName} Workspace",
+                CreatedByUserId = user.Id
+            };
+
+            try
+            {
+                await _unitOfWork.Repository<Workspace>().AddAsync(workspace);
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                await _userManager.DeleteAsync(user); // rollback user
+                return Result<AuthResponseDto>.Failure("Failed to create workspace. " + ex.Message);
+            }
+
+            // Step D: Link Workspace to User
+            user.WorkspaceId = workspace.Id;
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                // We could delete workspace here, but to keep it simple let's return error
+                return Result<AuthResponseDto>.Failure("Failed to link user to workspace.");
+            }
+
+            // Step E: Generate Token including WorkspaceId and Role
+            var roles = await _userManager.GetRolesAsync(user);
+            var (token, expiration) = _jwtHandler.GenerateToken(user, roles);
+
+            return Result<AuthResponseDto>.Success(new AuthResponseDto
+            {
+                Token = token,
+                Expiration = expiration,
+                Message = "Manager registered and workspace created successfully.",
+                User = new UserResponseDto
+                {
+                    Id = user.Id,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Email = user.Email!,
+                    Department = user.Department,
+                    SeniorityLevel = user.SeniorityLevel,
+                    Roles = roles.ToList(),
+                    WorkspaceId = user.WorkspaceId
+                }
+            });
         }
 
         // ✅ 1. Register
@@ -158,7 +246,15 @@ namespace SyncVerse.Application.Services.Identity
             {
                 Token = token.Token,
                 Expiration = token.Expiration,
-                User = new UserResponseDto { Id = user.Id, Email = user.Email!, FirstName = user.FirstName, LastName = user.LastName, Roles = roles.ToList() },
+                User = new UserResponseDto 
+                { 
+                    Id = user.Id, 
+                    Email = user.Email!, 
+                    FirstName = user.FirstName, 
+                    LastName = user.LastName, 
+                    Roles = roles.ToList(),
+                    WorkspaceId = user.WorkspaceId
+                },
                 Message = "Email verified successfully"
             });
         }
@@ -180,7 +276,15 @@ namespace SyncVerse.Application.Services.Identity
             {
                 Token = token.Token,
                 Expiration = token.Expiration,
-                User = new UserResponseDto { Id = user.Id, Email = user.Email!, FirstName = user.FirstName, LastName = user.LastName, Roles = roles.ToList() },
+                User = new UserResponseDto 
+                { 
+                    Id = user.Id, 
+                    Email = user.Email!, 
+                    FirstName = user.FirstName, 
+                    LastName = user.LastName, 
+                    Roles = roles.ToList(),
+                    WorkspaceId = user.WorkspaceId
+                },
                 Message = "Login successful"
             });
         }

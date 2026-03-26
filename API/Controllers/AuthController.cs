@@ -20,6 +20,21 @@ namespace SyncVerse.API.Controllers
         }
 
         /// <summary>
+        /// Register a manager and create a new workspace simultaneously
+        /// Returns direct Token for onboarding
+        /// </summary>
+        [HttpPost("register-manager")]
+        public async Task<IActionResult> RegisterManager([FromBody] RegisterManagerDto dto)
+        {
+            var result = await _authService.RegisterManagerAsync(dto);
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Register new user (sends OTP to email)
         /// </summary>
         [HttpPost("register")]

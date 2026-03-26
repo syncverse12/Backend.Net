@@ -194,6 +194,12 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
             user.SeniorityLevel = invitation.SeniorityLevel;
             user.Department = invitation.Team.Department;
 
+            var hrUser = await _userManager.FindByIdAsync(invitation.SentByHRId);
+            if (hrUser != null && hrUser.WorkspaceId != null) 
+            {
+                user.WorkspaceId = hrUser.WorkspaceId;
+            }
+
             var updateResult = await _userManager.UpdateAsync(user);
             if (!updateResult.Succeeded) return Result<AuthResponseDto>.Failure("Failed to update user profile");
 

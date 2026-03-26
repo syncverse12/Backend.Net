@@ -1,7 +1,12 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace SyncVerse.Domain.Entities
 {
     public class UserSettings
     {
+        [Key]
+        [ForeignKey("User")]
         public string UserId { get; set; } = string.Empty;
         public User User { get; set; } = null!;
 

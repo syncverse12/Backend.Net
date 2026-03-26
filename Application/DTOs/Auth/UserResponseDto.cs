@@ -18,5 +18,7 @@ namespace SyncVerse.Application.DTOs.Auth
         public Department Department { get; set; }
         public SeniorityLevel SeniorityLevel { get; set; }
         public List<string> Roles { get; set; } = new();
+
+        public string? WorkspaceId { get; set; }
     }
 }

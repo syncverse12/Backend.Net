@@ -11,6 +11,7 @@ namespace SyncVerse.Infrastructure.SeedConfiguration
             string[] roleNames = { 
                 "Admin", 
                 "HR", 
+                "WorkspaceAdmin",
                 "Manager", 
                 "Employee", 
                 "ProjectManager", 
