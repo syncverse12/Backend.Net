@@ -71,7 +71,7 @@ builder.Services.AddIdentity<User, Role>(options =>
     options.User.RequireUniqueEmail = true;
     
     // SignIn settings
-    options.SignIn.RequireConfirmedEmail = false; // للتطوير
+    options.SignIn.RequireConfirmedEmail = false; 
 })
     .AddEntityFrameworkStores<DatabaseDbContext>()
     .AddDefaultTokenProviders();

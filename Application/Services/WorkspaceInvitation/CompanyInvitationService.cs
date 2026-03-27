@@ -12,7 +12,7 @@ using System.Security.Cryptography;
 using SyncVerse.Application.DTOs.WorkspaceInvitation;
 using System.Security.Claims;
 using Microsoft.Extensions.Configuration;
-using SyncVerse.Application.Interfaces.Storage; // ✅ Needed for file upload
+using SyncVerse.Application.Interfaces.Storage; 
 using System.Threading.Tasks;
 
 namespace SyncVerse.Application.Services.WorkspaceInvitation
@@ -24,7 +24,7 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
         private readonly UserManager<User> _userManager;
         private readonly JwtHandler _jwtHandler;
         private readonly IConfiguration _configuration;
-        private readonly IFileStorageService _fileStorageService; // ✅ Inject the FileStorageService
+        private readonly IFileStorageService _fileStorageService; 
 
         public CompanyInvitationService(
             IUnitOfWork unitOfWork,
@@ -185,7 +185,6 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
                 var fileName = $"{Guid.NewGuid()}{fileExtension}";
                 
                 using var stream = dto.ProfilePicture.OpenReadStream();
-                // رفع الصورة في فولدر "profile-pictures"
                 var filePath = await _fileStorageService.UploadFileAsync(stream, fileName, "profile-pictures");
                 
                 user.ProfilePictureUrl = filePath;

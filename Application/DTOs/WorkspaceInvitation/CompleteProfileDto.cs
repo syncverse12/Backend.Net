@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http; // For IFormFile
+using Microsoft.AspNetCore.Http; 
 
 namespace SyncVerse.Application.DTOs.WorkspaceInvitation
 {
