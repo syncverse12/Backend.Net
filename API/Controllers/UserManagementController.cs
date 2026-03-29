@@ -7,7 +7,7 @@ namespace SyncVerse.API.Controllers
 {
     [ApiController]
     [Route("api/users")]
-    [Authorize(Roles = "Admin,HR,Manager")] // You can adjust these roles as needed
+    [Authorize]
     public class UserManagementController : ControllerBase
     {
         private readonly IUserManagementService _userManagementService;
@@ -18,6 +18,7 @@ namespace SyncVerse.API.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin,HR,Manager")]
         public async Task<IActionResult> GetAllUsers()
         {
             var result = await _userManagementService.GetAllUsersAsync();
@@ -32,6 +33,7 @@ namespace SyncVerse.API.Controllers
         }
 
         [HttpPut("{userId}")]
+        [Authorize(Roles = "Admin,HR,Manager")]
         public async Task<IActionResult> UpdateUser(string userId, [FromBody] UpdateUserDto dto)
         {
             var result = await _userManagementService.UpdateUserAsync(userId, dto);
@@ -39,6 +41,7 @@ namespace SyncVerse.API.Controllers
         }
 
         [HttpPut("{userId}/roles")]
+        [Authorize(Roles = "Admin,HR,Manager")]
         public async Task<IActionResult> UpdateUserRoles(string userId, [FromBody] List<string> newRoles)
         {
             var result = await _userManagementService.UpdateUserRolesAsync(userId, newRoles);
@@ -46,6 +49,7 @@ namespace SyncVerse.API.Controllers
         }
 
         [HttpPut("{userId}/lockout")]
+        [Authorize(Roles = "Admin,HR,Manager")]
         public async Task<IActionResult> ToggleUserLockout(string userId, [FromBody] bool lockUser)
         {
             var result = await _userManagementService.ToggleUserLockoutAsync(userId, lockUser);

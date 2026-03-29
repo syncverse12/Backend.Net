@@ -4,6 +4,7 @@ using SyncVerse.Application.Common.Results;
 using SyncVerse.Application.DTOs.UserManagement;
 using SyncVerse.Application.Interfaces.Identity;
 using SyncVerse.Domain.Entities;
+using SyncVerse.Domain.Enums;
 
 namespace SyncVerse.Application.Services.Identity
 {
@@ -50,12 +51,40 @@ namespace SyncVerse.Application.Services.Identity
             }
 
             var roles = await _userManager.GetRolesAsync(user);
+            var workspaceUsersCount = string.IsNullOrWhiteSpace(user.WorkspaceId)
+                ? 0
+                : await _userManager.Users.CountAsync(u => u.WorkspaceId == user.WorkspaceId);
+
+            var teamSize = workspaceUsersCount <= 10
+                ? 0
+                : workspaceUsersCount <= 30
+                    ? 1
+                    : 2;
+
+            var orgCode = string.IsNullOrWhiteSpace(user.WorkspaceId)
+                ? "GENERAL"
+                : user.WorkspaceId;
+
+            var teamId = user.Department switch
+            {
+                Department.Engineering => "TECH",
+                Department.ProductAndDesign => "UI",
+                Department.QA => "QA",
+                Department.HR => "HR",
+                Department.Support => "SUPPORT",
+                _ => "GENERAL"
+            };
 
             var dto = new UserDetailsDto
             {
                 Id = user.Id,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
+                DisplayName = $"{user.FirstName} {user.LastName}".Trim(),
+                OrgCode = orgCode,
+                TeamId = teamId,
+                TeamSize = teamSize,
+                Gender = "Unknown",
                 Email = user.Email ?? string.Empty,
                 Department = user.Department.ToString(),
                 SeniorityLevel = user.SeniorityLevel.ToString(),
