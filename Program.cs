@@ -168,7 +168,7 @@ builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddScoped<ICompanyInvitationService, CompanyInvitationService>(); 
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
-builder.Services.AddSingleton<IWorkspaceSessionService, WorkspaceSessionService>();
+builder.Services.AddScoped<IWorkspaceSessionService, WorkspaceSessionService>();
 
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddScoped<IProjectAttachmentService, ProjectAttachmentService>();
