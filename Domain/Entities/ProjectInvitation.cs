@@ -18,6 +18,7 @@ namespace SyncVerse.Domain.Entities
         public string? RejectionReason { get; set; }
 
         public DateTime SentAt { get; set; }
+        public DateTime ExpiresAt { get; set; }
     }
 
 }

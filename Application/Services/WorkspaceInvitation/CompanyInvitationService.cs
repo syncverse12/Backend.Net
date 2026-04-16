@@ -61,7 +61,7 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
                 InvitationToken = token,
                 SentByHRId = hrId,
                 SentAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow.AddDays(7),
+                ExpiresAt = DateTime.UtcNow.AddDays(3),
                 Status = InvitationStatus.Pending
             };
 

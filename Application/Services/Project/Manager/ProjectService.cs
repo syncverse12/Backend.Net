@@ -271,6 +271,7 @@ public class ProjectService : IProjectService
         var user = await _userManager.FindByIdAsync(dto.EmployeeId);
         if (user == null) return Result<bool>.Failure("Employee not found.");
 
+        var sentAt = DateTime.UtcNow;
         var invitation = new ProjectInvitation
         {
             ProjectId = projectId,
@@ -279,7 +280,8 @@ public class ProjectService : IProjectService
             Type = dto.Type,
             Role = dto.Role,
             Status = InvitationStatus.Pending,
-            SentAt = DateTime.UtcNow
+            SentAt = sentAt,
+            ExpiresAt = sentAt.AddDays(3)
         };
 
         await _unitOfWork.Repository<ProjectInvitation>().AddAsync(invitation);
