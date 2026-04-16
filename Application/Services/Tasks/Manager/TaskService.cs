@@ -732,5 +732,65 @@ namespace SyncVerse.Application.Services.Task.Manager
             return false;
         }
 
+
+        public async Task<List<UnityTaskResponseDto>> GetUnityTasksAsync(string orgId, string teamId)
+        {
+            var tasksQuery = _unitOfWork.Repository<TaskItem>()
+                .Query()
+                .Include(t => t.Project)
+                .Where(t => t.Project != null && t.Project.WorkspaceId == orgId && t.Project.TeamId == teamId && !t.IsDeleted);
+
+            var tasks = await tasksQuery.ToListAsync();
+
+            var result = tasks.Select(t => new UnityTaskResponseDto
+            {
+                Id = t.Id,
+                Title = t.Title,
+                Status = MapStatusToUnity(t.Status),
+                AssigneeId = t.AssignedToUserId
+            }).ToList();
+
+            return result;
+        }
+
+
+        public async Task<bool> UpdateTaskStatusAsync(string taskId, string status)
+        {
+            var task = await _unitOfWork.Repository<TaskItem>().GetByIdAsync(taskId);
+            if (task == null || task.IsDeleted)
+                return false;
+
+            var mappedStatus = MapUnityStatusToTaskStatus(status);
+            if (mappedStatus == null)
+                return false;
+
+            task.Status = mappedStatus.Value;
+            _unitOfWork.Repository<TaskItem>().Update(task);
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
+
+        private string MapStatusToUnity(TaskStatus status)
+        {
+            return status switch
+            {
+                TaskStatus.Pending => "Todo",
+                TaskStatus.InProgress => "Doing",
+                TaskStatus.Completed => "Done",
+                _ => "Todo"
+            };
+        }
+
+        private TaskStatus? MapUnityStatusToTaskStatus(string status)
+        {
+            return status switch
+            {
+                "Todo" => TaskStatus.Pending,
+                "Doing" => TaskStatus.InProgress,
+                "Done" => TaskStatus.Completed,
+                _ => null
+            };
+        }
+
     }
 }

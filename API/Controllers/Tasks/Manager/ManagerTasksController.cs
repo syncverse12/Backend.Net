@@ -14,6 +14,25 @@ public class TasksController : ControllerBase
 {
     private readonly ITaskService _taskService;
 
+    // GET: /api/tasks?orgId={orgCode}&teamId={teamId}
+    [HttpGet]
+    [Route("")]
+    public async Task<IActionResult> GetUnityTasks([FromQuery] string orgId, [FromQuery] string teamId)
+    {
+        var tasks = await _taskService.GetUnityTasksAsync(orgId, teamId);
+        return Ok(tasks);
+    }
+
+    // PUT: /api/tasks/{taskId}/status
+    [HttpPut("{taskId}/status")]
+    public async Task<IActionResult> UpdateTaskStatus(string taskId, [FromBody] UpdateTaskStatusDto dto)
+    {
+        var result = await _taskService.UpdateTaskStatusAsync(taskId, dto.Status);
+        if (!result)
+            return NotFound();
+        return NoContent();
+    }
+
     public TasksController(ITaskService taskService)
     {
         _taskService = taskService;

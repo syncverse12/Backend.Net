@@ -17,5 +17,9 @@ namespace SyncVerse.Application.Interfaces.Task.Manager
         Task<Result<bool>> ConfirmTaskAsync(string taskId, string managerId);
         Task<Result<bool>> RejectTaskAsync(string taskId, string managerId, string comment);
         Task<Result<List<TaskResponseDto>>> FilterTasksAsync(TaskFilterDto filter, string managerId);
+
+        // Unity endpoints
+        Task<List<UnityTaskResponseDto>> GetUnityTasksAsync(string orgId, string teamId);
+        Task<bool> UpdateTaskStatusAsync(string taskId, string status);
     }
 }

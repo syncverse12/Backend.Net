@@ -23,8 +23,8 @@ using SyncVerse.Application.Interfaces.Task.Manager;
 using SyncVerse.Application.Interfaces.Tasks.Comments;
 using SyncVerse.Application.Interfaces.Tasks.Employee;
 using SyncVerse.Application.Interfaces.Tasks.TimeTracking;
-using SyncVerse.Application.Interfaces.Team; 
-using SyncVerse.Application.Interfaces.WorkspaceInvitation; 
+using SyncVerse.Application.Interfaces.Team;
+using SyncVerse.Application.Interfaces.WorkspaceInvitation;
 using SyncVerse.Application.Interfaces.Workspaces;
 using SyncVerse.Application.Services.Attachments;
 using SyncVerse.Application.Services.Dashboard;
@@ -39,7 +39,7 @@ using SyncVerse.Application.Services.Tasks.Comments;
 using SyncVerse.Application.Services.Tasks.TimeTracking;
 using SyncVerse.Application.Services.Team;
 using SyncVerse.Application.Services.Workspaces;
-using SyncVerse.Application.Services.WorkspaceInvitation; 
+using SyncVerse.Application.Services.WorkspaceInvitation;
 using SyncVerse.Domain.Entities;
 using SyncVerse.Domain.Enums;
 using SyncVerse.Infrastructure.Data;
@@ -51,29 +51,28 @@ using SyncVerse.Infrastructure.Services.Email;
 using SyncVerse.Infrastructure.Storage;
 using System.Text;
 using System.Text.Json.Serialization;
+using AutoMapper;
+using SyncVerse.Application.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. Register Services ---
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+// --- 1. الخدمات (Services) ---
+
+// إعداد AutoMapper - السطر ده بيغني عن كل الإعداد اليدوي وبيسحب كل الـ Profiles أوتوماتيك
+builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
 
 builder.Services.AddDbContext<DatabaseDbContext>(opts =>
         opts.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddIdentity<User, Role>(options =>
 {
-    // Password settings 
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
     options.Password.RequireUppercase = true;
     options.Password.RequireNonAlphanumeric = true;
     options.Password.RequiredLength = 6;
-    
-    // User settings
     options.User.RequireUniqueEmail = true;
-    
-    // SignIn settings
-    options.SignIn.RequireConfirmedEmail = false; 
+    options.SignIn.RequireConfirmedEmail = false;
 })
     .AddEntityFrameworkStores<DatabaseDbContext>()
     .AddDefaultTokenProviders();
@@ -98,25 +97,25 @@ builder.Services.AddAuthentication(opt =>
         ValidAudience = jwtSettings["validAudience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey))
     };
-    
+
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
         {
             var accessToken = context.Request.Query["access_token"];
             var path = context.HttpContext.Request.Path;
-            
+
             if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/notifications"))
             {
                 context.Token = accessToken;
             }
-            
+
             return System.Threading.Tasks.Task.CompletedTask;
         }
     };
 });
 
-// ✅ CORS Configuration - Allow Frontend, Flutter, Unity
+// CORS Configuration
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -129,22 +128,18 @@ builder.Services.AddCors(options =>
     options.AddPolicy("ProductionPolicy", policy =>
     {
         policy.WithOrigins(
-                "http://localhost:3000",      // React/Next.js Dev
-                "http://localhost:4200",      // Angular Dev
-                "http://localhost:8080",      // Vue.js Dev
-                "http://localhost:5173",      // Vite Dev
-                "https://yourdomain.com",     // Production Frontend
-                "capacitor://localhost",      // Capacitor/Flutter
-                "ionic://localhost"           // Ionic
+                "http://localhost:3000",
+                "capacitor://localhost",
+                "ionic://localhost"
               )
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials()
-              .WithExposedHeaders("Content-Disposition"); // For file downloads
+              .WithExposedHeaders("Content-Disposition");
     });
 });
 
-// ✅ Services Registration
+// تسجيل الخدمات البرمجية (Dependency Injection)
 builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -160,12 +155,12 @@ builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IMilestoneService, MilestoneService>();
 builder.Services.AddScoped<ITaskCommentService, TaskCommentService>();
 builder.Services.AddScoped<ITimeLogService, TimeLogService>();
-builder.Services.AddScoped<IRealtimeNotificationService, SignalRNotificationService>();  
+builder.Services.AddScoped<IRealtimeNotificationService, SignalRNotificationService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEmployeeProjectService, EmployeeProjectService>();
 builder.Services.AddScoped<IEmployeeTaskService, EmployeeTaskService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
-builder.Services.AddScoped<ICompanyInvitationService, CompanyInvitationService>(); 
+builder.Services.AddScoped<ICompanyInvitationService, CompanyInvitationService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IWorkspaceSessionService, WorkspaceSessionService>();
@@ -175,6 +170,7 @@ builder.Services.AddScoped<IProjectAttachmentService, ProjectAttachmentService>(
 builder.Services.AddScoped<ITaskAttachmentService, TaskAttachmentService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 
+// Authorization Handlers
 builder.Services.AddScoped<IAuthorizationHandler, ManagerAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TaskOwnerAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ReviewTaskAuthorizationHandler>();
@@ -189,26 +185,13 @@ builder.Services.AddControllers()
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AdminOnly", policy =>
-        policy.RequireRole("Admin", "HR"));
-
-    options.AddPolicy("ProjectManagerOnly", policy =>
-        policy.RequireRole("ProjectManager", "Admin"));
-
-    options.AddPolicy("TeamLeaderOnly", policy =>
-        policy.RequireRole("TeamLeader", "ProjectManager", "Admin"));
-
-    options.AddPolicy("ManagerOnly", policy =>
-        policy.Requirements.Add(new ManagerRequirement()));
-
-    options.AddPolicy("TaskOwner", policy =>
-        policy.Requirements.Add(new TaskOwnerRequirement()));
-
-    options.AddPolicy("ReviewTask", policy =>
-        policy.Requirements.Add(new ReviewTaskRequirement()));
-        
-    options.AddPolicy("EmployeeOnly", policy =>
-        policy.RequireRole("Employee"));
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin", "HR"));
+    options.AddPolicy("ProjectManagerOnly", policy => policy.RequireRole("ProjectManager", "Admin"));
+    options.AddPolicy("TeamLeaderOnly", policy => policy.RequireRole("TeamLeader", "ProjectManager", "Admin"));
+    options.AddPolicy("ManagerOnly", policy => policy.Requirements.Add(new ManagerRequirement()));
+    options.AddPolicy("TaskOwner", policy => policy.Requirements.Add(new TaskOwnerRequirement()));
+    options.AddPolicy("ReviewTask", policy => policy.Requirements.Add(new ReviewTaskRequirement()));
+    options.AddPolicy("EmployeeOnly", policy => policy.RequireRole("Employee"));
 });
 
 builder.Services.AddFluentValidationAutoValidation();
@@ -218,20 +201,7 @@ builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
 {
-    opt.SwaggerDoc("v1", new OpenApiInfo 
-    { 
-        Title = "SyncVerse API", 
-        Version = "v1",
-        Description = "Project Management System API"
-    });
-
-    opt.CustomOperationIds(apiDesc =>
-    {
-        var controllerName = apiDesc.ActionDescriptor.RouteValues["controller"];
-        var actionName = apiDesc.ActionDescriptor.RouteValues["action"];
-        return $"{controllerName}_{actionName}";
-    });
-
+    opt.SwaggerDoc("v1", new OpenApiInfo { Title = "SyncVerse API", Version = "v1" });
     opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -241,17 +211,12 @@ builder.Services.AddSwaggerGen(opt =>
         BearerFormat = "JWT",
         Scheme = "bearer"
     });
-
     opt.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
             new OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
             },
             new string[]{}
         }
@@ -261,30 +226,35 @@ builder.Services.AddSwaggerGen(opt =>
 var app = builder.Build();
 
 // --- 2. Middleware Pipeline ---
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseCors("AllowAll"); // في الـ Dev بنفتح كل حاجة لليونيتي وفلاتر
+}
+else
+{
+    app.UseCors("ProductionPolicy");
 }
 
-// ✅ CORS - Must be before Authentication/Authorization
-app.UseCors(app.Environment.IsDevelopment() ? "AllowAll" : "ProductionPolicy");
-
 app.UseHttpsRedirection();
-app.UseStaticFiles(); 
+app.UseStaticFiles();
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
 
-// --- 3. Database Seeding ---
+// --- 3. الـ Database Migration والـ Seeding التلقائي ---
+
 using (var scope = app.Services.CreateScope())
 {
     try
     {
         var context = scope.ServiceProvider.GetRequiredService<DatabaseDbContext>();
 
+        // السطر ده هو اللي بيخلي الداتابيز تبقى Default عند الكل أول ما يرنوا
         await context.Database.MigrateAsync();
 
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
@@ -292,12 +262,11 @@ using (var scope = app.Services.CreateScope())
 
         await DefaultAdminSeeder.SeedAsync(userManager, roleManager);
 
-        Console.WriteLine("✅ Database seeding completed successfully!");
+        Console.WriteLine("✅ Database updated and seeded successfully!");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"❌ Error during database seeding: {ex.Message}");
-        Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+        Console.WriteLine($"❌ Error during startup: {ex.Message}");
     }
 }
 

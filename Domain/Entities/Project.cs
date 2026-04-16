@@ -28,6 +28,6 @@ namespace SyncVerse.Domain.Entities
            public ICollection<TeamMember> TeamMembers { get; set; } = new List<TeamMember>();
 
           public ICollection<TaskEmployee> Tasks { get; set; } = new List<TaskEmployee>();
-
+        public string? TeamId { get; set; }
     }
 }
