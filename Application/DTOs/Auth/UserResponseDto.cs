@@ -18,5 +18,7 @@ namespace SyncVerse.Application.DTOs.Auth
         public List<string> Roles { get; set; } = new();
 
         public string? WorkspaceId { get; set; }
+
+        public string? OrgCode { get; set; }
     }
 }

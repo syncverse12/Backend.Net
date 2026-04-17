@@ -21,5 +21,7 @@ namespace SyncVerse.Application.DTOs.Profile
         
         public List<string> Roles { get; set; } = new();
         public DateTime JoinedDate { get; set; }
+
+        public string? OrgCode { get; set; }
     }
 }

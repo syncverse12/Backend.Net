@@ -78,5 +78,18 @@ namespace SyncVerse.API.Controllers
             var result = await _profileService.UpdateUserSettingsAsync(userId, dto);
             return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
+
+        [HttpGet("orgcode")]
+        public async Task<IActionResult> GetOrgCode()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var user = await _profileService.GetUserWithWorkspaceAsync(userId);
+            if (user == null || user.Workspace == null)
+                return NotFound();
+
+            return Ok(new { orgCode = user.Workspace.OrgCode });
+        }
     }
 }

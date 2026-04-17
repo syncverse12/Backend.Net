@@ -34,9 +34,14 @@ namespace SyncVerse.API.JwtFeatuers
                 new Claim("lastName", user.LastName)
             };
 
+
             if (!string.IsNullOrEmpty(user.WorkspaceId))
             {
                 claims.Add(new Claim("WorkspaceId", user.WorkspaceId));
+                if (user.Workspace != null && !string.IsNullOrEmpty(user.Workspace.OrgCode))
+                {
+                    claims.Add(new Claim("orgCode", user.Workspace.OrgCode));
+                }
             }
 
             foreach (var role in roles)

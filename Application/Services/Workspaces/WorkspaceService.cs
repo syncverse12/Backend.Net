@@ -28,11 +28,13 @@ public class WorkspaceService : IWorkspaceService
         if (exists)
             return Result<WorkspaceResponseDto>.Failure("Workspace name already exists");
 
+
         var workspace = new Workspace
         {
             Name = dto.Name,
             Description = dto.Description,
-            CreatedByUserId = managerId
+            CreatedByUserId = managerId,
+            OrgCode = Guid.NewGuid().ToString("N").Substring(0, 8)
         };
 
         await _unitOfWork.Repository<Workspace>().AddAsync(workspace);

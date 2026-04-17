@@ -1,6 +1,6 @@
 ﻿using SyncVerse.Application.Common.Results;
 using SyncVerse.Application.DTOs.Profile;
-using System.Threading.Tasks;
+using SyncVerse.Domain.Entities;
 
 namespace SyncVerse.Application.Interfaces.Profile
 {
@@ -12,5 +12,6 @@ namespace SyncVerse.Application.Interfaces.Profile
         Task<Result<bool>> ChangeEmailAsync(string userId, ChangeEmailDto dto);
         Task<Result<UserSettingsDto>> GetUserSettingsAsync(string userId);
         Task<Result<UserSettingsDto>> UpdateUserSettingsAsync(string userId, UserSettingsDto dto);
+        Task<User?> GetUserWithWorkspaceAsync(string userId);
     }
 }

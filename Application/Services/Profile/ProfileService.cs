@@ -4,11 +4,6 @@ using SyncVerse.Application.DTOs.Profile;
 using SyncVerse.Application.Interfaces.Profile;
 using SyncVerse.Application.Interfaces.Storage;
 using SyncVerse.Domain.Entities;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 
 using Microsoft.EntityFrameworkCore;
 using SyncVerse.Infrastructure.Data;
@@ -195,6 +190,13 @@ namespace SyncVerse.Application.Services.Profile
             await _context.SaveChangesAsync();
 
             return Result<UserSettingsDto>.Success(dto, "Settings updated successfully.");
+        }
+
+        public async Task<User?> GetUserWithWorkspaceAsync(string userId)
+        {
+            return await _context.Users
+                .Include(u => u.Workspace)
+                .FirstOrDefaultAsync(u => u.Id == userId);
         }
     }
 }

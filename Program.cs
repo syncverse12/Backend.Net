@@ -57,9 +57,6 @@ using SyncVerse.Application.Services.Meetings;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. الـ Services (الخدمات) ---
-
-// ✅ تعديل AutoMapper: تم استخدام الـ Syntax المتوافق مع v16 ليتجاوز مشكلة الـ Assembly
 builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile<MappingProfile>();
@@ -109,7 +106,6 @@ builder.Services.AddAuthentication(opt =>
             var accessToken = context.Request.Query["access_token"];
             var path = context.HttpContext.Request.Path;
 
-            // ✅ حل مشكلة الـ Null Reference باستخدام الـ Safe Access (?.)
             if (!string.IsNullOrEmpty(accessToken) && path.Value?.Contains("/hubs") == true)
             {
                 context.Token = accessToken;
@@ -141,7 +137,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// تسجيل الخدمات البرمجية (Dependency Injection)
+// (Dependency Injection)
 builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -247,7 +243,7 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
 
-// --- 3. الـ Database Migration والـ Seeding ---
+// --- 3. Database Migration & Seeding ---
 
 using (var scope = app.Services.CreateScope())
 {
