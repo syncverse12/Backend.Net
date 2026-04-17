@@ -27,6 +27,7 @@ namespace SyncVerse.Infrastructure.Data
         public DbSet<TaskEmployee> TaskEmployees => Set<TaskEmployee>();
         public DbSet<TimeLog> TimeLogs => Set<TimeLog>();
         public DbSet<Project> Projects => Set<Project>();
+        public DbSet<Meeting> Meetings { get; set; }
         public DbSet<Workspace> Workspaces { get; set; }
         public DbSet<Milestone> Milestones => Set<Milestone>();
         public DbSet<TaskComment> TaskComments => Set<TaskComment>();

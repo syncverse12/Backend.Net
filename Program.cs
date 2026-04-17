@@ -15,6 +15,7 @@ using SyncVerse.Application.Interfaces;
 using SyncVerse.Application.Interfaces.Attachments;
 using SyncVerse.Application.Interfaces.Dashboard;
 using SyncVerse.Application.Interfaces.Identity;
+using SyncVerse.Application.Interfaces.Meetings;
 using SyncVerse.Application.Interfaces.Notifications;
 using SyncVerse.Application.Interfaces.Persistence;
 using SyncVerse.Application.Interfaces.Profile;
@@ -41,7 +42,6 @@ using SyncVerse.Application.Services.Team;
 using SyncVerse.Application.Services.Workspaces;
 using SyncVerse.Application.Services.WorkspaceInvitation;
 using SyncVerse.Domain.Entities;
-using SyncVerse.Domain.Enums;
 using SyncVerse.Infrastructure.Data;
 using SyncVerse.Infrastructure.Persistence;
 using SyncVerse.Infrastructure.Persistence.Repositories;
@@ -53,13 +53,17 @@ using System.Text;
 using System.Text.Json.Serialization;
 using AutoMapper;
 using SyncVerse.Application.Mapping;
+using SyncVerse.Application.Services.Meetings;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. الخدمات (Services) ---
+// --- 1. الـ Services (الخدمات) ---
 
-// إعداد AutoMapper - السطر ده بيغني عن كل الإعداد اليدوي وبيسحب كل الـ Profiles أوتوماتيك
-builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
+// ✅ تعديل AutoMapper: تم استخدام الـ Syntax المتوافق مع v16 ليتجاوز مشكلة الـ Assembly
+builder.Services.AddAutoMapper(cfg =>
+{
+    cfg.AddProfile<MappingProfile>();
+}, typeof(MappingProfile).Assembly);
 
 builder.Services.AddDbContext<DatabaseDbContext>(opts =>
         opts.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
@@ -105,12 +109,13 @@ builder.Services.AddAuthentication(opt =>
             var accessToken = context.Request.Query["access_token"];
             var path = context.HttpContext.Request.Path;
 
-            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/notifications"))
+            // ✅ حل مشكلة الـ Null Reference باستخدام الـ Safe Access (?.)
+            if (!string.IsNullOrEmpty(accessToken) && path.Value?.Contains("/hubs") == true)
             {
                 context.Token = accessToken;
             }
 
-            return System.Threading.Tasks.Task.CompletedTask;
+            return Task.CompletedTask;
         }
     };
 });
@@ -122,16 +127,13 @@ builder.Services.AddCors(options =>
     {
         policy.AllowAnyOrigin()
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .WithExposedHeaders("Content-Disposition");
     });
 
     options.AddPolicy("ProductionPolicy", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:3000",
-                "capacitor://localhost",
-                "ionic://localhost"
-              )
+        policy.WithOrigins("http://localhost:3000", "capacitor://localhost", "ionic://localhost")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials()
@@ -164,13 +166,12 @@ builder.Services.AddScoped<ICompanyInvitationService, CompanyInvitationService>(
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IWorkspaceSessionService, WorkspaceSessionService>();
-
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddScoped<IProjectAttachmentService, ProjectAttachmentService>();
 builder.Services.AddScoped<ITaskAttachmentService, TaskAttachmentService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
+builder.Services.AddScoped<IMeetingService, MeetingService>();
 
-// Authorization Handlers
 builder.Services.AddScoped<IAuthorizationHandler, ManagerAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TaskOwnerAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ReviewTaskAuthorizationHandler>();
@@ -225,13 +226,13 @@ builder.Services.AddSwaggerGen(opt =>
 
 var app = builder.Build();
 
-// --- 2. Middleware Pipeline ---
+// --- 2. الـ Middleware Pipeline ---
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseCors("AllowAll"); // في الـ Dev بنفتح كل حاجة لليونيتي وفلاتر
+    app.UseCors("AllowAll");
 }
 else
 {
@@ -246,27 +247,22 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
 
-// --- 3. الـ Database Migration والـ Seeding التلقائي ---
+// --- 3. الـ Database Migration والـ Seeding ---
 
 using (var scope = app.Services.CreateScope())
 {
     try
     {
         var context = scope.ServiceProvider.GetRequiredService<DatabaseDbContext>();
-
-        // السطر ده هو اللي بيخلي الداتابيز تبقى Default عند الكل أول ما يرنوا
         await context.Database.MigrateAsync();
-
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
-
         await DefaultAdminSeeder.SeedAsync(userManager, roleManager);
-
-        Console.WriteLine("✅ Database updated and seeded successfully!");
+        Console.WriteLine("✅ SyncVerse Database is ready and seeded!");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"❌ Error during startup: {ex.Message}");
+        Console.WriteLine($"❌ Critical Error during startup: {ex.Message}");
     }
 }
 
