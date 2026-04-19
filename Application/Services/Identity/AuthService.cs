@@ -74,7 +74,8 @@ namespace SyncVerse.Application.Services.Identity
                 Name = dto.WorkspaceName,
                 Industry = dto.Industry,
                 Description = $"{dto.WorkspaceName} Workspace",
-                CreatedByUserId = user.Id
+                CreatedByUserId = user.Id,
+                OrgCode = Guid.NewGuid().ToString("N").Substring(0, 8)
             };
 
             try
@@ -115,7 +116,8 @@ namespace SyncVerse.Application.Services.Identity
                     Department = user.Department,
                     SeniorityLevel = user.SeniorityLevel,
                     Roles = roles.ToList(),
-                    WorkspaceId = user.WorkspaceId
+                    WorkspaceId = user.WorkspaceId,
+                    OrgCode = workspace.OrgCode
                 }
             });
         }

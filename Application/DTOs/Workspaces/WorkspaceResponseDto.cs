@@ -8,5 +8,6 @@
         public string CreatedByUserId { get; set; } = null!;
         public string CreatedByUserName { get; set; } = null!;
         public DateTime CreatedAt { get; set; }
+        public string OrgCode { get; set; } = null!;
     }
 }

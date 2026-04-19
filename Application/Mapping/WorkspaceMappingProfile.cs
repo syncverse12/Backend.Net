@@ -9,7 +9,8 @@ namespace SyncVerse.Application.Mapping
         public WorkspaceMappingProfile()
         {
             CreateMap<Workspace, WorkspaceResponseDto>()
-                .ForMember(dest => dest.CreatedByUserName, opt => opt.MapFrom(src => src.CreatedByUser.UserName));
+                .ForMember(dest => dest.CreatedByUserName, opt => opt.MapFrom(src => src.CreatedByUser.UserName))
+                .ForMember(dest => dest.OrgCode, opt => opt.MapFrom(src => src.OrgCode));
 
             CreateMap<CreateWorkspaceDto, Workspace>();
             CreateMap<UpdateWorkspaceDto, Workspace>();
