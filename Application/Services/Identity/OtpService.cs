@@ -11,6 +11,13 @@ namespace SyncVerse.Application.Services.Identity
         private const int IterationCount = 10000;
         private const int KeySize = 32;
 
+        private readonly IEmailService _emailService;
+
+        public OtpService(IEmailService emailService)
+        {
+            _emailService = emailService;
+        }
+
         public string GenerateOtp()
         {
             using (var rng = RandomNumberGenerator.Create())
@@ -20,6 +27,23 @@ namespace SyncVerse.Application.Services.Identity
                 int randomNumber = Math.Abs(BitConverter.ToInt32(buffer, 0));
                 int otp = (randomNumber % (MaxOtpValue - MinOtpValue + 1)) + MinOtpValue;
                 return otp.ToString();
+            }
+        }
+
+        public async System.Threading.Tasks.Task<bool> GenerateAndSendOtpAsync(string email)
+        {
+            var otp = GenerateOtp();
+            var subject = "Your Verification Code";
+            var body = $"<p>Your verification code is: <b>{otp}</b></p>";
+            try
+            {
+                await _emailService.SendAsync(email, subject, body);
+
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 

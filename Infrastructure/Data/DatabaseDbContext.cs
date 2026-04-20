@@ -96,6 +96,30 @@ namespace SyncVerse.Infrastructure.Data
                 .HasForeignKey<UserSettings>(us => us.UserId);
 
             builder.ApplyConfigurationsFromAssembly(typeof(DatabaseDbContext).Assembly);
+
+            builder.Entity<Workspace>()
+                .HasOne(w => w.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(w => w.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Team>()
+                .HasOne(t => t.Workspace)
+                .WithMany()
+                .HasForeignKey(t => t.WorkspaceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<TaskItem>()
+                .HasOne(t => t.Workspace)
+                .WithMany()
+                .HasForeignKey(t => t.WorkspaceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Notification>()
+                .HasOne(n => n.Workspace)
+                .WithMany()
+                .HasForeignKey(n => n.WorkspaceId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

@@ -18,6 +18,9 @@ public class TaskItem : BaseEntity
 
     public DateTime? DueDate { get; set; }
 
+    public string? WorkspaceId { get; set; }
+    public Workspace? Workspace { get; set; }
+
     public string? CategoryId { get; set; }
     public Category? Category { get; set; }
     public virtual ICollection<TaskDependency> Dependencies { get; set; } = new List<TaskDependency>();

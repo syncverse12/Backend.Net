@@ -11,7 +11,10 @@ namespace SyncVerse.Domain.Entities
         public User? TriggeredByUser { get; set; }
 
         public NotificationType Type { get; set; }
-        
+
+        public string? WorkspaceId { get; set; }
+        public Workspace? Workspace { get; set; }
+
         public string Title { get; set; } = null!;
         public string Message { get; set; } = null!;
 

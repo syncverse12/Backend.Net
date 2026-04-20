@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SyncVerse.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using SyncVerse.Infrastructure.Data;
 namespace SyncVerse.Migrations
 {
     [DbContext(typeof(DatabaseDbContext))]
-    partial class DatabaseDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260420145223_FixWorkspaceDeleteBehavior")]
+    partial class FixWorkspaceDeleteBehavior
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -360,9 +363,6 @@ namespace SyncVerse.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("WorkspaceId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedAt");
@@ -374,8 +374,6 @@ namespace SyncVerse.Migrations
                     b.HasIndex("TriggeredByUserId");
 
                     b.HasIndex("UserId");
-
-                    b.HasIndex("WorkspaceId");
 
                     b.ToTable("Notifications", (string)null);
                 });
@@ -902,9 +900,6 @@ namespace SyncVerse.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("WorkspaceId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedByManagerId");
@@ -914,8 +909,6 @@ namespace SyncVerse.Migrations
                     b.HasIndex("Name");
 
                     b.HasIndex("TeamLeaderId");
-
-                    b.HasIndex("WorkspaceId");
 
                     b.ToTable("Teams");
                 });
@@ -1375,9 +1368,6 @@ namespace SyncVerse.Migrations
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("WorkspaceId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("AssignedToUserId");
@@ -1393,8 +1383,6 @@ namespace SyncVerse.Migrations
                     b.HasIndex("ReviewedByUserId");
 
                     b.HasIndex("UserId");
-
-                    b.HasIndex("WorkspaceId");
 
                     b.ToTable("Tasks", (string)null);
                 });
@@ -1497,18 +1485,11 @@ namespace SyncVerse.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SyncVerse.Domain.Entities.Workspace", "Workspace")
-                        .WithMany()
-                        .HasForeignKey("WorkspaceId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("Task");
 
                     b.Navigation("TriggeredByUser");
 
                     b.Navigation("User");
-
-                    b.Navigation("Workspace");
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.Project", b =>
@@ -1672,16 +1653,9 @@ namespace SyncVerse.Migrations
                         .WithMany()
                         .HasForeignKey("TeamLeaderId");
 
-                    b.HasOne("SyncVerse.Domain.Entities.Workspace", "Workspace")
-                        .WithMany()
-                        .HasForeignKey("WorkspaceId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("CreatedByManager");
 
                     b.Navigation("TeamLeader");
-
-                    b.Navigation("Workspace");
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.TeamMember", b =>
@@ -1811,11 +1785,6 @@ namespace SyncVerse.Migrations
                         .WithMany("AssignedTasks")
                         .HasForeignKey("UserId");
 
-                    b.HasOne("SyncVerse.Domain.Entities.Workspace", "Workspace")
-                        .WithMany()
-                        .HasForeignKey("WorkspaceId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("AssignedToUser");
 
                     b.Navigation("Category");
@@ -1827,8 +1796,6 @@ namespace SyncVerse.Migrations
                     b.Navigation("Project");
 
                     b.Navigation("ReviewedByUser");
-
-                    b.Navigation("Workspace");
                 });
 
             modelBuilder.Entity("Category", b =>

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using SyncVerse.Domain.Enums;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using SyncVerse.Application.Interfaces.Persistence;
 
 namespace SyncVerse.Application.Services.Identity
@@ -50,7 +51,7 @@ namespace SyncVerse.Application.Services.Identity
                 Email = dto.Email,
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
-                IsEmailVerified = true, // Bypass email verification for instant onboarding as requested
+                IsEmailVerified = false, // Require email verification
                 CreatedAt = DateTime.UtcNow,
                 SeniorityLevel = SeniorityLevel.Lead,
                 Department = Department.Engineering
@@ -98,15 +99,21 @@ namespace SyncVerse.Application.Services.Identity
                 return Result<AuthResponseDto>.Failure("Failed to link user to workspace.");
             }
 
-            // Step E: Generate Token including WorkspaceId and Role
-            var roles = await _userManager.GetRolesAsync(user);
-            var (token, expiration) = _jwtHandler.GenerateToken(user, roles);
+            // Step E: Send OTP for email verification
+            // Generate and send OTP (same as Register)
+            var otp = _otpService.GenerateOtp();
+            user.OtpCodeHash = _otpService.HashOtp(otp);
+            user.OtpExpirationDate = DateTime.UtcNow.AddMinutes(10);
+            await _userManager.UpdateAsync(user);
+
+            var emailBody = GetFormalHtmlTemplate("Verify Your Email", $"Thank you for registering SyncVerse, {dto.FirstName}!", otp);
+            await _emailService.SendAsync(user.Email!, "Account Verification", emailBody);
 
             return Result<AuthResponseDto>.Success(new AuthResponseDto
             {
-                Token = token,
-                Expiration = expiration,
-                Message = "Manager registered and workspace created successfully.",
+                Token = string.Empty,
+                Expiration = DateTime.UtcNow,
+                Message = "Manager registered successfully. Please verify your email to activate your account.",
                 User = new UserResponseDto
                 {
                     Id = user.Id,
@@ -115,7 +122,7 @@ namespace SyncVerse.Application.Services.Identity
                     Email = user.Email!,
                     Department = user.Department,
                     SeniorityLevel = user.SeniorityLevel,
-                    Roles = roles.ToList(),
+                    Roles = new List<string> { "Manager" },
                     WorkspaceId = user.WorkspaceId,
                     OrgCode = workspace.OrgCode
                 }
@@ -224,7 +231,9 @@ namespace SyncVerse.Application.Services.Identity
         // ✅ 4. Verify Email
         public async Task<Result<AuthResponseDto>> VerifyEmailAsync(VerifyEmailDto dto, string userId)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.Users
+                .Include(u => u.Workspace)
+                .FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null) return Result<AuthResponseDto>.Failure("User not found");
             if (user.IsEmailVerified) return Result<AuthResponseDto>.Failure("Email already verified");
 
@@ -253,6 +262,7 @@ namespace SyncVerse.Application.Services.Identity
                     Id = user.Id, 
                     Email = user.Email!, 
                     FirstName = user.FirstName, 
+                    OrgCode = user.Workspace?.OrgCode,
                     LastName = user.LastName, 
                     Roles = roles.ToList(),
                     WorkspaceId = user.WorkspaceId
@@ -264,7 +274,9 @@ namespace SyncVerse.Application.Services.Identity
         // ✅ 5. Login
         public async Task<Result<AuthResponseDto>> LoginAsync(LoginDto dto)
         {
-            var user = await _userManager.FindByEmailAsync(dto.Email);
+            var user = await _userManager.Users
+                .Include(u => u.Workspace)
+                .FirstOrDefaultAsync(u => u.Email == dto.Email);
             if (user == null || !user.IsEmailVerified)
                 return Result<AuthResponseDto>.Failure("Email not verified or invalid credentials.");
 
@@ -283,6 +295,7 @@ namespace SyncVerse.Application.Services.Identity
                     Id = user.Id, 
                     Email = user.Email!, 
                     FirstName = user.FirstName, 
+                    OrgCode = user.Workspace?.OrgCode,
                     LastName = user.LastName, 
                     Roles = roles.ToList(),
                     WorkspaceId = user.WorkspaceId

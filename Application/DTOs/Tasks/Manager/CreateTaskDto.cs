@@ -15,5 +15,7 @@ namespace SyncVerse.Application.DTOs.Tasks.Manager
         public string ProjectId { get; set; } = null!;
         public string MilestoneId { get; set; } = null!;
         public DateTime? DueDate { get; set; }
+
+        public string? WorkspaceId { get; set; } // Workspace linkage
     }
 }

@@ -12,5 +12,6 @@ namespace SyncVerse.Application.DTOs.Notifications
         public string? TaskId { get; set; }
         public string? RelatedEntityId { get; set; }
         public string? ActionUrl { get; set; }
+        public string? WorkspaceId { get; set; } // Workspace linkage
     }
 }
