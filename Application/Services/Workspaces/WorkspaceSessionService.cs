@@ -1,21 +1,25 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using SyncVerse.Application.Common.Results;
 using SyncVerse.Application.DTOs.Workspaces;
+using SyncVerse.Application.Interfaces.Persistence;
 using SyncVerse.Application.Interfaces.Workspaces;
 using SyncVerse.Domain.Entities;
 using System.Collections.Concurrent;
 
 namespace SyncVerse.Application.Services.Workspaces
 {
-    public class WorkspaceSessionService : IWorkspaceSessionService
-    {
-        private static readonly ConcurrentDictionary<string, WorkspaceSessionDto> Sessions = new();
-        private readonly UserManager<User> _userManager;
+public class WorkspaceSessionService : IWorkspaceSessionService
+{
+    private static readonly ConcurrentDictionary<string, WorkspaceSessionDto> Sessions = new();
+    private readonly UserManager<User> _userManager;
+    private readonly IRepository<Workspace> _workspaceRepository;
 
-        public WorkspaceSessionService(UserManager<User> userManager)
-        {
-            _userManager = userManager;
-        }
+    public WorkspaceSessionService(UserManager<User> userManager, IRepository<Workspace> workspaceRepository)
+    {
+        _userManager = userManager;
+        _workspaceRepository = workspaceRepository;
+    }
 
         public async Task<Result<WorkspaceSessionDto?>> GetSessionAsync(string orgCode, string userId)
         {
@@ -79,7 +83,11 @@ namespace SyncVerse.Application.Services.Workspaces
             if (user == null)
                 return Result<bool>.Failure("User not found");
 
-            if (string.IsNullOrWhiteSpace(user.WorkspaceId) || user.WorkspaceId != orgCode)
+            var workspace = await _workspaceRepository.Query().FirstOrDefaultAsync(w => w.OrgCode == orgCode);
+            if (workspace == null)
+                return Result<bool>.Failure("Workspace not found");
+
+            if (string.IsNullOrWhiteSpace(user.WorkspaceId) || user.WorkspaceId != workspace.Id)
                 return Result<bool>.Failure("Access denied for this workspace");
 
             return Result<bool>.Success(true);

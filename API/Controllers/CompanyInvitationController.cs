@@ -18,12 +18,12 @@ namespace SyncVerse.API.Controllers
         }
 
         /// HR sends company invitation
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Roles = "Admin,Manager,HR")]
         [HttpPost("send")]
         public async Task<IActionResult> SendInvitation(SendCompanyInvitationDto dto)
         {
-            var hrId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var result = await _invitationService.SendInvitationAsync(dto, hrId);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var result = await _invitationService.SendInvitationAsync(dto, userId);
             return result.IsSuccess ? Ok(result) : BadRequest(result);
         }
 

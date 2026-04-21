@@ -44,6 +44,7 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
 
         public async Task<Result<bool>> SendInvitationAsync(SendCompanyInvitationDto dto, string hrId)
         {
+
             var hr = await _userManager.FindByIdAsync(hrId);
             if (hr == null) return Result<bool>.Failure("HR user not found");
 
@@ -51,6 +52,10 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
             if (team == null) return Result<bool>.Failure("Team not found");
 
             var token = GenerateSecureToken();
+
+            var now = DateTime.UtcNow;
+            var expiresAt = now.AddDays(3);
+            Console.WriteLine($"[Invitation] Now: {now}, ExpiresAt: {expiresAt}");
 
             var invitation = new CompanyInvitation
             {
@@ -60,8 +65,8 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
                 Role = dto.Role,
                 InvitationToken = token,
                 SentByHRId = hrId,
-                SentAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow.AddDays(3),
+                SentAt = now,
+                ExpiresAt = expiresAt,
                 Status = InvitationStatus.Pending
             };
 
@@ -208,6 +213,7 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
 
             invitation.Status = InvitationStatus.Accepted;
             invitation.AcceptedAt = DateTime.UtcNow;
+            Console.WriteLine($"[Invitation] Token: {invitation.InvitationToken} status changed to Accepted at {invitation.AcceptedAt}");
             await _unitOfWork.SaveChangesAsync();
 
             var roles = await _userManager.GetRolesAsync(user);
