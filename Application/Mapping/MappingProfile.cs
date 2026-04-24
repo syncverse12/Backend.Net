@@ -14,9 +14,13 @@ namespace SyncVerse.Application.Mapping
                 .ForMember(u => u.UserName, opt => opt.MapFrom(src => src.Email));
 
             CreateMap<RegisterDto, User>();
+
             CreateMap<User, UserProfileDto>()
                 .ForMember(dest => dest.OrgCode, opt => opt.MapFrom(src => src.Workspace != null ? src.Workspace.OrgCode : null));
 
+            CreateMap<User, UserResponseDto>()
+                .ForMember(dest => dest.OrgCode, opt => opt.MapFrom(src => src.Workspace != null ? src.Workspace.OrgCode : null))
+                .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.Gender));
         }
         
 

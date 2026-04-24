@@ -20,5 +20,6 @@ namespace SyncVerse.Application.DTOs.Auth
         public string? WorkspaceId { get; set; }
 
         public string? OrgCode { get; set; }
+        public Gender? Gender { get; set; }
     }
 }

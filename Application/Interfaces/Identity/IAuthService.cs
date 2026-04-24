@@ -1,6 +1,6 @@
 ﻿using SyncVerse.Application.Common.Results;
 using SyncVerse.Application.DTOs.Auth;
-using SyncVerse.Application.DTOs.WorkspaceInvitation;
+
 
 namespace SyncVerse.Application.Interfaces.Identity
 {

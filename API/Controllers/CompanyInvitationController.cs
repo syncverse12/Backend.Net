@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using SyncVerse.Application.DTOs.CompanyInvitation;
 using SyncVerse.Application.Interfaces.WorkspaceInvitation;
-using SyncVerse.Application.DTOs.WorkspaceInvitation;
 
 namespace SyncVerse.API.Controllers
 {

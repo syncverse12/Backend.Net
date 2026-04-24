@@ -1,6 +1,6 @@
 using SyncVerse.Domain.Enums;
 
-namespace SyncVerse.Application.DTOs.WorkspaceInvitation
+namespace SyncVerse.Application.DTOs.CompanyInvitation
 {
     public class InvitationDetailsDto
     {
@@ -12,7 +12,7 @@ namespace SyncVerse.Application.DTOs.WorkspaceInvitation
         public string DepartmentDisplay { get; set; } = null!;
         public SeniorityLevel SeniorityLevel { get; set; }
         public string SeniorityLevelDisplay { get; set; } = null!;
-        public ProjectRole Role { get; set; }  
+        public ProjectRole Role { get; set; }
         public string RoleDisplay { get; set; } = null!;
         public string HRName { get; set; } = null!;
         public DateTime ExpiresAt { get; set; }

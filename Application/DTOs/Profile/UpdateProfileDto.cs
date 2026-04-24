@@ -11,5 +11,6 @@ namespace SyncVerse.Application.DTOs.Profile
         public string? Address { get; set; }
         public List<string>? Skills { get; set; }
         public IFormFile? ProfilePicture { get; set; }
+        public string? Gender { get; set; }
     }
 }

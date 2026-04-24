@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using SyncVerse.Application.Interfaces.WorkspaceInvitation;
-using SyncVerse.Application.DTOs.WorkspaceInvitation;
 using SyncVerse.Application.DTOs.Auth;
 using SyncVerse.Application.Interfaces.Identity;
 

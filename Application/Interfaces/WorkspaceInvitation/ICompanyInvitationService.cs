@@ -1,7 +1,8 @@
 ﻿using System.Threading.Tasks;
 using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.CompanyInvitation;
 using SyncVerse.Application.DTOs.Auth;
-using SyncVerse.Application.DTOs.WorkspaceInvitation;
+
 
 namespace SyncVerse.Application.Interfaces.WorkspaceInvitation
 {

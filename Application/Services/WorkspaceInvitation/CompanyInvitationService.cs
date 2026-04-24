@@ -2,18 +2,17 @@
 using SyncVerse.Application.DTOs.Auth;
 using SyncVerse.Application.Interfaces.Identity;
 using SyncVerse.Application.Interfaces.Persistence;
-using SyncVerse.Application.Interfaces.WorkspaceInvitation;
 using SyncVerse.Domain.Entities;
 using SyncVerse.Domain.Enums;
 using SyncVerse.API.JwtFeatuers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
-using SyncVerse.Application.DTOs.WorkspaceInvitation;
 using System.Security.Claims;
-using Microsoft.Extensions.Configuration;
 using SyncVerse.Application.Interfaces.Storage; 
-using System.Threading.Tasks;
+using SyncVerse.Application.DTOs.CompanyInvitation;
+using SyncVerse.Application.Interfaces.WorkspaceInvitation;
+
 
 namespace SyncVerse.Application.Services.WorkspaceInvitation
 {
@@ -182,6 +181,7 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
             if (!string.IsNullOrEmpty(dto.PhoneNumber)) user.PhoneNumber = dto.PhoneNumber;
             if (!string.IsNullOrEmpty(dto.Address)) user.Address = dto.Address;
             if (dto.Skills != null && dto.Skills.Any()) user.Skills = dto.Skills;
+           if (dto.Gender != null) user.Gender = dto.Gender;
 
             // ✅ Logic to Handle Attachment Upload
             if (dto.ProfilePicture != null)

@@ -59,6 +59,10 @@ namespace SyncVerse.Application.Services.Profile
             if (!string.IsNullOrEmpty(dto.LastName)) user.LastName = dto.LastName;
             if (!string.IsNullOrEmpty(dto.PhoneNumber)) user.PhoneNumber = dto.PhoneNumber;
             if (!string.IsNullOrEmpty(dto.Address)) user.Address = dto.Address;
+            if (!string.IsNullOrEmpty(dto.Gender) && Enum.TryParse<SyncVerse.Domain.Enums.Gender>(dto.Gender, true, out var genderEnum))
+            {
+                user.Gender = genderEnum;
+            }
             
             // updating skills
             if (dto.Skills != null) 

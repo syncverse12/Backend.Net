@@ -23,5 +23,6 @@ namespace SyncVerse.Application.DTOs.Profile
         public DateTime JoinedDate { get; set; }
 
         public string? OrgCode { get; set; }
+        public Gender? Gender { get; set; }
     }
 }

@@ -41,5 +41,6 @@ namespace SyncVerse.Domain.Entities
 
         // Navigation property for settings
         public UserSettings? Settings { get; set; }
+        public Gender? Gender { get; set; }
     }
 }

@@ -39,7 +39,6 @@ namespace SyncVerse.Infrastructure.Data
         public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
         public DbSet<Team> Teams => Set<Team>();
         public DbSet<CompanyInvitation> CompanyInvitations => Set<CompanyInvitation>();
-        public DbSet<WorkspaceInvitation> WorkspaceInvitations { get; set; }
         public DbSet<UserSettings> UserSettings { get; set; }
 
         public override int SaveChanges()
