@@ -43,7 +43,9 @@ namespace SyncVerse.Application.Services.Profile
                 Department = user.Department, 
                 SeniorityLevel = user.SeniorityLevel, 
                 Roles = roles.ToList(),
-                JoinedDate = user.CreatedAt
+                JoinedDate = user.CreatedAt,
+                OrgCode = user.Workspace?.OrgCode,
+                Gender = user.Gender
             };
 
             return Result<UserProfileDto>.Success(profile);
@@ -59,9 +61,9 @@ namespace SyncVerse.Application.Services.Profile
             if (!string.IsNullOrEmpty(dto.LastName)) user.LastName = dto.LastName;
             if (!string.IsNullOrEmpty(dto.PhoneNumber)) user.PhoneNumber = dto.PhoneNumber;
             if (!string.IsNullOrEmpty(dto.Address)) user.Address = dto.Address;
-            if (!string.IsNullOrEmpty(dto.Gender) && Enum.TryParse<SyncVerse.Domain.Enums.Gender>(dto.Gender, true, out var genderEnum))
+            if (dto.Gender.HasValue)
             {
-                user.Gender = genderEnum;
+                user.Gender = dto.Gender.Value;
             }
             
             // updating skills
