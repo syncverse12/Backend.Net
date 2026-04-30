@@ -30,6 +30,14 @@ namespace SyncVerse.Application.Services.Profile
 
             var roles = await _userManager.GetRolesAsync(user);
 
+            // جلب أسماء الفرق التي ينتمي إليها المستخدم
+            var teamNames = await _context.TeamMembers
+                .Where(tm => tm.UserId == userId && tm.IsActive)
+                .Include(tm => tm.Project)
+                .Select(tm => tm.Project.Name)
+                .Distinct()
+                .ToListAsync();
+
             var profile = new UserProfileDto
             {
                 Id = user.Id,
@@ -45,7 +53,8 @@ namespace SyncVerse.Application.Services.Profile
                 Roles = roles.ToList(),
                 JoinedDate = user.CreatedAt,
                 OrgCode = user.Workspace?.OrgCode,
-                Gender = user.Gender
+                Gender = user.Gender,
+                TeamNames = teamNames
             };
 
             return Result<UserProfileDto>.Success(profile);

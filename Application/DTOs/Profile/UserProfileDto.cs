@@ -24,5 +24,8 @@ namespace SyncVerse.Application.DTOs.Profile
 
         public string? OrgCode { get; set; }
         public Gender? Gender { get; set; }
+
+        // الفرق التي يعمل بها الموظف
+        public List<string> TeamNames { get; set; } = new();
     }
 }
