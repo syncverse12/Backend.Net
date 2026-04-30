@@ -1,13 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 using SyncVerse.Application.DTOs.Meetings;
-using SyncVerse.Application.Services.Meetings;
+using SyncVerse.Application.Interfaces.Meetings;
 
 [ApiController]
 [Route("api/meetings")]
 public class MeetingsController : ControllerBase
 {
-    private readonly MeetingService _meetingService;
-    public MeetingsController(MeetingService meetingService)
+    private readonly IMeetingService _meetingService;
+
+    public MeetingsController(IMeetingService meetingService)
     {
         _meetingService = meetingService;
     }
@@ -34,6 +35,6 @@ public class MeetingsController : ControllerBase
     {
         var deleted = await _meetingService.DeleteMeeting(roomId);
         if (!deleted) return NotFound();
-        return NoContent();
+        return Ok(new { message = "Meeting deleted successfully." });
     }
 }
