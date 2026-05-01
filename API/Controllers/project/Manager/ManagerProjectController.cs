@@ -78,4 +78,11 @@ public class ProjectsController : ControllerBase
         return result.IsSuccess ? Ok(result) : BadRequest(result);
     }
 
+    // GET: api/projects/{projectId}/accepted-employees
+    [HttpGet("{projectId}/accepted-employees")]
+    public async Task<IActionResult> GetAcceptedEmployeeNames(string projectId)
+    {
+        var names = await _projectService.GetAcceptedEmployeeNamesAsync(projectId);
+        return Ok(names);
+    }
 }

@@ -301,4 +301,15 @@ public class ProjectService : IProjectService
         return Result<bool>.Success(true, "Invitation sent successfully.");
     }
 
+    public async Task<List<string>> GetAcceptedEmployeeNamesAsync(string projectId)
+    {
+        var acceptedInvitations = await _unitOfWork.Repository<ProjectInvitation>()
+            .Query()
+            .Where(inv => inv.ProjectId == projectId && inv.Status == InvitationStatus.Accepted)
+            .ToListAsync();
+
+        var employeeIds = acceptedInvitations.Select(inv => inv.EmployeeId).Distinct().ToList();
+        var users = await _userManager.Users.Where(u => employeeIds.Contains(u.Id)).ToListAsync();
+        return users.Select(u => u.FirstName + " " + u.LastName).ToList();
+    }
 }
