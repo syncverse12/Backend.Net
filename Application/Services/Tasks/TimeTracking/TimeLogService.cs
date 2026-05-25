@@ -35,6 +35,14 @@ namespace SyncVerse.Application.Services.Tasks.TimeTracking
             if (activeTimeLog != null)
                 return Result<TimeLogResponseDto>.Failure("You already have an active time log for this task. Please stop it first");
 
+            task.Status = TaskStatus.InProgress;
+            if (task.TaskStartedAt == null)
+            {
+                task.TaskStartedAt = DateTime.UtcNow;
+            }
+
+            _unitOfWork.Repository<TaskItem>().Update(task);
+
             var timeLog = new TimeLog
             {
                 TaskId = taskId,
@@ -54,6 +62,7 @@ namespace SyncVerse.Application.Services.Tasks.TimeTracking
                 TimeLogId = timeLog.Id,
                 TaskId = timeLog.TaskId,
                 TaskTitle = task.Title,
+                TaskStatus = task.Status,
                 UserId = timeLog.UserId,
                 UserName = user?.UserName ?? "Unknown",
                 StartTime = timeLog.StartTime,

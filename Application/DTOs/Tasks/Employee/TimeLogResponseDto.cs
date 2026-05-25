@@ -1,3 +1,5 @@
+using SyncVerse.Domain.Enums;
+
 namespace SyncVerse.Application.DTOs.Tasks.Employee
 {
     public class TimeLogResponseDto
@@ -5,6 +7,7 @@ namespace SyncVerse.Application.DTOs.Tasks.Employee
         public string TimeLogId { get; set; } = null!;
         public string TaskId { get; set; } = null!;
         public string TaskTitle { get; set; } = null!;
+        public TaskStatus TaskStatus { get; set; }
         public string UserId { get; set; } = null!;
         public string UserName { get; set; } = null!;
         public DateTime StartTime { get; set; }
