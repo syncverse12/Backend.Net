@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <Folder Include="API\Filters\" />
+    <Folder Include="wwwroot\" />
   </ItemGroup>
 
 </Project>

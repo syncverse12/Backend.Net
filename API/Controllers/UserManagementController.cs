@@ -18,7 +18,7 @@ namespace SyncVerse.API.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin,HR,Manager")]
+        [Authorize(Roles = "Admin,HR,Manager,ProjectManager")]
         public async Task<IActionResult> GetAllUsers()
         {
             var result = await _userManagementService.GetAllUsersAsync();
