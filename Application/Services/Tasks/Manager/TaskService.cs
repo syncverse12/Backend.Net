@@ -105,8 +105,10 @@ namespace SyncVerse.Application.Services.Task.Manager
             await _unitOfWork.Repository<TaskItem>().AddAsync(task);
             await _unitOfWork.SaveChangesAsync();
 
-            var taskWithCategory = await _unitOfWork.Repository<TaskItem>().Query()
-               .Include(t => t.Category) 
+            var taskWithDetails = await _unitOfWork.Repository<TaskItem>().Query()
+               .Include(t => t.Category)
+               .Include(t => t.AssignedToUser)
+               .Include(t => t.CreatedByUser)
                .FirstOrDefaultAsync(t => t.Id == task.Id);
 
             if (!string.IsNullOrEmpty(dto.AssignedToUserId))
@@ -122,7 +124,7 @@ namespace SyncVerse.Application.Services.Task.Manager
                 });
             }
 
-            return Result<TaskResponseDto>.Success(_mapper.Map<TaskResponseDto>(task), "Task Created Successfully");
+            return Result<TaskResponseDto>.Success(_mapper.Map<TaskResponseDto>(taskWithDetails ?? task), "Task Created Successfully");
         }
 
 

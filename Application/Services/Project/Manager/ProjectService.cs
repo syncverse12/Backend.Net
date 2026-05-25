@@ -32,10 +32,13 @@ public class ProjectService : IProjectService
             return Result<ProjectResponseDto>.Failure("End date cannot be earlier than start date.");
 
         var user = await _userManager.FindByIdAsync(currentUserId);
-        if (user == null || string.IsNullOrEmpty(user.WorkspaceId))
+        if (user == null || string.IsNullOrWhiteSpace(user.WorkspaceId))
             return Result<ProjectResponseDto>.Failure("User or Workspace not found.");
 
-        var workspace = await _unitOfWork.Repository<Workspace>().GetByIdAsync(user.WorkspaceId);
+        if (!string.Equals(user.WorkspaceId, dto.WorkspaceId, StringComparison.Ordinal))
+            return Result<ProjectResponseDto>.Failure("Unauthorized: You can only create projects within your own workspace.");
+
+        var workspace = await _unitOfWork.Repository<Workspace>().GetByIdAsync(dto.WorkspaceId);
         if (workspace == null)
             return Result<ProjectResponseDto>.Failure("Workspace not found.");
 
@@ -51,7 +54,7 @@ public class ProjectService : IProjectService
         }
 
         var project = _mapper.Map<Project>(dto);
-        project.WorkspaceId = user.WorkspaceId;
+        project.WorkspaceId = dto.WorkspaceId;
         project.CreatedByUserId = currentUserId;
         project.CreatedAt = DateTime.UtcNow;
 

@@ -4,6 +4,7 @@ using SyncVerse.Application.DTOs.Workspaces;
 using SyncVerse.Application.Interfaces;
 using SyncVerse.Application.Interfaces.Persistence;
 using SyncVerse.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore; 
 using System.Linq;
 
@@ -11,23 +12,28 @@ public class WorkspaceService : IWorkspaceService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly UserManager<User> _userManager;
 
-    public WorkspaceService(IUnitOfWork unitOfWork, IMapper mapper)
+    public WorkspaceService(IUnitOfWork unitOfWork, IMapper mapper, UserManager<User> userManager)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _userManager = userManager;
     }
 
     // CREATE
     public async Task<Result<WorkspaceResponseDto>> CreateAsync(CreateWorkspaceDto dto, string managerId)
     {
+        var user = await _userManager.FindByIdAsync(managerId);
+        if (user == null)
+            return Result<WorkspaceResponseDto>.Failure("User not found.");
+
         var exists = await _unitOfWork.Repository<Workspace>()
             .Query() 
             .AnyAsync(w => w.Name == dto.Name && w.CreatedByUserId == managerId);
 
         if (exists)
             return Result<WorkspaceResponseDto>.Failure("Workspace name already exists");
-
 
         var workspace = new Workspace
         {
@@ -38,6 +44,10 @@ public class WorkspaceService : IWorkspaceService
         };
 
         await _unitOfWork.Repository<Workspace>().AddAsync(workspace);
+        await _unitOfWork.SaveChangesAsync();
+
+        user.WorkspaceId = workspace.Id;
+        await _userManager.UpdateAsync(user);
         await _unitOfWork.SaveChangesAsync();
 
         return Result<WorkspaceResponseDto>.Success(

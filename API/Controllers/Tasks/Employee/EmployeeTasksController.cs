@@ -26,7 +26,6 @@ public class EmployeeTasksController : ControllerBase
     }
 
     [HttpGet("{taskId}")]
-    [Authorize(Policy = "TaskOwner")]
     public async Task<IActionResult> GetTaskDetails(string taskId)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -35,7 +34,6 @@ public class EmployeeTasksController : ControllerBase
     }
 
     [HttpPut("{taskId}/start")]
-    [Authorize(Policy = "TaskOwner")]
     public async Task<IActionResult> StartTask(string taskId)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -44,7 +42,6 @@ public class EmployeeTasksController : ControllerBase
     }
 
     [HttpPut("{taskId}/submit")]
-    [Authorize(Policy = "TaskOwner")]
     public async Task<IActionResult> SubmitTask(string taskId, [FromBody] SubmitTaskDto submitDto)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
