@@ -195,7 +195,7 @@ namespace SyncVerse.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("CompanyInvitations");
+                    b.ToTable("CompanyInvitations", (string)null);
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.Meeting", b =>
@@ -220,7 +220,7 @@ namespace SyncVerse.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Meetings");
+                    b.ToTable("Meetings", (string)null);
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.Milestone", b =>
@@ -268,7 +268,7 @@ namespace SyncVerse.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("Milestones");
+                    b.ToTable("Milestones", (string)null);
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.Notification", b =>
@@ -466,7 +466,7 @@ namespace SyncVerse.Migrations
 
                     b.HasIndex("UploadedByUserId");
 
-                    b.ToTable("ProjectAttachments");
+                    b.ToTable("ProjectAttachments", (string)null);
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.ProjectInvitation", b =>
@@ -523,7 +523,7 @@ namespace SyncVerse.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("ProjectInvitations");
+                    b.ToTable("ProjectInvitations", (string)null);
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.ProjectMember", b =>
@@ -579,7 +579,7 @@ namespace SyncVerse.Migrations
                     b.HasIndex("ProjectId", "UserId")
                         .IsUnique();
 
-                    b.ToTable("ProjectMembers");
+                    b.ToTable("ProjectMembers", (string)null);
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.Role", b =>
@@ -687,7 +687,7 @@ namespace SyncVerse.Migrations
 
                     b.HasIndex("UploadedByUserId");
 
-                    b.ToTable("TaskAttachments");
+                    b.ToTable("TaskAttachments", (string)null);
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.TaskComment", b =>
@@ -884,7 +884,7 @@ namespace SyncVerse.Migrations
 
                     b.HasIndex("WorkspaceId");
 
-                    b.ToTable("Teams");
+                    b.ToTable("Teams", (string)null);
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.TeamMember", b =>
@@ -927,7 +927,7 @@ namespace SyncVerse.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TeamMembers");
+                    b.ToTable("TeamMembers", (string)null);
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.TimeLog", b =>
@@ -985,7 +985,7 @@ namespace SyncVerse.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TimeLogs");
+                    b.ToTable("TimeLogs", (string)null);
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.User", b =>
@@ -1148,7 +1148,7 @@ namespace SyncVerse.Migrations
 
                     b.HasKey("UserId");
 
-                    b.ToTable("UserSettings");
+                    b.ToTable("UserSettings", (string)null);
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.Workspace", b =>

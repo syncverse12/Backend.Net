@@ -51,11 +51,24 @@ using SyncVerse.Infrastructure.Services.Email;
 using SyncVerse.Infrastructure.Storage;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.IO;
 using AutoMapper;
 using SyncVerse.Application.Mapping;
 using SyncVerse.Application.Services.Meetings;
 
+var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+var envFileName = environmentName switch
+{
+    "Production" => ".production.env",
+    "Development" => ".dev.env",
+    _ => ".local.env"
+};
+
+var envFilePath = Path.Combine(Directory.GetCurrentDirectory(), "envs", envFileName);
+LoadEnvFile(envFilePath);
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.AddAutoMapper(cfg =>
 {
@@ -224,7 +237,7 @@ var app = builder.Build();
 
 // --- 2. الـ Middleware Pipeline ---
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Local"))
 {
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -263,3 +276,30 @@ using (var scope = app.Services.CreateScope())
 }
 
 await app.RunAsync();
+
+static void LoadEnvFile(string filePath)
+{
+    if (!File.Exists(filePath))
+    {
+        return;
+    }
+
+    foreach (var line in File.ReadAllLines(filePath))
+    {
+        var trimmedLine = line.Trim();
+        if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith("#"))
+        {
+            continue;
+        }
+
+        var separatorIndex = trimmedLine.IndexOf('=');
+        if (separatorIndex <= 0)
+        {
+            continue;
+        }
+
+        var key = trimmedLine.Substring(0, separatorIndex).Trim();
+        var value = trimmedLine.Substring(separatorIndex + 1).Trim();
+        Environment.SetEnvironmentVariable(key, value);
+    }
+}
