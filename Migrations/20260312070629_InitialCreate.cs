@@ -64,7 +64,7 @@ namespace SyncVerse.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Category",
+                name: "TaskCategories",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
@@ -78,7 +78,7 @@ namespace SyncVerse.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Category", x => x.Id);
+                    table.PrimaryKey("PK_TaskCategories", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(

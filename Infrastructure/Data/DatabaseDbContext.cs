@@ -40,6 +40,7 @@ namespace SyncVerse.Infrastructure.Data
         public DbSet<Team> Teams => Set<Team>();
         public DbSet<CompanyInvitation> CompanyInvitations => Set<CompanyInvitation>();
         public DbSet<UserSettings> UserSettings { get; set; }
+        public DbSet<TaskCategory> TaskCategories => Set<TaskCategory>();
 
         public override int SaveChanges()
         {
@@ -95,6 +96,9 @@ namespace SyncVerse.Infrastructure.Data
                 .HasForeignKey<UserSettings>(us => us.UserId);
 
             builder.ApplyConfigurationsFromAssembly(typeof(DatabaseDbContext).Assembly);
+
+            builder.Entity<TaskCategory>()
+                .ToTable("TaskCategories");
 
             builder.Entity<Workspace>()
                 .HasOne(w => w.CreatedByUser)

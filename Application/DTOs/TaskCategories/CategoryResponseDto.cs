@@ -1,6 +1,6 @@
-﻿namespace SyncVerse.Application.DTOs.Category
+﻿namespace SyncVerse.Application.DTOs.TaskCategory
 {
-    public class CategoryResponseDto
+    public class TaskCategoryResponseDto
     {
         public string Id { get; set; } = null!;
         public string Name { get; set; } = null!;

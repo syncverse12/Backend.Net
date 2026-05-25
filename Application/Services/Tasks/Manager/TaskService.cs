@@ -62,7 +62,7 @@ namespace SyncVerse.Application.Services.Task.Manager
 
             if (!string.IsNullOrEmpty(dto.CategoryId))
             {
-                var categoryExists = await _unitOfWork.Repository<Category>().Query()
+                var categoryExists = await _unitOfWork.Repository<TaskCategory>().Query()
                     .AnyAsync(c => c.Id == dto.CategoryId && !c.IsDeleted);
 
                 if (!categoryExists)
@@ -251,7 +251,7 @@ namespace SyncVerse.Application.Services.Task.Manager
 
             if (!string.IsNullOrEmpty(dto.CategoryId))
             {
-                var categoryExists = await _unitOfWork.Repository<Category>().Query()
+                var categoryExists = await _unitOfWork.Repository<TaskCategory>().Query()
                     .AnyAsync(c => c.Id == dto.CategoryId && !c.IsDeleted);
 
                 if (!categoryExists)
@@ -435,7 +435,7 @@ namespace SyncVerse.Application.Services.Task.Manager
 
             if (!string.IsNullOrEmpty(task.CategoryId))
             {
-                var category = await _unitOfWork.Repository<Category>().Query()
+                var category = await _unitOfWork.Repository<TaskCategory>().Query()
                     .IgnoreQueryFilters() 
                     .FirstOrDefaultAsync(c => c.Id == task.CategoryId);
 

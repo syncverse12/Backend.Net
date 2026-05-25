@@ -1,13 +1,12 @@
-﻿using SyncVerse.Application.DTOs.Category;
+﻿using SyncVerse.Application.DTOs.TaskCategory;
 using SyncVerse.Application.Interfaces.Task.Manager;
-using SyncVerse.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 [Authorize]
 [ApiController]
-[Route("api/categories")]
+[Route("api/task-categories")]
 public class CategoriesController : ControllerBase
 {
     private readonly ICategoryTaskService _categoryService;
@@ -18,7 +17,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateCategoryDto dto)
+    public async Task<IActionResult> Create(CreateTaskCategoryDto dto)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         return Ok(await _categoryService.CreateAsync(dto, userId));

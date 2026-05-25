@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using SyncVerse.Application.DTOs.Category; 
-using SyncVerse.Domain.Entities;       
+using SyncVerse.Application.DTOs.TaskCategory;
+using SyncVerse.Domain.Entities;
 
 namespace SyncVerse.Application.Mapping
 {
@@ -8,7 +8,7 @@ namespace SyncVerse.Application.Mapping
     {
         public CategoryMappingProfile()
         {
-            CreateMap<Category, CategoryResponseDto>();
+            CreateMap<TaskCategory, TaskCategoryResponseDto>();
         }
     }
 }

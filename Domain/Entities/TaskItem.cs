@@ -22,7 +22,7 @@ public class TaskItem : BaseEntity
     public Workspace? Workspace { get; set; }
 
     public string? CategoryId { get; set; }
-    public Category? Category { get; set; }
+    public TaskCategory? Category { get; set; }
     public virtual ICollection<TaskDependency> Dependencies { get; set; } = new List<TaskDependency>();
     public virtual ICollection<TaskDependency> DependentTasks { get; set; } = new List<TaskDependency>();
 
