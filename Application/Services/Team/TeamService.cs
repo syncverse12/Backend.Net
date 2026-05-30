@@ -4,6 +4,7 @@ using SyncVerse.Application.DTOs.Team;
 using SyncVerse.Application.Interfaces.Persistence;
 using SyncVerse.Application.Interfaces.Team;
 using SyncVerse.Domain.Entities;
+using SyncVerse.Domain.Enums;
 
 namespace SyncVerse.Application.Services.Team
 {
@@ -77,6 +78,20 @@ namespace SyncVerse.Application.Services.Team
                 workspaceId = currentUser.WorkspaceId;
             }
 
+            // Temporary logging for debugging
+            try
+            {
+                Console.WriteLine($"GetMyTeams Debug => userId={userId}, userRole={userRole}, workspaceId={workspaceId}");
+                var tmCount = await _unitOfWork.Repository<TeamMember>()
+                    .Query()
+                    .CountAsync(tm => tm.UserId == userId && tm.Role == ProjectRole.TeamLeader && tm.IsActive);
+                Console.WriteLine($"GetMyTeams Debug => TeamLeader memberships: {tmCount}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"GetMyTeams Debug => logging failed: {ex.Message}");
+            }
+
             var teamsQuery = _unitOfWork.Repository<Domain.Entities.Team>()
                 .Query()
                 .Include(t => t.CreatedByManager)
@@ -85,12 +100,18 @@ namespace SyncVerse.Application.Services.Team
 
             if (string.Equals(userRole, "Manager", StringComparison.OrdinalIgnoreCase))
             {
+                // Manager sees only teams they created
                 teamsQuery = teamsQuery.Where(t => t.CreatedByManagerId == userId);
             }
-            else if (!string.Equals(userRole, "HR", StringComparison.OrdinalIgnoreCase) &&
-                     !string.Equals(userRole, "Admin", StringComparison.OrdinalIgnoreCase) &&
-                     !string.Equals(userRole, "TeamLeader", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(userRole, "TeamLeader", StringComparison.OrdinalIgnoreCase))
             {
+                // TeamLeader sees only teams where they are assigned as TeamLeader
+                teamsQuery = teamsQuery.Where(t => t.TeamMembers.Any(tm => tm.UserId == userId && tm.Role == ProjectRole.TeamLeader && tm.IsActive));
+            }
+            else if (!string.Equals(userRole, "HR", StringComparison.OrdinalIgnoreCase) &&
+                     !string.Equals(userRole, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                // Other roles have no access
                 teamsQuery = teamsQuery.Where(t => false);
             }
 
@@ -131,20 +152,32 @@ namespace SyncVerse.Application.Services.Team
                 .Include(t => t.Workspace)
                 .Where(t => t.Id == teamId && t.WorkspaceId == currentUser.WorkspaceId && t.CreatedByManager.WorkspaceId == currentUser.WorkspaceId);
 
+            var team = await teamQuery.FirstOrDefaultAsync();
+
+            if (team == null)
+                return Result<TeamResponseDto>.Failure("Team not found");
+
+            // Authorization: Manager sees only their created teams
             if (string.Equals(userRole, "Manager", StringComparison.OrdinalIgnoreCase))
             {
-                teamQuery = teamQuery.Where(t => t.CreatedByManagerId == userId);
+                if (team.CreatedByManagerId != userId)
+                    return Result<TeamResponseDto>.Failure("Unauthorized");
+            }
+            else if (string.Equals(userRole, "TeamLeader", StringComparison.OrdinalIgnoreCase))
+            {
+                // TeamLeader must be an active TeamMember with TeamLeader role for this team
+                var isLeader = await _unitOfWork.Repository<TeamMember>()
+                    .Query()
+                    .AnyAsync(tm => tm.TeamId == team.Id && tm.UserId == userId && tm.Role == ProjectRole.TeamLeader && tm.IsActive);
+
+                if (!isLeader)
+                    return Result<TeamResponseDto>.Failure("Unauthorized");
             }
             else if (!string.Equals(userRole, "HR", StringComparison.OrdinalIgnoreCase) &&
                      !string.Equals(userRole, "Admin", StringComparison.OrdinalIgnoreCase))
             {
                 return Result<TeamResponseDto>.Failure("Unauthorized");
             }
-
-            var team = await teamQuery.FirstOrDefaultAsync();
-
-            if (team == null)
-                return Result<TeamResponseDto>.Failure("Team not found");
 
             var membersCount = await _unitOfWork.Repository<TeamMember>()
                 .Query()

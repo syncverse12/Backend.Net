@@ -12,20 +12,20 @@ namespace SyncVerse.Application.DTOs.Profile
         public string? ProfilePictureUrl { get; set; }
         public string? Address { get; set; }
         public List<string> Skills { get; set; } = new();
-        
+
         public Department Department { get; set; }
         public string DepartmentDisplay => Department.ToString();
-        
+
         public SeniorityLevel SeniorityLevel { get; set; }
         public string SeniorityLevelDisplay => SeniorityLevel.ToString();
-        
+
         public List<string> Roles { get; set; } = new();
         public DateTime JoinedDate { get; set; }
 
         public string? OrgCode { get; set; }
         public Gender? Gender { get; set; }
 
-        // الفرق التي يعمل بها الموظف
         public List<string> TeamNames { get; set; } = new();
+        public List<string> TeamIds { get; set; } = new();
     }
 }

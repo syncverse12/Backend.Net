@@ -39,6 +39,12 @@ namespace SyncVerse.Application.Services.Profile
                 .Distinct()
                 .ToListAsync();
 
+            var teamIds = await _context.TeamMembers
+                .Where(tm => tm.UserId == userId && tm.IsActive)
+                .Select(tm => tm.TeamId)
+                .Distinct()
+                .ToListAsync();
+
             var profile = new UserProfileDto
             {
                 Id = user.Id,
@@ -55,7 +61,8 @@ namespace SyncVerse.Application.Services.Profile
                 JoinedDate = user.CreatedAt,
                 OrgCode = user.Workspace?.OrgCode,
                 Gender = user.Gender,
-                TeamNames = teamNames
+                TeamNames = teamNames,
+                TeamIds = teamIds
             };
 
             return Result<UserProfileDto>.Success(profile);

@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <Folder Include="API\Filters\" />
-    <Folder Include="wwwroot\" />
+    <Folder Include="wwwroot\copy-org\" />
   </ItemGroup>
 
   <ItemGroup>

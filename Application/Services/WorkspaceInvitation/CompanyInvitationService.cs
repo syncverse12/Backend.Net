@@ -9,10 +9,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Security.Claims;
-using SyncVerse.Application.Interfaces.Storage; 
+using SyncVerse.Application.Interfaces.Storage;
 using SyncVerse.Application.DTOs.CompanyInvitation;
 using SyncVerse.Application.Interfaces.WorkspaceInvitation;
-
+using Microsoft.Extensions.Configuration;
 
 namespace SyncVerse.Application.Services.WorkspaceInvitation
 {
@@ -23,7 +23,7 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
         private readonly UserManager<User> _userManager;
         private readonly JwtHandler _jwtHandler;
         private readonly IConfiguration _configuration;
-        private readonly IFileStorageService _fileStorageService; 
+        private readonly IFileStorageService _fileStorageService;
 
         public CompanyInvitationService(
             IUnitOfWork unitOfWork,
@@ -107,55 +107,69 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
             var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:3000";
             var invitationLink = $"{frontendUrl}/register?token={token}&email={dto.Email}&orgCode={workspace?.OrgCode ?? string.Empty}";
 
+            var subject = $"Invitation to join the {team.Name} team at SyncVerse";
+
+            // 👔 الـ Email Body الاحترافي والفورمال الجديد بالكامل
             var emailBody = $@"
-            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #f4f4f4; background-color: #1a1a1a; padding: 20px; border-radius: 8px;'>
-                <div style='text-align: center; border-bottom: 1px solid #444; padding-bottom: 20px; margin-bottom: 20px;'>
-                    <h1 style='color: #ffffff; margin: 0;'>Welcome to SyncVerse</h1>
+            <div style='font-family: -apple-system, BlinkMacSystemFont, ""Segoe UI"", Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; background-color: #ffffff; padding: 32px; border: 1px solid #e2e8f0; border-radius: 8px;'>
+                
+                <!-- Header -->
+                <div style='border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 24px;'>
+                    <h2 style='margin: 0; color: #0f172a; font-size: 22px; font-weight: 700; letter-spacing: -0.5px;'>Team Invitation</h2>
+                    <p style='margin: 4px 0 0; color: #64748b; font-size: 14px;'>SyncVerse Enterprise Platform</p>
                 </div>
 
-                <p style='font-size: 16px; color: #dddddd;'>Dear Candidate,</p>
-                
-                <p style='font-size: 15px; color: #bbbbbb; line-height: 1.6;'>
-                    We are pleased to inform you that you have been invited to join <strong>SyncVerse</strong> as a member of our team. 
-                    This invitation has been initiated by <strong>{hr.FirstName} {hr.LastName}</strong> from the Human Resources Department.
+                <p style='color: #0f172a; font-size: 16px; font-weight: 500; margin-bottom: 16px;'>Dear Candidate,</p>
+
+                <p style='font-size: 15px; color: #334155; line-height: 1.6; margin-bottom: 20px;'>
+                    You have been officially invited to join the <strong style='color: #0f172a;'>{team.Name}</strong> team within the <strong>{team.Department}</strong> department at <strong>SyncVerse</strong>. This invitation was initiated by <strong>{hr.FirstName} {hr.LastName}</strong> from Human Resources.
                 </p>
 
-                <div style='background-color: #252525; padding: 20px; border-radius: 6px; margin: 25px 0;'>
-                    <p style='margin-top: 0; font-weight: bold; color: #ffffff; border-bottom: 1px solid #444; padding-bottom: 10px;'>Assignment Details</p>
-                    <p style='margin: 10px 0;'>You will be joining the <strong>{team.Name}</strong> team within the <strong>{team.Department}</strong> department. 
-                    Your position is designated at the <strong>{dto.SeniorityLevel}</strong> level, where you will be serving in the role of <strong>{dto.Role}</strong>.</p>
-                    <p style='margin: 10px 0;'>Organization Code: <strong>{workspace?.OrgCode ?? "N/A"}</strong></p>
+                <div style='background-color: #f8fafc; border: 1px solid #ebd9fc; border-left: 4px solid #0f172a; padding: 16px; border-radius: 6px; margin: 20px 0;'>
+                    <p style='margin: 0 0 10px; font-weight: 600; color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;'>Assignment Details</p>
+                    <p style='margin: 0; color: #475569; font-size: 14px; line-height: 1.5;'>
+                        <strong>Team:</strong> {team.Name}<br/>
+                        <strong>Department:</strong> {team.Department}<br/>
+                        <strong>Role:</strong> {dto.Role}<br/>
+                        <strong>Seniority Level:</strong> {dto.SeniorityLevel}
+                    </p>
                 </div>
 
-                <p style='color: #dddddd;'>To complete your registration and access your workspace, please click the button below:</p>
+                <p style='font-size: 14px; color: #0b2545; line-height: 1.6; margin-bottom: 12px;'>
+                    Please copy this Organization Code:
+                    <strong style='color: #0b2545; font-family: monospace; font-size:15px; margin-left:8px;'>{workspace?.OrgCode ?? "N/A"}</strong>
+                    to successfully complete your registration by using the button below.
+                </p>
 
-                <div style='text-align: center; margin: 30px 0;'>
-                    <a href='{invitationLink}' style='background-color: #314357; color: #ffffff; text-decoration: none; padding: 14px 25px; font-weight: bold; border-radius: 4px; display: inline-block;'>
+                <!-- Action Button -->
+                <div style='text-align: center; margin: 28px 0;'>
+                    <a href='{invitationLink}' style='background-color: #0b2545; color: #ffffff; text-decoration: none; padding: 12px 32px; font-weight: 600; font-size: 15px; border-radius: 6px; display: inline-block; transition: background-color 0.2s;'>
                         Complete Registration
                     </a>
                 </div>
 
-                <div style='background-color: #2c2100; border-left: 4px solid #ffcc00; padding: 15px; margin: 20px 0;'>
-                    <p style='margin: 0; font-size: 13px; color: #ffcc00;'>
-                        <strong>Security Notice:</strong> This is a personal invitation link intended only for you. 
-                        Please do not share this link with others for security reasons.
+                <!-- Security Notice -->
+                <div style='background-color: #fffbeb; border-left: 4px solid #d97706; padding: 14px; border-radius: 4px; margin: 24px 0;'>
+                    <p style='margin: 0; font-size: 13px; color: #b45309; line-height: 1.5;'>
+                        <strong>Important Security Notice:</strong> This secure registration link contains unique credentials intended strictly for the designated recipient. For security purposes, do not forward this email or share the parameters of this link with anyone else.
                     </p>
                 </div>
 
-                <p style='font-size: 12px; color: #888; text-align: center;'>
-                    This invitation will expire on <strong>{invitation.ExpiresAt.ToString("MMMM dd, yyyy")}</strong>.
+                <p style='color: #94a3b8; font-size: 12px; text-align: center; margin-top: 24px;'>
+                    This corporate invitation is valid until <strong>{invitation.ExpiresAt.ToString("MMMM dd, yyyy")}</strong>.
                 </p>
-                
-                <hr style='border: none; border-top: 1px solid #333; margin-top: 40px;'/>
-                <p style='font-size: 11px; color: #666; text-align: center;'>
-                    © 2026 SyncVerse. All rights reserved.<br/>
-                    This email was sent from an automated system. Please do not reply.
+
+                <hr style='border: none; border-top: 1px solid #e2e8f0; margin: 24px 0 16px;' />
+
+                <p style='color: #94a3b8; font-size: 12px; text-align: center; line-height: 1.5; margin: 0;'>
+                    © 2026 SyncVerse Platform. All rights reserved.<br/>
+                    This is an automated operational email. Please do not reply directly to this address.
                 </p>
             </div>";
 
             try
             {
-                await _emailService.SendAsync(dto.Email, "Invitation to Join SyncVerse", emailBody);
+                await _emailService.SendAsync(dto.Email, subject, emailBody);
             }
             catch (Exception ex)
             {
@@ -229,13 +243,11 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
             if (invitation == null) return Result<AuthResponseDto>.Failure("Invalid invitation token");
             if (invitation.Status != InvitationStatus.Pending) return Result<AuthResponseDto>.Failure("Invitation already used or expired");
 
-            // ✅ Map Normal Properties
             if (!string.IsNullOrEmpty(dto.PhoneNumber)) user.PhoneNumber = dto.PhoneNumber;
             if (!string.IsNullOrEmpty(dto.Address)) user.Address = dto.Address;
             if (dto.Skills != null && dto.Skills.Any()) user.Skills = dto.Skills;
             if (dto.Gender != null) user.Gender = dto.Gender;
 
-            // ✅ Logic to Handle Attachment Upload
             if (dto.ProfilePicture != null)
             {
                 var fileExtension = Path.GetExtension(dto.ProfilePicture.FileName);
@@ -337,7 +349,7 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
                 Message = "Profile completed and team membership assigned successfully"
             });
         }
-        
+
         private string GenerateSecureToken()
         {
             var randomBytes = new byte[32];
