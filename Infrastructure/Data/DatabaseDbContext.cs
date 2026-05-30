@@ -112,6 +112,12 @@ namespace SyncVerse.Infrastructure.Data
                 .HasForeignKey(t => t.WorkspaceId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<TeamMember>()
+                .HasOne(tm => tm.Team)
+                .WithMany(t => t.TeamMembers)
+                .HasForeignKey(tm => tm.TeamId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.Entity<TaskItem>()
                 .HasOne(t => t.Workspace)
                 .WithMany()

@@ -136,6 +136,18 @@ namespace SyncVerse.Application.Services.Identity
             if (existingUser != null)
                 return Result<RegisterResponseDto>.Failure("Email already registered");
 
+            Workspace? workspace = null;
+            if (!string.IsNullOrWhiteSpace(dto.OrgCode))
+            {
+                workspace = await _unitOfWork.Repository<Workspace>()
+                    .Query()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(w => w.OrgCode == dto.OrgCode);
+
+                if (workspace == null)
+                    return Result<RegisterResponseDto>.Failure("Invalid organization code");
+            }
+
             var user = new User
             {
                 UserName = dto.Email,
@@ -145,7 +157,8 @@ namespace SyncVerse.Application.Services.Identity
                 IsEmailVerified = false,
                 CreatedAt = DateTime.UtcNow,
                 SeniorityLevel = SeniorityLevel.Intern,
-                Department = Department.Engineering
+                Department = Department.Engineering,
+                WorkspaceId = workspace?.Id
             };
 
             var result = await _userManager.CreateAsync(user, dto.Password);
@@ -167,7 +180,9 @@ namespace SyncVerse.Application.Services.Identity
                 UserId = user.Id,
                 Email = user.Email!,
                 Message = "Registration successful. Please verify your email.",
-                OtpExpiresAt = user.OtpExpirationDate.Value
+                OtpExpiresAt = user.OtpExpirationDate.Value,
+                WorkspaceId = user.WorkspaceId,
+                OrgCode = workspace?.OrgCode
             });
         }
 
@@ -265,7 +280,8 @@ namespace SyncVerse.Application.Services.Identity
                     OrgCode = user.Workspace?.OrgCode,
                     LastName = user.LastName, 
                     Roles = roles.ToList(),
-                    WorkspaceId = user.WorkspaceId
+                    WorkspaceId = user.WorkspaceId,
+                    Gender = user.Gender
                 },
                 Message = "Email verified successfully"
             });
@@ -298,7 +314,8 @@ namespace SyncVerse.Application.Services.Identity
                     OrgCode = user.Workspace?.OrgCode,
                     LastName = user.LastName, 
                     Roles = roles.ToList(),
-                    WorkspaceId = user.WorkspaceId
+                    WorkspaceId = user.WorkspaceId,
+                    Gender = user.Gender
                 },
                 Message = "Login successful"
             });

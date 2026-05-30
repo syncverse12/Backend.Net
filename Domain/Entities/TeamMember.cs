@@ -5,8 +5,8 @@ namespace SyncVerse.Domain.Entities
 {
     public class TeamMember : BaseEntity
     {
-        public string ProjectId { get; set; } = null!;
-        public Project Project { get; set; } = null!;
+        public string TeamId { get; set; } = null!;
+        public Team Team { get; set; } = null!;
 
         public string UserId { get; set; } = null!;
         public User User { get; set; } = null!;

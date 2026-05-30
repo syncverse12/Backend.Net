@@ -9,7 +9,7 @@ namespace SyncVerse.API.Extensions
             services.AddAuthorization(options =>
             {
                 options.AddPolicy("AdminOnly",
-                    policy => policy.RequireRole("Admin"));
+                    policy => policy.RequireRole("Admin", "HR"));
 
                 options.AddPolicy("ManagerOnly",
                     policy => policy.RequireRole("Manager"));

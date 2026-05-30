@@ -20,23 +20,37 @@ namespace SyncVerse.Infrastructure.Services.Email
         public async System.Threading.Tasks.Task SendAsync(string toEmail, string subject, string htmlBody)
         {
             var smtpHost = _configuration["Email:SmtpHost"];
-            var smtpPort = int.Parse(_configuration["Email:SmtpPort"] ?? "587");
+            var smtpPortValue = _configuration["Email:SmtpPort"];
             var smtpUser = _configuration["Email:SmtpUser"];
             var smtpPassword = _configuration["Email:SmtpPassword"];
             var fromEmail = _configuration["Email:FromEmail"];
             var fromName = _configuration["Email:FromName"];
 
+            if (string.IsNullOrWhiteSpace(smtpHost) ||
+                string.IsNullOrWhiteSpace(smtpUser) ||
+                string.IsNullOrWhiteSpace(smtpPassword) ||
+                string.IsNullOrWhiteSpace(fromEmail))
+            {
+                throw new InvalidOperationException("Email configuration is incomplete. Please set Email:SmtpHost, Email:SmtpUser, Email:SmtpPassword, and Email:FromEmail.");
+            }
+
+            if (!int.TryParse(smtpPortValue, out var smtpPort))
+                smtpPort = 587;
+
             try
             {
                 using var smtpClient = new SmtpClient(smtpHost, smtpPort)
                 {
+                    UseDefaultCredentials = false,
                     Credentials = new NetworkCredential(smtpUser, smtpPassword),
-                    EnableSsl = true
+                    EnableSsl = true,
+                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                    Timeout = 100000
                 };
 
                 var mailMessage = new MailMessage
                 {
-                    From = new MailAddress(fromEmail!, fromName),
+                    From = new MailAddress(fromEmail, string.IsNullOrWhiteSpace(fromName) ? "SyncVerse" : fromName),
                     Subject = subject,
                     Body = htmlBody,
                     IsBodyHtml = true
@@ -45,12 +59,12 @@ namespace SyncVerse.Infrastructure.Services.Email
                 mailMessage.To.Add(toEmail);
 
                 await smtpClient.SendMailAsync(mailMessage);
-                
-                _logger.LogInformation($"Email sent successfully to {toEmail}");
+
+                _logger.LogInformation("Email sent successfully to {ToEmail}", toEmail);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed to send email to {toEmail}: {ex.Message}");
+                _logger.LogError(ex, "Failed to send email to {ToEmail}", toEmail);
                 throw;
             }
         }

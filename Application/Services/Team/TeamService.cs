@@ -1,9 +1,9 @@
-﻿using SyncVerse.Application.Common.Results;
+﻿using Microsoft.EntityFrameworkCore;
+using SyncVerse.Application.Common.Results;
 using SyncVerse.Application.DTOs.Team;
 using SyncVerse.Application.Interfaces.Persistence;
 using SyncVerse.Application.Interfaces.Team;
 using SyncVerse.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
 
 namespace SyncVerse.Application.Services.Team
 {
@@ -18,13 +18,25 @@ namespace SyncVerse.Application.Services.Team
 
         public async Task<Result<TeamResponseDto>> CreateTeamAsync(CreateTeamDto dto, string managerId)
         {
+            var manager = await _unitOfWork.Repository<User>()
+                .Query()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == managerId);
+
+            if (manager == null)
+                return Result<TeamResponseDto>.Failure("Manager not found");
+
+            if (string.IsNullOrWhiteSpace(manager.WorkspaceId))
+                return Result<TeamResponseDto>.Failure("Workspace not found for current manager");
+
             var team = new Domain.Entities.Team
             {
                 Name = dto.Name,
                 Description = dto.Description,
                 Specialization = dto.Specialization,
                 Department = dto.Department,
-                CreatedByManagerId = managerId
+                CreatedByManagerId = managerId,
+                WorkspaceId = manager.WorkspaceId
             };
 
             await _unitOfWork.Repository<Domain.Entities.Team>().AddAsync(team);
@@ -37,7 +49,8 @@ namespace SyncVerse.Application.Services.Team
                 Description = team.Description,
                 Specialization = team.Specialization,
                 Department = team.Department,
-                DepartmentDisplay = team.Department.ToString(), 
+                DepartmentDisplay = team.Department.ToString(),
+                ManagerName = $"{manager.FirstName} {manager.LastName}",
                 CreatedAt = team.CreatedAt,
                 MembersCount = 0
             };
@@ -45,13 +58,43 @@ namespace SyncVerse.Application.Services.Team
             return Result<TeamResponseDto>.Success(response, "Team created successfully");
         }
 
-        public async Task<Result<List<TeamResponseDto>>> GetMyTeamsAsync(string managerId)
+        public async Task<Result<List<TeamResponseDto>>> GetMyTeamsAsync(string userId, string userRole, string workspaceId, string orgCode)
         {
-            var teams = await _unitOfWork.Repository<Domain.Entities.Team>()
+            // Prefer workspaceId from token claims; fallback to DB if missing
+            if (string.IsNullOrWhiteSpace(workspaceId))
+            {
+                var currentUser = await _unitOfWork.Repository<User>()
+                    .Query()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.Id == userId);
+
+                if (currentUser == null)
+                    return Result<List<TeamResponseDto>>.Failure("User not found");
+
+                if (string.IsNullOrWhiteSpace(currentUser.WorkspaceId))
+                    return Result<List<TeamResponseDto>>.Failure("Workspace not found for current user");
+
+                workspaceId = currentUser.WorkspaceId;
+            }
+
+            var teamsQuery = _unitOfWork.Repository<Domain.Entities.Team>()
                 .Query()
                 .Include(t => t.CreatedByManager)
-                .Where(t => t.CreatedByManagerId == managerId)
-                .ToListAsync();
+                .Include(t => t.TeamMembers)
+                .Where(t => t.WorkspaceId == workspaceId);
+
+            if (string.Equals(userRole, "Manager", StringComparison.OrdinalIgnoreCase))
+            {
+                teamsQuery = teamsQuery.Where(t => t.CreatedByManagerId == userId);
+            }
+            else if (!string.Equals(userRole, "HR", StringComparison.OrdinalIgnoreCase) &&
+                     !string.Equals(userRole, "Admin", StringComparison.OrdinalIgnoreCase) &&
+                     !string.Equals(userRole, "TeamLeader", StringComparison.OrdinalIgnoreCase))
+            {
+                teamsQuery = teamsQuery.Where(t => false);
+            }
+
+            var teams = await teamsQuery.ToListAsync();
 
             var result = teams.Select(t => new TeamResponseDto
             {
@@ -60,27 +103,55 @@ namespace SyncVerse.Application.Services.Team
                 Description = t.Description,
                 Specialization = t.Specialization,
                 Department = t.Department,
-                DepartmentDisplay = t.Department.ToString(), 
+                DepartmentDisplay = t.Department.ToString(),
                 ManagerName = $"{t.CreatedByManager.FirstName} {t.CreatedByManager.LastName}",
                 CreatedAt = t.CreatedAt,
-                MembersCount = 0
+                MembersCount = t.TeamMembers.Count(tm => tm.IsActive)
             }).ToList();
 
             return Result<List<TeamResponseDto>>.Success(result);
         }
 
-        public async Task<Result<TeamResponseDto>> GetTeamByIdAsync(string teamId, string managerId)
+        public async Task<Result<TeamResponseDto>> GetTeamByIdAsync(string teamId, string userId, string userRole)
         {
-            var team = await _unitOfWork.Repository<Domain.Entities.Team>()
+            var currentUser = await _unitOfWork.Repository<User>()
+                .Query()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (currentUser == null)
+                return Result<TeamResponseDto>.Failure("User not found");
+
+            if (string.IsNullOrWhiteSpace(currentUser.WorkspaceId))
+                return Result<TeamResponseDto>.Failure("Workspace not found for current user");
+
+            var teamQuery = _unitOfWork.Repository<Domain.Entities.Team>()
                 .Query()
                 .Include(t => t.CreatedByManager)
-                .FirstOrDefaultAsync(t => t.Id == teamId);
+                .Include(t => t.Workspace)
+                .Where(t => t.Id == teamId && t.WorkspaceId == currentUser.WorkspaceId && t.CreatedByManager.WorkspaceId == currentUser.WorkspaceId);
+
+            if (string.Equals(userRole, "Manager", StringComparison.OrdinalIgnoreCase))
+            {
+                teamQuery = teamQuery.Where(t => t.CreatedByManagerId == userId);
+            }
+            else if (!string.Equals(userRole, "HR", StringComparison.OrdinalIgnoreCase) &&
+                     !string.Equals(userRole, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return Result<TeamResponseDto>.Failure("Unauthorized");
+            }
+
+            var team = await teamQuery.FirstOrDefaultAsync();
 
             if (team == null)
                 return Result<TeamResponseDto>.Failure("Team not found");
 
-            if (team.CreatedByManagerId != managerId)
-                return Result<TeamResponseDto>.Failure("Unauthorized");
+            var membersCount = await _unitOfWork.Repository<TeamMember>()
+                .Query()
+                .Where(tm => tm.TeamId == team.Id && tm.IsActive)
+                .Select(tm => tm.UserId)
+                .Distinct()
+                .CountAsync();
 
             var response = new TeamResponseDto
             {
@@ -89,10 +160,10 @@ namespace SyncVerse.Application.Services.Team
                 Description = team.Description,
                 Specialization = team.Specialization,
                 Department = team.Department,
-                DepartmentDisplay = team.Department.ToString(), 
+                DepartmentDisplay = team.Department.ToString(),
                 ManagerName = $"{team.CreatedByManager.FirstName} {team.CreatedByManager.LastName}",
                 CreatedAt = team.CreatedAt,
-                MembersCount = 0
+                MembersCount = membersCount
             };
 
             return Result<TeamResponseDto>.Success(response);
@@ -128,7 +199,7 @@ namespace SyncVerse.Application.Services.Team
                 return Result<bool>.Failure("Unauthorized");
 
             team.IsDeleted = true;
-            
+
             _unitOfWork.Repository<Domain.Entities.Team>().Update(team);
             await _unitOfWork.SaveChangesAsync();
 
@@ -152,7 +223,7 @@ namespace SyncVerse.Application.Services.Team
                 return Result<bool>.Failure("Team is already active and not deleted");
 
             team.IsDeleted = false;
-            
+
             _unitOfWork.Repository<Domain.Entities.Team>().Update(team);
             await _unitOfWork.SaveChangesAsync();
 

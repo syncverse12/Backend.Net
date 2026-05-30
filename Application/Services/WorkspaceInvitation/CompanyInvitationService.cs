@@ -41,14 +41,46 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
             _fileStorageService = fileStorageService;
         }
 
-        public async Task<Result<bool>> SendInvitationAsync(SendCompanyInvitationDto dto, string hrId)
+        public async Task<Result<SendCompanyInvitationResponseDto>> SendInvitationAsync(SendCompanyInvitationDto dto, string hrId)
         {
-
             var hr = await _userManager.FindByIdAsync(hrId);
-            if (hr == null) return Result<bool>.Failure("HR user not found");
+            if (hr == null) return Result<SendCompanyInvitationResponseDto>.Failure("HR user not found");
 
-            var team = await _unitOfWork.Repository<Domain.Entities.Team>().GetByIdAsync(dto.TeamId);
-            if (team == null) return Result<bool>.Failure("Team not found");
+            var team = await _unitOfWork.Repository<Domain.Entities.Team>()
+                .Query()
+                .Include(t => t.CreatedByManager)
+                .FirstOrDefaultAsync(t => t.Id == dto.TeamId);
+
+            if (team == null) return Result<SendCompanyInvitationResponseDto>.Failure("Team not found");
+
+            var workspace = team.Workspace;
+            if (workspace == null && !string.IsNullOrWhiteSpace(team.WorkspaceId))
+            {
+                workspace = await _unitOfWork.Repository<Workspace>()
+                    .Query()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(w => w.Id == team.WorkspaceId);
+            }
+
+            if (workspace == null && !string.IsNullOrWhiteSpace(team.CreatedByManagerId))
+            {
+                var manager = team.CreatedByManager ?? await _userManager.FindByIdAsync(team.CreatedByManagerId);
+                if (manager != null && !string.IsNullOrWhiteSpace(manager.WorkspaceId))
+                {
+                    workspace = await _unitOfWork.Repository<Workspace>()
+                        .Query()
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(w => w.Id == manager.WorkspaceId);
+
+                    if (workspace != null)
+                    {
+                        team.WorkspaceId = workspace.Id;
+                        team.Workspace = workspace;
+                        _unitOfWork.Repository<Domain.Entities.Team>().Update(team);
+                        await _unitOfWork.SaveChangesAsync();
+                    }
+                }
+            }
 
             var token = GenerateSecureToken();
 
@@ -73,7 +105,7 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
             await _unitOfWork.SaveChangesAsync();
 
             var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:3000";
-            var invitationLink = $"{frontendUrl}/register?token={token}&email={dto.Email}";
+            var invitationLink = $"{frontendUrl}/register?token={token}&email={dto.Email}&orgCode={workspace?.OrgCode ?? string.Empty}";
 
             var emailBody = $@"
             <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #f4f4f4; background-color: #1a1a1a; padding: 20px; border-radius: 8px;'>
@@ -92,6 +124,7 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
                     <p style='margin-top: 0; font-weight: bold; color: #ffffff; border-bottom: 1px solid #444; padding-bottom: 10px;'>Assignment Details</p>
                     <p style='margin: 10px 0;'>You will be joining the <strong>{team.Name}</strong> team within the <strong>{team.Department}</strong> department. 
                     Your position is designated at the <strong>{dto.SeniorityLevel}</strong> level, where you will be serving in the role of <strong>{dto.Role}</strong>.</p>
+                    <p style='margin: 10px 0;'>Organization Code: <strong>{workspace?.OrgCode ?? "N/A"}</strong></p>
                 </div>
 
                 <p style='color: #dddddd;'>To complete your registration and access your workspace, please click the button below:</p>
@@ -120,9 +153,25 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
                 </p>
             </div>";
 
-            await _emailService.SendAsync(dto.Email, "Invitation to Join SyncVerse", emailBody);
+            try
+            {
+                await _emailService.SendAsync(dto.Email, "Invitation to Join SyncVerse", emailBody);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Invitation] Email sending failed for {dto.Email}: {ex.Message}");
+                return Result<SendCompanyInvitationResponseDto>.Failure("Company invitation saved, but email sending failed. Please verify SMTP configuration.");
+            }
 
-            return Result<bool>.Success(true, "Company invitation sent successfully");
+            return Result<SendCompanyInvitationResponseDto>.Success(new SendCompanyInvitationResponseDto
+            {
+                InvitationToken = token,
+                InvitationLink = invitationLink,
+                TeamId = dto.TeamId,
+                WorkspaceId = workspace?.Id,
+                OrgCode = workspace?.OrgCode,
+                Email = dto.Email
+            }, "Company invitation sent successfully");
         }
 
         public async Task<Result<InvitationDetailsDto>> GetInvitationDetailsAsync(string token)
@@ -159,6 +208,8 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
                 Role = invitation.Role,
                 RoleDisplay = invitation.Role.ToString(),
                 HRName = $"{invitation.SentByHR.FirstName} {invitation.SentByHR.LastName}",
+                WorkspaceId = invitation.Team.WorkspaceId,
+                OrgCode = invitation.Team.Workspace?.OrgCode,
                 ExpiresAt = invitation.ExpiresAt,
                 IsValid = true
             });
@@ -172,6 +223,7 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
             var invitation = await _unitOfWork.Repository<CompanyInvitation>()
                 .Query()
                 .Include(i => i.Team)
+                .ThenInclude(t => t.Workspace)
                 .FirstOrDefaultAsync(i => i.InvitationToken == dto.Token);
 
             if (invitation == null) return Result<AuthResponseDto>.Failure("Invalid invitation token");
@@ -181,27 +233,48 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
             if (!string.IsNullOrEmpty(dto.PhoneNumber)) user.PhoneNumber = dto.PhoneNumber;
             if (!string.IsNullOrEmpty(dto.Address)) user.Address = dto.Address;
             if (dto.Skills != null && dto.Skills.Any()) user.Skills = dto.Skills;
-           if (dto.Gender != null) user.Gender = dto.Gender;
+            if (dto.Gender != null) user.Gender = dto.Gender;
 
             // ✅ Logic to Handle Attachment Upload
             if (dto.ProfilePicture != null)
             {
                 var fileExtension = Path.GetExtension(dto.ProfilePicture.FileName);
                 var fileName = $"{Guid.NewGuid()}{fileExtension}";
-                
+
                 using var stream = dto.ProfilePicture.OpenReadStream();
                 var filePath = await _fileStorageService.UploadFileAsync(stream, fileName, "profile-pictures");
-                
+
                 user.ProfilePictureUrl = filePath;
             }
 
             user.SeniorityLevel = invitation.SeniorityLevel;
             user.Department = invitation.Team.Department;
 
-            var hrUser = await _userManager.FindByIdAsync(invitation.SentByHRId);
-            if (hrUser != null && hrUser.WorkspaceId != null) 
+            var workspace = invitation.Team.Workspace;
+            if (workspace == null && !string.IsNullOrWhiteSpace(invitation.Team.WorkspaceId))
             {
-                user.WorkspaceId = hrUser.WorkspaceId;
+                workspace = await _unitOfWork.Repository<Workspace>()
+                    .Query()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(w => w.Id == invitation.Team.WorkspaceId);
+            }
+
+            if (workspace == null)
+            {
+                var hrUser = await _userManager.FindByIdAsync(invitation.SentByHRId);
+                if (hrUser != null && !string.IsNullOrWhiteSpace(hrUser.WorkspaceId))
+                {
+                    workspace = await _unitOfWork.Repository<Workspace>()
+                        .Query()
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(w => w.Id == hrUser.WorkspaceId);
+                }
+            }
+
+            if (workspace != null && string.IsNullOrWhiteSpace(user.WorkspaceId))
+            {
+                user.WorkspaceId = workspace.Id;
+                user.Workspace = workspace;
             }
 
             var updateResult = await _userManager.UpdateAsync(user);
@@ -210,6 +283,26 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
             await _userManager.AddToRoleAsync(user, invitation.Role.ToString());
             await ReplaceUserClaimAsync(user, "Department", user.Department.ToString());
             await ReplaceUserClaimAsync(user, "SeniorityLevel", user.SeniorityLevel.ToString());
+
+            var existingTeamMember = await _unitOfWork.Repository<TeamMember>()
+                .Query()
+                .FirstOrDefaultAsync(tm => tm.TeamId == invitation.TeamId && tm.UserId == user.Id);
+
+            if (existingTeamMember == null)
+            {
+                await _unitOfWork.Repository<TeamMember>().AddAsync(new TeamMember
+                {
+                    TeamId = invitation.TeamId,
+                    UserId = user.Id,
+                    Role = ProjectRole.TeamMember,
+                    IsActive = true
+                });
+            }
+            else
+            {
+                existingTeamMember.IsActive = true;
+                _unitOfWork.Repository<TeamMember>().Update(existingTeamMember);
+            }
 
             invitation.Status = InvitationStatus.Accepted;
             invitation.AcceptedAt = DateTime.UtcNow;
@@ -230,13 +323,18 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
                     Email = user.Email!,
                     FirstName = user.FirstName,
                     LastName = user.LastName,
-                    PhoneNumber = user.PhoneNumber, 
+                    PhoneNumber = user.PhoneNumber,
                     Skills = user.Skills,
                     Address = user.Address,
                     ProfilePictureUrl = user.ProfilePictureUrl,
-                    Roles = roles.ToList()
+                    Department = user.Department,
+                    SeniorityLevel = user.SeniorityLevel,
+                    Roles = roles.ToList(),
+                    WorkspaceId = user.WorkspaceId,
+                    OrgCode = workspace?.OrgCode,
+                    Gender = user.Gender
                 },
-                Message = "Profile completed and workspace assigned successfully"
+                Message = "Profile completed and team membership assigned successfully"
             });
         }
         

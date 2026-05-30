@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SyncVerse.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using SyncVerse.Infrastructure.Data;
 namespace SyncVerse.Migrations
 {
     [DbContext(typeof(DatabaseDbContext))]
-    partial class DatabaseDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260528205836_FixTeamMemberRelationship")]
+    partial class FixTeamMemberRelationship
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -870,7 +873,6 @@ namespace SyncVerse.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("WorkspaceId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
@@ -1620,8 +1622,7 @@ namespace SyncVerse.Migrations
                     b.HasOne("SyncVerse.Domain.Entities.Workspace", "Workspace")
                         .WithMany()
                         .HasForeignKey("WorkspaceId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("CreatedByManager");
 

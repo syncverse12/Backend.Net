@@ -15,6 +15,8 @@ namespace SyncVerse.Application.DTOs.CompanyInvitation
         public ProjectRole Role { get; set; }
         public string RoleDisplay { get; set; } = null!;
         public string HRName { get; set; } = null!;
+        public string? WorkspaceId { get; set; }
+        public string? OrgCode { get; set; }
         public DateTime ExpiresAt { get; set; }
         public bool IsValid { get; set; }
     }

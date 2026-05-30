@@ -25,16 +25,17 @@ namespace SyncVerse.Application.Services.Profile
 
         public async Task<Result<UserProfileDto>> GetProfileAsync(string userId)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _context.Users
+                .Include(u => u.Workspace)
+                .FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null) return Result<UserProfileDto>.Failure("User not found");
 
             var roles = await _userManager.GetRolesAsync(user);
 
-            // جلب أسماء الفرق التي ينتمي إليها المستخدم
             var teamNames = await _context.TeamMembers
                 .Where(tm => tm.UserId == userId && tm.IsActive)
-                .Include(tm => tm.Project)
-                .Select(tm => tm.Project.Name)
+                .Include(tm => tm.Team)
+                .Select(tm => tm.Team.Name)
                 .Distinct()
                 .ToListAsync();
 
