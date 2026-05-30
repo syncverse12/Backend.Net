@@ -171,7 +171,6 @@ namespace SyncVerse.Application.Services.Profile
             var dto = new UserSettingsDto
             {
                 Theme = settings.Theme,
-                Language = settings.Language,
                 TimeZoneId = settings.TimeZoneId,
                 EnableEmailNotifications = settings.EnableEmailNotifications,
                 EnableInAppNotifications = settings.EnableInAppNotifications,
@@ -200,7 +199,6 @@ namespace SyncVerse.Application.Services.Profile
 
             // Map updated settings
             settings.Theme = dto.Theme;
-            settings.Language = dto.Language;
             settings.TimeZoneId = dto.TimeZoneId;
             settings.EnableEmailNotifications = dto.EnableEmailNotifications;
             settings.EnableInAppNotifications = dto.EnableInAppNotifications;

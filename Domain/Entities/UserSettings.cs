@@ -12,7 +12,6 @@ namespace SyncVerse.Domain.Entities
 
         // 1. UI Preferences
         public string Theme { get; set; } = "System"; // Light, Dark, System
-        public string Language { get; set; } = "en"; // en, ar, etc.
         public string TimeZoneId { get; set; } = "UTC";
 
         // 2. Notification Preferences

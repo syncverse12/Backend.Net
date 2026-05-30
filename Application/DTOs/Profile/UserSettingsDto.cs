@@ -3,7 +3,6 @@ namespace SyncVerse.Application.DTOs.Profile
     public class UserSettingsDto
     {
         public string Theme { get; set; } = "System"; 
-        public string Language { get; set; } = "en"; 
         public string TimeZoneId { get; set; } = "UTC";
 
         public bool EnableEmailNotifications { get; set; }
