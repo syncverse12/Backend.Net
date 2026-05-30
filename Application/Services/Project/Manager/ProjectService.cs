@@ -315,4 +315,26 @@ public class ProjectService : IProjectService
         var users = await _userManager.Users.Where(u => employeeIds.Contains(u.Id)).ToListAsync();
         return users.Select(u => u.FirstName + " " + u.LastName).ToList();
     }
+
+    public async Task<List<SyncVerse.Application.DTOs.Project.Manager.AcceptedEmployeeDto>> GetAcceptedEmployeesAsync(string projectId)
+    {
+        var acceptedInvitations = await _unitOfWork.Repository<ProjectInvitation>()
+            .Query()
+            .Where(inv => inv.ProjectId == projectId && inv.Status == InvitationStatus.Accepted)
+            .ToListAsync();
+
+        var employeeIds = acceptedInvitations.Select(inv => inv.EmployeeId).Distinct().ToList();
+        var users = await _userManager.Users.Where(u => employeeIds.Contains(u.Id)).ToListAsync();
+
+        var roleByEmployee = acceptedInvitations
+            .GroupBy(inv => inv.EmployeeId)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(inv => inv.SentAt).First().Role);
+
+        return users.Select(u => new SyncVerse.Application.DTOs.Project.Manager.AcceptedEmployeeDto
+        {
+            UserId = u.Id,
+            Name = u.FirstName + " " + u.LastName,
+            Role = roleByEmployee.TryGetValue(u.Id, out var r) ? r.ToString() : string.Empty
+        }).ToList();
+    }
 }

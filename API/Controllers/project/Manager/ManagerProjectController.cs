@@ -82,7 +82,7 @@ public class ProjectsController : ControllerBase
     [HttpGet("{projectId}/accepted-employees")]
     public async Task<IActionResult> GetAcceptedEmployeeNames(string projectId)
     {
-        var names = await _projectService.GetAcceptedEmployeeNamesAsync(projectId);
-        return Ok(names);
+        var employees = await _projectService.GetAcceptedEmployeesAsync(projectId);
+        return Ok(employees);
     }
 }

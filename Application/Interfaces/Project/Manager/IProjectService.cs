@@ -19,5 +19,6 @@ namespace SyncVerse.Application.Interfaces
 
       Task<Result<bool>> InviteEmployeeAsync(string projectId, InviteEmployeeDto dto, string managerId);
       Task<List<string>> GetAcceptedEmployeeNamesAsync(string projectId);
+      Task<List<SyncVerse.Application.DTOs.Project.Manager.AcceptedEmployeeDto>> GetAcceptedEmployeesAsync(string projectId);
     }
 }
