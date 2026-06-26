@@ -242,6 +242,21 @@ builder.Services.AddSwaggerGen(opt =>
             new string[]{}
         }
     });
+
+
+    opt.OrderActionsBy(apiDesc =>
+    {
+        var controllerName = apiDesc.ActionDescriptor.RouteValues["controller"];
+
+        return controllerName switch
+        {
+            "Auth" => "01",
+            "CompanyInvitation" => "02",
+            "AiMeeting" => "03",
+            "Meetings" => "04",
+            _ => "99" 
+        };
+    });
 });
 
 var app = builder.Build();

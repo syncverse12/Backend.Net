@@ -295,30 +295,48 @@ namespace SyncVerse.Application.Services.Identity
             var user = await _userManager.Users
                 .Include(u => u.Workspace)
                 .FirstOrDefaultAsync(u => u.Email == dto.Email);
+
             if (user == null || !user.IsEmailVerified)
                 return Result<AuthResponseDto>.Failure("Email not verified or invalid credentials.");
 
-            if (!string.Equals(user.Workspace?.OrgCode, dto.OrgCode?.Trim(), StringComparison.OrdinalIgnoreCase))
-                return Result<AuthResponseDto>.Failure("Invalid organization code.");
+            var roles = await _userManager.GetRolesAsync(user);
+            var isAdmin = roles.Contains("Admin", StringComparer.OrdinalIgnoreCase);
+
+            string? finalOrgCode = user.Workspace?.OrgCode;
+
+            if (isAdmin)
+            {
+                if (!string.IsNullOrEmpty(dto.OrgCode))
+                {
+                    finalOrgCode = dto.OrgCode.Trim();
+                }
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(user.Workspace?.OrgCode) ||
+                    !string.Equals(user.Workspace.OrgCode, dto.OrgCode?.Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    return Result<AuthResponseDto>.Failure("Invalid organization code.");
+                }
+            }
 
             var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
             if (!result.Succeeded) return Result<AuthResponseDto>.Failure("Invalid email or password");
 
-            var roles = await _userManager.GetRolesAsync(user);
             var token = _jwtHandler.GenerateToken(user, roles);
 
             return Result<AuthResponseDto>.Success(new AuthResponseDto
             {
                 Token = token.Token,
                 Expiration = token.Expiration,
-                OrgCode = user.Workspace?.OrgCode,
-                User = new UserResponseDto 
-                { 
-                    Id = user.Id, 
-                    Email = user.Email!, 
-                    FirstName = user.FirstName, 
-                    OrgCode = user.Workspace?.OrgCode,
-                    LastName = user.LastName, 
+                OrgCode = finalOrgCode,
+                User = new UserResponseDto
+                {
+                    Id = user.Id,
+                    Email = user.Email!,
+                    FirstName = user.FirstName,
+                    OrgCode = finalOrgCode,
+                    LastName = user.LastName,
                     Roles = roles.ToList(),
                     WorkspaceId = user.WorkspaceId,
                     Gender = user.Gender
