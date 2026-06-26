@@ -14,6 +14,7 @@ using SyncVerse.API.JwtFeatuers;
 using SyncVerse.API.Middleware;
 using SyncVerse.Application.Interfaces;
 using SyncVerse.Application.Interfaces.AI;
+using SyncVerse.Application.Interfaces.AI.Meeting.TaskExtraction;
 using SyncVerse.Application.Interfaces.Attachments;
 using SyncVerse.Application.Interfaces.Dashboard;
 using SyncVerse.Application.Interfaces.Identity;
@@ -188,12 +189,20 @@ builder.Services.AddScoped<IAuthorizationHandler, TaskOwnerAuthorizationHandler>
 builder.Services.AddScoped<IAuthorizationHandler, ReviewTaskAuthorizationHandler>();
 
 builder.Services.AddScoped<IAiMeetingService, AiMeetingService>();
+builder.Services.AddScoped<IAiTaskExtractionService, AiTaskExtractionService>();
 
 builder.Services.AddSignalR();
 
 builder.Services.AddHttpClient("AI_Meeting_Server", client =>
 {
     client.BaseAddress = new Uri("https://marwaabuelkheir-meeting-summary-api.hf.space/");
+    client.Timeout = TimeSpan.FromSeconds(45);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddHttpClient("AI_Task_Extraction_Server", client =>
+{
+    client.BaseAddress = new Uri("https://marwaabuelkheir-meeting-task-extraction-api.hf.space/");
     client.Timeout = TimeSpan.FromSeconds(45);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
