@@ -1,6 +1,5 @@
 ﻿using SyncVerse.Application.Common.Pagination;
 using SyncVerse.Application.Common.Results;
-using SyncVerse.Application.DTOs.Project.Manager;
 using SyncVerse.Application.DTOs.Tasks;
 using SyncVerse.Application.DTOs.Tasks.Manager;
 
@@ -21,5 +20,7 @@ namespace SyncVerse.Application.Interfaces.Task.Manager
         // Unity endpoints
         Task<List<UnityTaskResponseDto>> GetUnityTasksAsync(string orgId, string teamId);
         Task<bool> UpdateTaskStatusAsync(string taskId, string status);
+        //AI endpoints
+        Task<Result<List<TaskResponseDto>>> SaveExtractedTasksAsync(List<SyncVerse.Application.DTOs.AI.Meeting.TaskExtraction.AiExtractedTaskDto> extractedTasks, string projectId, string milestoneId, string currentUserId);
     }
 }

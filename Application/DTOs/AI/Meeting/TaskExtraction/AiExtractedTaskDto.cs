@@ -7,7 +7,7 @@ namespace SyncVerse.Application.DTOs.AI.Meeting.TaskExtraction
         [JsonPropertyName("title")]
         public string Title { get; set; } = string.Empty;
 
-        [JsonPropertyName("description")]
+        [JsonPropertyName("summary")]
         public string Description { get; set; } = string.Empty;
 
         [JsonPropertyName("assignee")]
