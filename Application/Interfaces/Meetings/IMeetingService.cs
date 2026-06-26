@@ -8,5 +8,7 @@ namespace SyncVerse.Application.Interfaces.Meetings
         Task<Result<MeetingResponseDto>> CreateAsync(CreateMeetingDto dto);
         Task<List<MeetingResponseDto>> GetActiveMeetings(string orgCode);
         Task<bool> DeleteMeeting(string roomId);
+
+        Task<Result<bool>> SaveAiSummaryAsync(string meetingId, SyncVerse.Application.DTOs.AI.Meeting.AiMeetingSummaryResponseDto aiDto);
     }
 }

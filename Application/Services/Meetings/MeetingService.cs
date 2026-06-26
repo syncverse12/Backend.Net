@@ -1,9 +1,10 @@
-using SyncVerse.Domain.Entities;
-using SyncVerse.Application.DTOs.Meetings;
-using SyncVerse.Application.Common.Results;
-using SyncVerse.Application.Interfaces.Persistence;
-using SyncVerse.Application.Interfaces.Meetings;
 using Microsoft.EntityFrameworkCore;
+using SyncVerse.Application.Common.Results;
+using SyncVerse.Application.DTOs.AI.Meeting;
+using SyncVerse.Application.DTOs.Meetings;
+using SyncVerse.Application.Interfaces.Meetings;
+using SyncVerse.Application.Interfaces.Persistence;
+using SyncVerse.Domain.Entities;
 
 namespace SyncVerse.Application.Services.Meetings
 {
@@ -61,6 +62,26 @@ namespace SyncVerse.Application.Services.Meetings
             _unitOfWork.Repository<Meeting>().Delete(meeting);
             await _unitOfWork.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<Result<bool>> SaveAiSummaryAsync(string meetingId, AiMeetingSummaryResponseDto aiDto)
+        {
+            var meeting = await _unitOfWork.Repository<Meeting>()
+                .Query()
+                .FirstOrDefaultAsync(m => m.Id == meetingId);
+
+            if (meeting == null)
+                return Result<bool>.Failure("Meeting not found");
+
+            meeting.Summary = aiDto.Summary;
+
+            meeting.KeyPoints = aiDto.KeyPoints != null ? string.Join("\n", aiDto.KeyPoints) : null;
+            meeting.Decisions = aiDto.Decisions != null ? string.Join("\n", aiDto.Decisions) : null;
+
+            _unitOfWork.Repository<Meeting>().Update(meeting);
+            await _unitOfWork.SaveChangesAsync();
+
+            return Result<bool>.Success(true, "Meeting summary saved successfully to Database.");
         }
     }
 }

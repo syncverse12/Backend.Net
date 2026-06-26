@@ -9,5 +9,9 @@ namespace SyncVerse.Domain.Entities
         public string RoomId { get; set; } = null!;
         public string VivoxChannelName { get; set; } = null!;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public string? Summary { get; set; }
+        public string? KeyPoints { get; set; } 
+        public string? Decisions { get; set; }
     }
 }
