@@ -114,6 +114,7 @@ namespace SyncVerse.Application.Services.Identity
                 Token = string.Empty,
                 Expiration = DateTime.UtcNow,
                 Message = "Manager registered successfully. Please verify your email to activate your account.",
+                OrgCode = workspace.OrgCode,
                 User = new UserResponseDto
                 {
                     Id = user.Id,
@@ -272,6 +273,7 @@ namespace SyncVerse.Application.Services.Identity
             {
                 Token = token.Token,
                 Expiration = token.Expiration,
+                OrgCode = user.Workspace?.OrgCode,
                 User = new UserResponseDto 
                 { 
                     Id = user.Id, 
@@ -296,6 +298,9 @@ namespace SyncVerse.Application.Services.Identity
             if (user == null || !user.IsEmailVerified)
                 return Result<AuthResponseDto>.Failure("Email not verified or invalid credentials.");
 
+            if (!string.Equals(user.Workspace?.OrgCode, dto.OrgCode?.Trim(), StringComparison.OrdinalIgnoreCase))
+                return Result<AuthResponseDto>.Failure("Invalid organization code.");
+
             var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
             if (!result.Succeeded) return Result<AuthResponseDto>.Failure("Invalid email or password");
 
@@ -306,6 +311,7 @@ namespace SyncVerse.Application.Services.Identity
             {
                 Token = token.Token,
                 Expiration = token.Expiration,
+                OrgCode = user.Workspace?.OrgCode,
                 User = new UserResponseDto 
                 { 
                     Id = user.Id, 

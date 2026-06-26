@@ -10,5 +10,8 @@ namespace SyncVerse.Application.DTOs.Auth
 
         [Required(ErrorMessage = "Password is required")]
         public string Password { get; set; } = null!;
+
+        [Required(ErrorMessage = "Organization code is required")]
+        public string OrgCode { get; set; } = null!;
     }
 }
