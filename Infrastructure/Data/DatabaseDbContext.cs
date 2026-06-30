@@ -77,6 +77,10 @@ namespace SyncVerse.Infrastructure.Data
 
             builder.Entity<User>().Ignore(u => u.WorkspaceId);
             builder.Entity<User>().Ignore(u => u.Workspace);
+
+            // 🎯 🔥 السطر السحري المصلح لإيرور اللوجن (جبر الـ EF Core على قراءة الجدول المفرد من الـ SQL)
+            builder.Entity<UserWorkspace>().ToTable("UserWorkspace");
+
             builder.Entity<UserWorkspace>()
                 .HasKey(uw => new { uw.UserId, uw.WorkspaceId });
 
@@ -96,7 +100,7 @@ namespace SyncVerse.Infrastructure.Data
                 if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType) &&
                     !entityType.ClrType.Name.Contains("User") &&
                     !entityType.ClrType.Name.Contains("Role") &&
-                    entityType.ClrType != typeof(UserWorkspace)) 
+                    entityType.ClrType != typeof(UserWorkspace))
                 {
                     var parameter = Expression.Parameter(entityType.ClrType, "e");
                     var propertyMethodInfo = typeof(EF).GetMethod("Property")?.MakeGenericMethod(typeof(bool));
