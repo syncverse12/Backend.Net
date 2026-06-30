@@ -29,7 +29,7 @@ public class WorkspaceService : IWorkspaceService
             return Result<WorkspaceResponseDto>.Failure("User not found.");
 
         var exists = await _unitOfWork.Repository<Workspace>()
-            .Query() 
+            .Query()
             .AnyAsync(w => w.Name == dto.Name && w.CreatedByUserId == managerId);
 
         if (exists)
@@ -46,7 +46,17 @@ public class WorkspaceService : IWorkspaceService
         await _unitOfWork.Repository<Workspace>().AddAsync(workspace);
         await _unitOfWork.SaveChangesAsync();
 
-        user.WorkspaceId = workspace.Id;
+
+        var userWorkspace = new UserWorkspace
+        {
+            UserId = managerId,
+            WorkspaceId = workspace.Id,
+            JoinedAt = DateTime.UtcNow
+        };
+        await _unitOfWork.Repository<UserWorkspace>().AddAsync(userWorkspace);
+
+
+        user.CurrentWorkspaceId = workspace.Id;
         await _userManager.UpdateAsync(user);
         await _unitOfWork.SaveChangesAsync();
 

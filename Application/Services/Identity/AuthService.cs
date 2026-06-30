@@ -51,7 +51,7 @@ namespace SyncVerse.Application.Services.Identity
                 Email = dto.Email,
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
-                IsEmailVerified = false, // Require email verification
+                IsEmailVerified = false,
                 CreatedAt = DateTime.UtcNow,
                 SeniorityLevel = SeniorityLevel.Lead,
                 Department = Department.Engineering
@@ -61,11 +61,11 @@ namespace SyncVerse.Application.Services.Identity
             if (!userResult.Succeeded)
                 return Result<AuthResponseDto>.Failure(string.Join(", ", userResult.Errors.Select(e => e.Description)));
 
-            // Step B: Assign Role (Manager) instead of WorkspaceAdmin since Manager is the owner in this app
+            // Step B: Assign Role
             var roleResult = await _userManager.AddToRoleAsync(user, "Manager");
             if (!roleResult.Succeeded)
             {
-                await _userManager.DeleteAsync(user); // rollback user
+                await _userManager.DeleteAsync(user);
                 return Result<AuthResponseDto>.Failure("Could not assign Manager role");
             }
 
@@ -86,21 +86,19 @@ namespace SyncVerse.Application.Services.Identity
             }
             catch (Exception ex)
             {
-                await _userManager.DeleteAsync(user); // rollback user
+                await _userManager.DeleteAsync(user);
                 return Result<AuthResponseDto>.Failure("Failed to create workspace. " + ex.Message);
             }
 
-            // Step D: Link Workspace to User
-            user.WorkspaceId = workspace.Id;
-            var updateResult = await _userManager.UpdateAsync(user);
-            if (!updateResult.Succeeded)
-            {
-                // We could delete workspace here, but to keep it simple let's return error
-                return Result<AuthResponseDto>.Failure("Failed to link user to workspace.");
-            }
+            // Step D: Link Workspace to User via Join Table
+            var userWorkspace = new UserWorkspace { UserId = user.Id, WorkspaceId = workspace.Id };
+            await _unitOfWork.Repository<UserWorkspace>().AddAsync(userWorkspace);
+
+            user.CurrentWorkspaceId = workspace.Id;
+            await _userManager.UpdateAsync(user);
+            await _unitOfWork.SaveChangesAsync();
 
             // Step E: Send OTP for email verification
-            // Generate and send OTP (same as Register)
             var otp = _otpService.GenerateOtp();
             user.OtpCodeHash = _otpService.HashOtp(otp);
             user.OtpExpirationDate = DateTime.UtcNow.AddMinutes(10);
@@ -124,13 +122,13 @@ namespace SyncVerse.Application.Services.Identity
                     Department = user.Department,
                     SeniorityLevel = user.SeniorityLevel,
                     Roles = new List<string> { "Manager" },
-                    WorkspaceId = user.WorkspaceId,
+                    WorkspaceId = user.CurrentWorkspaceId, 
                     OrgCode = workspace.OrgCode
                 }
             });
         }
 
-        // ✅ 1. Register
+        // ✅ 1. Register Employee
         public async Task<Result<RegisterResponseDto>> RegisterAsync(RegisterDto dto)
         {
             var existingUser = await _userManager.FindByEmailAsync(dto.Email);
@@ -159,7 +157,7 @@ namespace SyncVerse.Application.Services.Identity
                 CreatedAt = DateTime.UtcNow,
                 SeniorityLevel = SeniorityLevel.Intern,
                 Department = Department.Engineering,
-                WorkspaceId = workspace?.Id
+                CurrentWorkspaceId = workspace?.Id 
             };
 
             var result = await _userManager.CreateAsync(user, dto.Password);
@@ -167,6 +165,13 @@ namespace SyncVerse.Application.Services.Identity
                 return Result<RegisterResponseDto>.Failure(string.Join(", ", result.Errors.Select(e => e.Description)));
 
             await _userManager.AddToRoleAsync(user, "Employee");
+
+            if (workspace != null)
+            {
+                var empWorkspace = new UserWorkspace { UserId = user.Id, WorkspaceId = workspace.Id };
+                await _unitOfWork.Repository<UserWorkspace>().AddAsync(empWorkspace);
+                await _unitOfWork.SaveChangesAsync();
+            }
 
             var otp = _otpService.GenerateOtp();
             user.OtpCodeHash = _otpService.HashOtp(otp);
@@ -182,7 +187,7 @@ namespace SyncVerse.Application.Services.Identity
                 Email = user.Email!,
                 Message = "Registration successful. Please verify your email.",
                 OtpExpiresAt = user.OtpExpirationDate.Value,
-                WorkspaceId = user.WorkspaceId,
+                WorkspaceId = user.CurrentWorkspaceId, 
                 OrgCode = workspace?.OrgCode
             });
         }
@@ -227,7 +232,6 @@ namespace SyncVerse.Application.Services.Identity
             return Result<string>.Success("A new OTP has been sent to your email.");
         }
 
-        // 🛠️ Minimalist Formal HTML Template (Clean Black/White/Grey)
         private string GetFormalHtmlTemplate(string title, string message, string code)
         {
             return $@"
@@ -248,8 +252,10 @@ namespace SyncVerse.Application.Services.Identity
         public async Task<Result<AuthResponseDto>> VerifyEmailAsync(VerifyEmailDto dto, string userId)
         {
             var user = await _userManager.Users
-                .Include(u => u.Workspace)
+                .Include(u => u.UserWorkspaces)
+                    .ThenInclude(uw => uw.Workspace)
                 .FirstOrDefaultAsync(u => u.Id == userId);
+
             if (user == null) return Result<AuthResponseDto>.Failure("User not found");
             if (user.IsEmailVerified) return Result<AuthResponseDto>.Failure("Email already verified");
 
@@ -269,20 +275,23 @@ namespace SyncVerse.Application.Services.Identity
             var roles = await _userManager.GetRolesAsync(user);
             var token = _jwtHandler.GenerateToken(user, roles);
 
+
+            var activeWorkspace = user.UserWorkspaces.FirstOrDefault()?.Workspace;
+
             return Result<AuthResponseDto>.Success(new AuthResponseDto
             {
                 Token = token.Token,
                 Expiration = token.Expiration,
-                OrgCode = user.Workspace?.OrgCode,
-                User = new UserResponseDto 
-                { 
-                    Id = user.Id, 
-                    Email = user.Email!, 
-                    FirstName = user.FirstName, 
-                    OrgCode = user.Workspace?.OrgCode,
-                    LastName = user.LastName, 
+                OrgCode = activeWorkspace?.OrgCode,
+                User = new UserResponseDto
+                {
+                    Id = user.Id,
+                    Email = user.Email!,
+                    FirstName = user.FirstName,
+                    OrgCode = activeWorkspace?.OrgCode,
+                    LastName = user.LastName,
                     Roles = roles.ToList(),
-                    WorkspaceId = user.WorkspaceId,
+                    WorkspaceId = user.CurrentWorkspaceId, 
                     Gender = user.Gender
                 },
                 Message = "Email verified successfully"
@@ -293,7 +302,8 @@ namespace SyncVerse.Application.Services.Identity
         public async Task<Result<AuthResponseDto>> LoginAsync(LoginDto dto)
         {
             var user = await _userManager.Users
-                .Include(u => u.Workspace)
+                .Include(u => u.UserWorkspaces)
+                    .ThenInclude(uw => uw.Workspace)
                 .FirstOrDefaultAsync(u => u.Email == dto.Email);
 
             if (user == null || !user.IsEmailVerified)
@@ -302,26 +312,37 @@ namespace SyncVerse.Application.Services.Identity
             var roles = await _userManager.GetRolesAsync(user);
             var isAdmin = roles.Contains("Admin", StringComparer.OrdinalIgnoreCase);
 
-            string? finalOrgCode = user.Workspace?.OrgCode;
+            string? finalOrgCode = string.Empty;
+            string? targetWorkspaceId = string.Empty;
 
             if (isAdmin)
             {
-                if (!string.IsNullOrEmpty(dto.OrgCode))
-                {
-                    finalOrgCode = dto.OrgCode.Trim();
-                }
+                finalOrgCode = string.IsNullOrEmpty(dto.OrgCode) ? "ADMIN_CODE" : dto.OrgCode.Trim();
             }
             else
             {
-                if (string.IsNullOrEmpty(user.Workspace?.OrgCode) ||
-                    !string.Equals(user.Workspace.OrgCode, dto.OrgCode?.Trim(), StringComparison.OrdinalIgnoreCase))
-                {
-                    return Result<AuthResponseDto>.Failure("Invalid organization code.");
-                }
+                if (string.IsNullOrEmpty(dto.OrgCode))
+                    return Result<AuthResponseDto>.Failure("Organization code is required.");
+
+                var matchedWorkspace = user.UserWorkspaces
+                    .FirstOrDefault(uw => string.Equals(uw.Workspace.OrgCode, dto.OrgCode.Trim(), StringComparison.OrdinalIgnoreCase))?
+                    .Workspace;
+
+                if (matchedWorkspace == null)
+                    return Result<AuthResponseDto>.Failure("Unauthorized: You are not a member of this organization.");
+
+                finalOrgCode = matchedWorkspace.OrgCode;
+                targetWorkspaceId = matchedWorkspace.Id;
             }
 
             var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
             if (!result.Succeeded) return Result<AuthResponseDto>.Failure("Invalid email or password");
+
+            if (!isAdmin)
+            {
+                user.CurrentWorkspaceId = targetWorkspaceId;
+                await _userManager.UpdateAsync(user);
+            }
 
             var token = _jwtHandler.GenerateToken(user, roles);
 
@@ -335,10 +356,10 @@ namespace SyncVerse.Application.Services.Identity
                     Id = user.Id,
                     Email = user.Email!,
                     FirstName = user.FirstName,
-                    OrgCode = finalOrgCode,
                     LastName = user.LastName,
+                    OrgCode = finalOrgCode,
                     Roles = roles.ToList(),
-                    WorkspaceId = user.WorkspaceId,
+                    WorkspaceId = user.CurrentWorkspaceId, 
                     Gender = user.Gender
                 },
                 Message = "Login successful"

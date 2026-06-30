@@ -30,9 +30,33 @@ namespace SyncVerse.Domain.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // ✅ NEW: Link User to a specific Workspace
-        public string? WorkspaceId { get; set; }
-        public Workspace? Workspace { get; set; }
-        
+        public string? CurrentWorkspaceId { get; set; }
+
+        public virtual ICollection<UserWorkspace> UserWorkspaces { get; set; } = new List<UserWorkspace>();
+
+
+
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped] 
+        public string? WorkspaceId
+        {
+            get => CurrentWorkspaceId;
+            set => CurrentWorkspaceId = value;
+        }
+
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped] 
+        public Workspace? Workspace
+        {
+            get => UserWorkspaces?.FirstOrDefault(uw => uw.WorkspaceId == CurrentWorkspaceId)?.Workspace;
+            set
+            {
+                if (value != null && UserWorkspaces != null && !UserWorkspaces.Any(uw => uw.WorkspaceId == value.Id))
+                {
+                    UserWorkspaces.Add(new UserWorkspace { WorkspaceId = value.Id, UserId = this.Id, Workspace = value });
+                }
+                CurrentWorkspaceId = value?.Id;
+            }
+        }
+
         // Navigation properties (existing)
         public ICollection<ProjectMember> ProjectMembers { get; set; } = new List<ProjectMember>();
         public ICollection<TaskItem> AssignedTasks { get; set; } = new List<TaskItem>();

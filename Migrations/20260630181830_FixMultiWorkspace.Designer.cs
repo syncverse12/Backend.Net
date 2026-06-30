@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SyncVerse.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using SyncVerse.Infrastructure.Data;
 namespace SyncVerse.Migrations
 {
     [DbContext(typeof(DatabaseDbContext))]
-    partial class DatabaseDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260630181830_FixMultiWorkspace")]
+    partial class FixMultiWorkspace
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1103,6 +1106,9 @@ namespace SyncVerse.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<string>("WorkspaceId1")
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Department");
@@ -1116,6 +1122,8 @@ namespace SyncVerse.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.HasIndex("SeniorityLevel");
+
+                    b.HasIndex("WorkspaceId1");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -1719,6 +1727,13 @@ namespace SyncVerse.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SyncVerse.Domain.Entities.User", b =>
+                {
+                    b.HasOne("SyncVerse.Domain.Entities.Workspace", null)
+                        .WithMany("Users")
+                        .HasForeignKey("WorkspaceId1");
+                });
+
             modelBuilder.Entity("SyncVerse.Domain.Entities.UserSettings", b =>
                 {
                     b.HasOne("SyncVerse.Domain.Entities.User", "User")
@@ -1866,6 +1881,8 @@ namespace SyncVerse.Migrations
                     b.Navigation("Projects");
 
                     b.Navigation("UserWorkspaces");
+
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("TaskCategory", b =>
