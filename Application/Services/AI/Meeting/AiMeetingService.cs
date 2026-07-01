@@ -46,22 +46,23 @@ namespace SyncVerse.Application.Services.AI
                 content.Add(streamContent, "file", audioFile.FileName);
                 content.Add(new StringContent("true"), "language_detection");
 
-
                 var response = await client.PostAsync("transcribe/file", content);
 
                 if (!response.IsSuccessStatusCode)
                     return Result<TranscriptionSecureResponseDto>.Failure($"AI Server error: {response.StatusCode}");
 
-                var transcriptionResult = await response.Content.ReadFromJsonAsync<AiTranscriptionResponseDto>();
-                if (transcriptionResult == null || string.IsNullOrEmpty(transcriptionResult.Text))
+                var rawText = await response.Content.ReadAsStringAsync();
+
+                if (string.IsNullOrEmpty(rawText))
                     return Result<TranscriptionSecureResponseDto>.Failure("Failed to extract text from audio.");
 
+                var cleanText = rawText.Trim('"').Trim();
 
-                var signature = GenerateSignature(meetingId, transcriptionResult.Text);
+                var signature = GenerateSignature(meetingId, cleanText);
 
                 return Result<TranscriptionSecureResponseDto>.Success(new TranscriptionSecureResponseDto
                 {
-                    Transcript = transcriptionResult.Text,
+                    Transcript = cleanText,
                     Signature = signature
                 }, "Audio transcribed and verified successfully.");
             }
@@ -138,7 +139,16 @@ namespace SyncVerse.Application.Services.AI
                     var responseStream = await response.Content.ReadAsStreamAsync();
                     var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                     var result = await JsonSerializer.DeserializeAsync<AiMeetingSummaryResponseDto>(responseStream, options);
-                    return result != null ? Result<AiMeetingSummaryResponseDto>.Success(result) : Result<AiMeetingSummaryResponseDto>.Failure("Deserialization failed.");
+
+                    if (result != null)
+                    {
+                        result.MeetingId = dto.MeetingId;      
+                        result.MeetingTitle = dto.MeetingTitle;  
+
+                        return Result<AiMeetingSummaryResponseDto>.Success(result);
+                    }
+
+                    return Result<AiMeetingSummaryResponseDto>.Failure("Deserialization failed.");
                 }
                 return Result<AiMeetingSummaryResponseDto>.Failure($"AI Server error: {response.StatusCode}");
             }

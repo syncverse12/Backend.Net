@@ -196,7 +196,7 @@ builder.Services.AddSignalR();
 
 builder.Services.AddHttpClient("AI_Transcription_Server", client =>
 {
-    client.BaseAddress = new Uri("https://marwaezzat8-speech-text.hf.space/");
+    client.BaseAddress = new Uri("https://marwaezzat8-meet.hf.space/");
     client.Timeout = TimeSpan.FromSeconds(60);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
