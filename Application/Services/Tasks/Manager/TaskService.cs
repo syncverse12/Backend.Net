@@ -49,15 +49,16 @@ namespace SyncVerse.Application.Services.Task.Manager
             var projectMember = await _unitOfWork.Repository<ProjectMember>().Query()
                 .FirstOrDefaultAsync(m => m.ProjectId == dto.ProjectId && m.UserId == currentUserId);
 
-            // ✅ Check: Workspace Owner OR Project Manager OR Team Leader
+            // ✅ Check permissions: Workspace Owner OR Project Creator OR ProjectMember(ProjectManager) OR Team Leader
             bool isWorkspaceOwner = project.Workspace?.CreatedByUserId == currentUserId;
-            bool isProjectManager = project.CreatedByUserId == currentUserId;
+            bool isProjectCreator = project.CreatedByUserId == currentUserId;
+            bool isProjectManagerMember = projectMember?.Role == ProjectRole.ProjectManager;
             bool isTeamLeader = projectMember?.Role == ProjectRole.TeamLeader;
 
-            if (!isWorkspaceOwner && !isProjectManager && !isTeamLeader)
+            if (!isWorkspaceOwner && !isProjectCreator && !isProjectManagerMember && !isTeamLeader)
             {
                 return Result<TaskResponseDto>.Failure(
-                    "Unauthorized: Only Workspace Owner, Project Manager, or Team Leader can create tasks.");
+                    "Unauthorized: Only Workspace Owner, Project Manager, Project Creator, or Team Leader can create tasks.");
             }
 
             if (!string.IsNullOrEmpty(dto.CategoryId))

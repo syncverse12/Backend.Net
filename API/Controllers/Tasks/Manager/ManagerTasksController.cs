@@ -40,7 +40,6 @@ public class TasksController : ControllerBase
 
     // CREATE TASK (Manager)
     [HttpPost]
-    [Authorize(Policy = "ManagerOnly")]
     public async Task<IActionResult> Create(CreateTaskDto dto)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;

@@ -15,6 +15,7 @@ using SyncVerse.API.Middleware;
 using SyncVerse.Application.Interfaces;
 using SyncVerse.Application.Interfaces.AI;
 using SyncVerse.Application.Interfaces.AI.Meeting.TaskExtraction;
+using SyncVerse.Application.Interfaces.AI.Risk;
 using SyncVerse.Application.Interfaces.Attachments;
 using SyncVerse.Application.Interfaces.Dashboard;
 using SyncVerse.Application.Interfaces.Identity;
@@ -190,6 +191,7 @@ builder.Services.AddScoped<IAuthorizationHandler, ReviewTaskAuthorizationHandler
 
 builder.Services.AddScoped<IAiMeetingService, AiMeetingService>();
 builder.Services.AddScoped<IAiTaskExtractionService, AiTaskExtractionService>();
+builder.Services.AddScoped<IAiRiskService, AiRiskService>();
 
 builder.Services.AddSignalR();
 
@@ -214,6 +216,14 @@ builder.Services.AddHttpClient("AI_Task_Extraction_Server", client =>
 {
     client.BaseAddress = new Uri("https://marwaabuelkheir-meeting-task-extraction-api.hf.space/");
     client.Timeout = TimeSpan.FromSeconds(45);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+
+builder.Services.AddHttpClient("AI_Risk_Server", client =>
+{
+    client.BaseAddress = new Uri("https://elkady61-risk.hf.space/");
+    client.Timeout = TimeSpan.FromSeconds(60);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
