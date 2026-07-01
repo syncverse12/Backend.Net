@@ -6,6 +6,11 @@ using SyncVerse.Application.Interfaces.Attachments;
 using SyncVerse.Application.Interfaces.Persistence;
 using SyncVerse.Application.Interfaces.Storage;
 using SyncVerse.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SyncVerse.Application.Services.Attachments
 {
@@ -27,22 +32,25 @@ namespace SyncVerse.Application.Services.Attachments
             // Validate task exists
             var task = await _unitOfWork.Repository<TaskItem>()
                 .Query()
+                .Include(t => t.Project)
+                    .ThenInclude(p => p != null ? p.Workspace : null)
                 .FirstOrDefaultAsync(t => t.Id == taskId && !t.IsDeleted);
 
             if (task == null)
                 return Result<AttachmentResponseDto>.Failure("Task not found");
 
-            // Validate user can upload (all project members regardless of role)
-            if (!string.IsNullOrWhiteSpace(task.ProjectId))
+            bool isWorkspaceOwner = task?.Project?.Workspace?.CreatedByUserId == userId;
+
+            if (!string.IsNullOrWhiteSpace(task?.ProjectId))
             {
                 var isProjectMember = await _unitOfWork.Repository<ProjectMember>()
                     .Query()
                     .AnyAsync(m => m.ProjectId == task.ProjectId && m.UserId == userId && m.IsActive);
 
-                if (!isProjectMember)
+                if (!isWorkspaceOwner && !isProjectMember)
                     return Result<AttachmentResponseDto>.Failure("You are not a member of this project");
             }
-            else if (task.AssignedToUserId != userId && task.CreatedByUserId != userId)
+            else if (task!.AssignedToUserId != userId && task.CreatedByUserId != userId && !isWorkspaceOwner)
             {
                 return Result<AttachmentResponseDto>.Failure("You are not authorized to upload files to this task");
             }
@@ -61,11 +69,9 @@ namespace SyncVerse.Application.Services.Attachments
             // Upload file
             var folder = $"tasks/{taskId}";
             string filePath;
-            
-            using (var stream = file.OpenReadStream())
-            {
-                filePath = await _fileStorageService.UploadFileAsync(stream, file.FileName, folder);
-            }
+
+            using var stream = file.OpenReadStream();
+            filePath = await _fileStorageService.UploadFileAsync(stream, file.FileName, folder);
 
             // Save to database
             var attachment = new TaskAttachment
@@ -82,8 +88,19 @@ namespace SyncVerse.Application.Services.Attachments
             await _unitOfWork.Repository<TaskAttachment>().AddAsync(attachment);
             await _unitOfWork.SaveChangesAsync();
 
-            var fileUrl = await _fileStorageService.GetFileUrlAsync(filePath);
-            
+            string fileUrl = string.Empty;
+            if (!string.IsNullOrWhiteSpace(filePath))
+            {
+                try
+                {
+                    fileUrl = await _fileStorageService.GetFileUrlAsync(filePath);
+                }
+                catch
+                {
+                    fileUrl = string.Empty;
+                }
+            }
+
             var user = await _unitOfWork.Repository<User>()
                 .Query()
                 .FirstOrDefaultAsync(u => u.Id == userId);
@@ -111,10 +128,22 @@ namespace SyncVerse.Application.Services.Attachments
                 .ToListAsync();
 
             var dtos = new List<AttachmentResponseDto>();
-            
+
             foreach (var attachment in attachments)
             {
-                var fileUrl = await _fileStorageService.GetFileUrlAsync(attachment.FilePath);
+                string fileUrl = string.Empty;
+                if (!string.IsNullOrWhiteSpace(attachment.FilePath))
+                {
+                    try
+                    {
+                        fileUrl = await _fileStorageService.GetFileUrlAsync(attachment.FilePath);
+                    }
+                    catch
+                    {
+                        fileUrl = string.Empty;
+                    }
+                }
+
                 dtos.Add(new AttachmentResponseDto
                 {
                     Id = attachment.Id,
@@ -136,32 +165,35 @@ namespace SyncVerse.Application.Services.Attachments
             var attachment = await _unitOfWork.Repository<TaskAttachment>()
                 .Query()
                 .Include(a => a.Task)
+                .ThenInclude(t => t != null ? t.Project : null)
+                .ThenInclude(p => p != null ? p.Workspace : null)
                 .FirstOrDefaultAsync(a => a.Id == attachmentId && !a.IsDeleted);
 
             if (attachment == null)
                 return Result<bool>.Failure("Attachment not found");
 
-            // Allow delete for all project members regardless of role
-            if (!string.IsNullOrWhiteSpace(attachment.Task.ProjectId))
+            if (attachment.Task == null)
+                return Result<bool>.Failure("Attachment's task not found");
+
+            bool isWorkspaceOwner = attachment?.Task?.Project?.Workspace?.CreatedByUserId == userId;
+
+            if (!string.IsNullOrWhiteSpace(attachment!.Task.ProjectId))
             {
                 var isProjectMember = await _unitOfWork.Repository<ProjectMember>()
                     .Query()
                     .AnyAsync(m => m.ProjectId == attachment.Task.ProjectId && m.UserId == userId && m.IsActive);
 
-                if (!isProjectMember)
+                if (!isWorkspaceOwner && !isProjectMember)
                     return Result<bool>.Failure("Unauthorized to delete this attachment");
             }
             else if (attachment.UploadedByUserId != userId &&
                      attachment.Task.CreatedByUserId != userId &&
-                     attachment.Task.AssignedToUserId != userId)
+                     attachment.Task.AssignedToUserId != userId &&
+                     !isWorkspaceOwner)
             {
                 return Result<bool>.Failure("Unauthorized to delete this attachment");
             }
 
-            // Delete from storage
-            await _fileStorageService.DeleteFileAsync(attachment.FilePath);
-
-            // Soft delete from database
             attachment.IsDeleted = true;
             _unitOfWork.Repository<TaskAttachment>().Update(attachment);
             await _unitOfWork.SaveChangesAsync();
@@ -178,8 +210,18 @@ namespace SyncVerse.Application.Services.Attachments
             if (attachment == null)
                 return Result<Stream>.Failure("Attachment not found");
 
-            var stream = await _fileStorageService.DownloadFileAsync(attachment.FilePath);
-            return Result<Stream>.Success(stream);
+            if (string.IsNullOrWhiteSpace(attachment.FilePath))
+                return Result<Stream>.Failure("Attachment file not available");
+
+            try
+            {
+                var stream = await _fileStorageService.DownloadFileAsync(attachment.FilePath);
+                return Result<Stream>.Success(stream);
+            }
+            catch
+            {
+                return Result<Stream>.Failure("Failed to download attachment");
+            }
         }
     }
 }
