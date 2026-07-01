@@ -34,29 +34,41 @@ namespace SyncVerse.Application.Services.AI
             if (audioFile == null || audioFile.Length == 0)
                 return Result<TranscriptionSecureResponseDto>.Failure("Audio file is empty.");
 
-            var client = _httpClientFactory.CreateClient("AI_Transcription_Server");
-            using var content = new MultipartFormDataContent();
-            using var stream = audioFile.OpenReadStream();
-            using var streamContent = new StreamContent(stream);
-            streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(audioFile.ContentType);
-            content.Add(streamContent, "file", audioFile.FileName);
-            content.Add(new StringContent("true"), "language_detection");
-
-            var response = await client.PostAsync("transcribe/file", content);
-            if (!response.IsSuccessStatusCode)
-                return Result<TranscriptionSecureResponseDto>.Failure($"AI Server error: {response.StatusCode}");
-
-            var transcriptionResult = await response.Content.ReadFromJsonAsync<AiTranscriptionResponseDto>();
-            if (transcriptionResult == null || string.IsNullOrEmpty(transcriptionResult.Text))
-                return Result<TranscriptionSecureResponseDto>.Failure("Failed to extract text from audio.");
-
-            var signature = GenerateSignature(meetingId, transcriptionResult.Text);
-
-            return Result<TranscriptionSecureResponseDto>.Success(new TranscriptionSecureResponseDto
+            try
             {
-                Transcript = transcriptionResult.Text,
-                Signature = signature
-            }, "Audio transcribed and verified successfully.");
+                var client = _httpClientFactory.CreateClient("AI_Transcription_Server");
+
+                var content = new MultipartFormDataContent();
+                var stream = audioFile.OpenReadStream();
+                var streamContent = new StreamContent(stream);
+
+                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(audioFile.ContentType);
+                content.Add(streamContent, "file", audioFile.FileName);
+                content.Add(new StringContent("true"), "language_detection");
+
+
+                var response = await client.PostAsync("transcribe/file", content);
+
+                if (!response.IsSuccessStatusCode)
+                    return Result<TranscriptionSecureResponseDto>.Failure($"AI Server error: {response.StatusCode}");
+
+                var transcriptionResult = await response.Content.ReadFromJsonAsync<AiTranscriptionResponseDto>();
+                if (transcriptionResult == null || string.IsNullOrEmpty(transcriptionResult.Text))
+                    return Result<TranscriptionSecureResponseDto>.Failure("Failed to extract text from audio.");
+
+
+                var signature = GenerateSignature(meetingId, transcriptionResult.Text);
+
+                return Result<TranscriptionSecureResponseDto>.Success(new TranscriptionSecureResponseDto
+                {
+                    Transcript = transcriptionResult.Text,
+                    Signature = signature
+                }, "Audio transcribed and verified successfully.");
+            }
+            catch (Exception ex)
+            {
+                return Result<TranscriptionSecureResponseDto>.Failure($"Stream copying failed: {ex.Message}");
+            }
         }
 
         public async Task<Result<bool>> ProcessAndSaveSummaryAsync(string meetingId, SecureProcessRequestDto dto)

@@ -193,12 +193,14 @@ builder.Services.AddScoped<IAiTaskExtractionService, AiTaskExtractionService>();
 
 builder.Services.AddSignalR();
 
+
 builder.Services.AddHttpClient("AI_Transcription_Server", client =>
 {
-    client.BaseAddress = new Uri("https://marwaabuelkheir-meeting-whisper-api.hf.space/");
-    client.Timeout = TimeSpan.FromSeconds(60); 
+    client.BaseAddress = new Uri("https://marwaezzat8-speech-text.hf.space/");
+    client.Timeout = TimeSpan.FromSeconds(60);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
+
 
 builder.Services.AddHttpClient("AI_Meeting_Server", client =>
 {
@@ -206,6 +208,7 @@ builder.Services.AddHttpClient("AI_Meeting_Server", client =>
     client.Timeout = TimeSpan.FromSeconds(45);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
+
 
 builder.Services.AddHttpClient("AI_Task_Extraction_Server", client =>
 {
