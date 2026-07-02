@@ -219,10 +219,9 @@ builder.Services.AddHttpClient("AI_Task_Extraction_Server", client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
-
 builder.Services.AddHttpClient("AI_Risk_Server", client =>
 {
-    client.BaseAddress = new Uri("https://elkady61-risk.hf.space/");
+    client.BaseAddress = new Uri("https://marway-risk-analysis.hf.space/");
     client.Timeout = TimeSpan.FromSeconds(60);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
