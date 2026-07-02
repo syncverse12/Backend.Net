@@ -1,0 +1,1155 @@
+{
+  "info": {
+    "name": "SyncVerse API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register Manager",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/register-manager"
+          }
+        },
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/register"
+          }
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/verify-email/{{userId}}"
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/forgot-password"
+          }
+        },
+        {
+          "name": "Verify Reset OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/verify-reset-otp/{{userId}}"
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/reset-password/{{userId}}"
+          }
+        },
+        {
+          "name": "Resend OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/resend-otp"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/profile/me"
+          }
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "url": "{{baseUrl}}/api/profile/me"
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/profile/change-password"
+          }
+        },
+        {
+          "name": "Change Email",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/profile/change-email"
+          }
+        },
+        {
+          "name": "Get Settings",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/profile/settings"
+          }
+        },
+        {
+          "name": "Update Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/profile/settings"
+          }
+        },
+        {
+          "name": "Get Org Code",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/profile/orgcode"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/users"
+          }
+        },
+        {
+          "name": "Get User By Id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/users/{{userId}}"
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/{{userId}}"
+          }
+        },
+        {
+          "name": "Update User Roles",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/{{userId}}/roles"
+          }
+        },
+        {
+          "name": "Toggle User Lockout",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/{{userId}}/lockout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Workspaces",
+      "item": [
+        {
+          "name": "Create Workspace",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/workspaces"
+          }
+        },
+        {
+          "name": "Update Workspace",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/workspaces/{{workspaceId}}"
+          }
+        },
+        {
+          "name": "Get Workspace By Id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/workspaces/{{workspaceId}}"
+          }
+        },
+        {
+          "name": "Get Workspaces",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/workspaces"
+          }
+        },
+        {
+          "name": "Delete Workspace",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/workspaces/{{workspaceId}}"
+          }
+        },
+        {
+          "name": "Restore Workspace",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/workspaces/{{workspaceId}}/restore"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Workspace Sessions",
+      "item": [
+        {
+          "name": "Get Session",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/workspaces/{{orgCode}}/session"
+          }
+        },
+        {
+          "name": "Create Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/workspaces/{{orgCode}}/session"
+          }
+        },
+        {
+          "name": "End Session",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/workspaces/{{orgCode}}/session"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Teams",
+      "item": [
+        {
+          "name": "Create Team",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/teams"
+          }
+        },
+        {
+          "name": "Get My Teams",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/teams/my-teams"
+          }
+        },
+        {
+          "name": "Get Team By Id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/teams/{{teamId}}"
+          }
+        },
+        {
+          "name": "Update Team",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/teams"
+          }
+        },
+        {
+          "name": "Delete Team",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/teams/{{teamId}}"
+          }
+        },
+        {
+          "name": "Restore Team",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/teams/{{teamId}}/restore"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Company Invitations",
+      "item": [
+        {
+          "name": "Send Invitation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/company-invitations/send"
+          }
+        },
+        {
+          "name": "Get Invitation Details",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/company-invitations/details/{{token}}"
+          }
+        },
+        {
+          "name": "Complete Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "url": "{{baseUrl}}/api/company-invitations/complete-profile"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get My Notifications",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/notifications?unreadOnly=false"
+          }
+        },
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/notifications/unread-count"
+          }
+        },
+        {
+          "name": "Mark As Read",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/notifications/{{notificationId}}/read"
+          }
+        },
+        {
+          "name": "Mark All As Read",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/notifications/mark-all-read"
+          }
+        },
+        {
+          "name": "Delete Notification",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/notifications/{{notificationId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Meetings",
+      "item": [
+        {
+          "name": "Create Meeting",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/meetings"
+          }
+        },
+        {
+          "name": "Get Active Meetings",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/meetings?orgCode={{orgCode}}"
+          }
+        },
+        {
+          "name": "Delete Meeting",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/meetings/{{roomId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Milestones",
+      "item": [
+        {
+          "name": "Create Milestone",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/milestones"
+          }
+        },
+        {
+          "name": "Update Milestone",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/milestones/{{milestoneId}}"
+          }
+        },
+        {
+          "name": "Delete Milestone",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/milestones/{{milestoneId}}"
+          }
+        },
+        {
+          "name": "Get Milestone By Id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/milestones/{{milestoneId}}"
+          }
+        },
+        {
+          "name": "Get Project Milestones",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/milestones/project/{{projectId}}"
+          }
+        },
+        {
+          "name": "Restore Milestone",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/milestones/{{milestoneId}}/restore"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks (Manager)",
+      "item": [
+        {
+          "name": "Get Unity Tasks",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/tasks?orgId={{orgCode}}&teamId={{teamId}}"
+          }
+        },
+        {
+          "name": "Update Task Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{taskId}}/status"
+          }
+        },
+        {
+          "name": "Create Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks"
+          }
+        },
+        {
+          "name": "Get Manager Tasks",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/tasks/manager/tasks"
+          }
+        },
+        {
+          "name": "Update Task",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{taskId}}"
+          }
+        },
+        {
+          "name": "Delete Task",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/tasks/{{taskId}}"
+          }
+        },
+        {
+          "name": "Restore Task",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/tasks/{{taskId}}/restore"
+          }
+        },
+        {
+          "name": "Add Task Dependency",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/dependency"
+          }
+        },
+        {
+          "name": "Confirm Task",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/tasks/{{taskId}}/confirm"
+          }
+        },
+        {
+          "name": "Reject Task",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{taskId}}/reject"
+          }
+        },
+        {
+          "name": "Filter Tasks",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/filter"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks (Employee)",
+      "item": [
+        {
+          "name": "Get My Tasks",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/employee/tasks/my"
+          }
+        },
+        {
+          "name": "Get Task Details",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/employee/tasks/{{taskId}}"
+          }
+        },
+        {
+          "name": "Start Task",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/employee/tasks/{{taskId}}/start"
+          }
+        },
+        {
+          "name": "Submit Task",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/employee/tasks/{{taskId}}/submit"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Task Comments",
+      "item": [
+        {
+          "name": "Add Comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/task-comments/{{taskId}}"
+          }
+        },
+        {
+          "name": "Get Comments",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/task-comments/{{taskId}}"
+          }
+        },
+        {
+          "name": "Update Comment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/task-comments/{{commentId}}"
+          }
+        },
+        {
+          "name": "Delete Comment",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/task-comments/{{commentId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Task Attachments",
+      "item": [
+        {
+          "name": "Upload Task Attachment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "url": "{{baseUrl}}/api/task-attachments/upload"
+          }
+        },
+        {
+          "name": "Get Task Attachments",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/task-attachments/{{taskId}}"
+          }
+        },
+        {
+          "name": "Delete Task Attachment",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/task-attachments/{{attachmentId}}"
+          }
+        },
+        {
+          "name": "Download Task Attachment",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/task-attachments/download/{{attachmentId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Project Attachments",
+      "item": [
+        {
+          "name": "Upload Project Attachment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "url": "{{baseUrl}}/api/project-attachments/upload"
+          }
+        },
+        {
+          "name": "Get Project Attachments",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/project-attachments/{{projectId}}"
+          }
+        },
+        {
+          "name": "Delete Project Attachment",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/project-attachments/{{attachmentId}}"
+          }
+        },
+        {
+          "name": "Download Project Attachment",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/project-attachments/download/{{attachmentId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects (Manager)",
+      "item": [
+        {
+          "name": "Create Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projects"
+          }
+        },
+        {
+          "name": "Update Project",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projects/{{projectId}}"
+          }
+        },
+        {
+          "name": "Get Project By Id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/projects/{{projectId}}"
+          }
+        },
+        {
+          "name": "Get Projects By Workspace",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/projects/workspace/{{workspaceId}}"
+          }
+        },
+        {
+          "name": "Delete Project",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/projects/{{projectId}}"
+          }
+        },
+        {
+          "name": "Restore Project",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/projects/{{projectId}}/restore"
+          }
+        },
+        {
+          "name": "Invite Employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projects/{{projectId}}/invite"
+          }
+        },
+        {
+          "name": "Get Accepted Employees",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/projects/{{projectId}}/accepted-employees"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects (Employee)",
+      "item": [
+        {
+          "name": "Get My Projects",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/employee/projects"
+          }
+        },
+        {
+          "name": "Get Project Details",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/employee/projects/{{projectId}}"
+          }
+        },
+        {
+          "name": "Get My Invitations",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/employee/invitations"
+          }
+        },
+        {
+          "name": "Respond To Invitation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/employee/invitations/{{invitationId}}/respond"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Task Categories",
+      "item": [
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/task-categories"
+          }
+        },
+        {
+          "name": "Get My Categories",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/task-categories"
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/task-categories/{{categoryId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Time Logs",
+      "item": [
+        {
+          "name": "Start Time Log",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{taskId}}/timelogs/start"
+          }
+        },
+        {
+          "name": "Stop Time Log",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{taskId}}/timelogs/stop"
+          }
+        },
+        {
+          "name": "Create Manual Time Log",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{taskId}}/timelogs/manual"
+          }
+        },
+        {
+          "name": "Get Task Time Logs",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/tasks/{{taskId}}/timelogs"
+          }
+        },
+        {
+          "name": "Get Active Working Time",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/tasks/{{taskId}}/timelogs/active-time"
+          }
+        },
+        {
+          "name": "Get Total Time Spent",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/tasks/{{taskId}}/timelogs/total"
+          }
+        },
+        {
+          "name": "Get My Time Logs",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/employee/timelogs/my"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboards",
+      "item": [
+        {
+          "name": "Admin Dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/dashboard"
+          }
+        },
+        {
+          "name": "Manager Dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/manager/dashboard"
+          }
+        },
+        {
+          "name": "Manager Task Dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/manager/dashboard/tasks"
+          }
+        },
+        {
+          "name": "Project Task Dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/manager/dashboard/projects/{{projectId}}/tasks"
+          }
+        },
+        {
+          "name": "HR Dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/hr/dashboard"
+          }
+        },
+        {
+          "name": "Team Leader Dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/team-leader/dashboard"
+          }
+        },
+        {
+          "name": "Employee Dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/employee/dashboard"
+          }
+        },
+        {
+          "name": "Project Manager Dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/project-manager/dashboard"
+          }
+        }
+      ]
+    }
+  ]
+}

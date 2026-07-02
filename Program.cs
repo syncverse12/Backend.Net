@@ -237,16 +237,12 @@ var app = builder.Build();
 
 // --- 2. الـ Middleware Pipeline ---
 
-if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Local"))
-{
+
     app.UseSwagger();
     app.UseSwaggerUI();
     app.UseCors("AllowAll");
-}
-else
-{
-    app.UseCors("ProductionPolicy");
-}
+
+    //app.UseCors("ProductionPolicy");
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

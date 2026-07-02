@@ -157,5 +157,7 @@ Once the application is running navigate to:
 `https://localhost:<port>/swagger/index.html` 
 to view the dynamically generated Swagger UI encompassing all endpoints, models, and authorization behaviors.
 
+A Postman collection is also available for testing the API endpoints locally. You can find it in the repository under `postman/SyncVerse.postman_collection.json`. Simply import this file into Postman.
+
 ---
 
