@@ -64,6 +64,7 @@ namespace SyncVerse.Application.Services.Task.Manager
 
         public async Task<Result<List<TaskCategoryResponseDto>>> GetMyCategoriesAsync(string userId)
         {
+  
             var categories = await _unitOfWork.Repository<TaskCategory>()
                 .Query()
                 .Where(c => !c.IsDeleted)
@@ -74,16 +75,29 @@ namespace SyncVerse.Application.Services.Task.Manager
                 .Select(c => c.Name)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
+            var newlySeedOnes = new List<TaskCategory>();
+
+     
             foreach (var defaultName in DefaultTaskCategoryNames)
             {
                 if (!existingNames.Contains(defaultName))
                 {
-                    categories.Add(new TaskCategory
+                    var newDefaultCategory = new TaskCategory
                     {
                         Name = defaultName,
                         UserId = userId
-                    });
+                    };
+
+                    await _unitOfWork.Repository<TaskCategory>().AddAsync(newDefaultCategory);
+                    newlySeedOnes.Add(newDefaultCategory);
                 }
+            }
+
+      
+            if (newlySeedOnes.Any())
+            {
+                await _unitOfWork.SaveChangesAsync();
+                categories.AddRange(newlySeedOnes);
             }
 
             var orderedCategories = categories

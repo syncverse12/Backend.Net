@@ -26,13 +26,13 @@ namespace SyncVerse.Application.Services.Dashboard
                 return Result<ManagerDashboardDto>.Failure("Unauthorized");
 
             var manager = await _userManager.FindByIdAsync(userId);
-            if (manager == null || string.IsNullOrEmpty(manager.WorkspaceId))
+            if (manager == null || string.IsNullOrEmpty(manager.CurrentWorkspaceId))
                 return Result<ManagerDashboardDto>.Failure("Manager or Workspace not found");
 
-            var workspaceId = manager.WorkspaceId;
+            var workspaceId = manager.CurrentWorkspaceId;
             var now = DateTime.UtcNow;
-            
-            var totalEmployees = await _userManager.Users.CountAsync(u => u.WorkspaceId == workspaceId);
+
+            var totalEmployees = await _userManager.Users.CountAsync(u => u.CurrentWorkspaceId == workspaceId);
             var totalProjects = await _unitOfWork.Repository<SyncVerse.Domain.Entities.Project>()
                 .Query()
                 .CountAsync(p => p.WorkspaceId == workspaceId);
@@ -42,10 +42,10 @@ namespace SyncVerse.Application.Services.Dashboard
             var lastMonthStart = thisMonthStart.AddMonths(-1);
 
             var employeesCreatedThisMonth = await _userManager.Users
-                .CountAsync(u => u.WorkspaceId == workspaceId && u.CreatedAt >= thisMonthStart);
-            
+                .CountAsync(u => u.CurrentWorkspaceId == workspaceId && u.CreatedAt >= thisMonthStart);
+
             var employeesCreatedLastMonth = await _userManager.Users
-                .CountAsync(u => u.WorkspaceId == workspaceId && u.CreatedAt >= lastMonthStart && u.CreatedAt < thisMonthStart);
+                .CountAsync(u => u.CurrentWorkspaceId == workspaceId && u.CreatedAt >= lastMonthStart && u.CreatedAt < thisMonthStart);
 
             double growth = 0;
             if (employeesCreatedLastMonth > 0)
@@ -74,7 +74,7 @@ namespace SyncVerse.Application.Services.Dashboard
 
             // Department Breakdown
             var departmentBreakdown = await _userManager.Users
-                .Where(u => u.WorkspaceId == workspaceId)
+                .Where(u => u.CurrentWorkspaceId == workspaceId)
                 .GroupBy(u => u.Department)
                 .Select(g => new DepartmentOverviewDto
                 {
@@ -86,7 +86,7 @@ namespace SyncVerse.Application.Services.Dashboard
             // Managed Teams (Assuming created by the manager for now, ideally by workspaceId)
             var managedTeams = await _unitOfWork.Repository<SyncVerse.Domain.Entities.Team>()
                 .Query()
-                .Where(t => t.CreatedByManagerId == userId || t.CreatedByManager.WorkspaceId == workspaceId)
+                .Where(t => t.CreatedByManagerId == userId || t.CreatedByManager.CurrentWorkspaceId == workspaceId)
                 .Include(t => t.TeamLeader)
                 .Select(t => new ManagedTeamDto
                 {
@@ -98,10 +98,10 @@ namespace SyncVerse.Application.Services.Dashboard
 
             // Hierarchy (Role counts)
             var hierarchy = new List<HierarchyNodeDto>();
-            
-            var allUsers = await _userManager.Users.Where(u => u.WorkspaceId == workspaceId).ToListAsync();
+
+            var allUsers = await _userManager.Users.Where(u => u.CurrentWorkspaceId == workspaceId).ToListAsync();
             int adminsCount = 0, managersCount = 0, employeesCount = 0;
-            
+
             foreach (var user in allUsers)
             {
                 var roles = await _userManager.GetRolesAsync(user);
@@ -343,7 +343,7 @@ namespace SyncVerse.Application.Services.Dashboard
                 return Result<TeamLeaderDashboardDto>.Failure("Unauthorized");
 
             var now = DateTime.UtcNow;
-            
+
             // Get projects where user is TeamLeader
             var myLeadProjectIds = await _unitOfWork.Repository<ProjectMember>()
                 .Query()
@@ -456,15 +456,15 @@ namespace SyncVerse.Application.Services.Dashboard
                 return Result<HRDashboardDto>.Failure("Unauthorized");
 
             var hrUser = await _userManager.FindByIdAsync(userId);
-            if (hrUser == null || string.IsNullOrEmpty(hrUser.WorkspaceId))
+            if (hrUser == null || string.IsNullOrEmpty(hrUser.CurrentWorkspaceId))
                 return Result<HRDashboardDto>.Failure("HR or Workspace not found");
 
-            var workspaceId = hrUser.WorkspaceId;
+            var workspaceId = hrUser.CurrentWorkspaceId;
             var now = DateTime.UtcNow;
 
             // 1. Employee Overview
             var employeeOverview = await _userManager.Users
-                .Where(u => u.WorkspaceId == workspaceId)
+                .Where(u => u.CurrentWorkspaceId == workspaceId)
                 .GroupBy(u => u.Department)
                 .Select(g => new DepartmentOverviewDto
                 {
@@ -477,8 +477,8 @@ namespace SyncVerse.Application.Services.Dashboard
             var invitationsQuery = _unitOfWork.Repository<CompanyInvitation>()
                 .Query()
                 .Include(i => i.SentByHR)
-                .Where(i => i.SentByHR.WorkspaceId == workspaceId);
-                
+                .Where(i => i.SentByHR.CurrentWorkspaceId == workspaceId);
+
             var invitationsStatsList = await invitationsQuery
                 .GroupBy(i => 1)
                 .Select(g => new
@@ -519,7 +519,7 @@ namespace SyncVerse.Application.Services.Dashboard
             var tasksQuery = _unitOfWork.Repository<TaskItem>()
                 .Query()
                 .Include(t => t.AssignedToUser)
-                .Where(t => t.AssignedToUser != null && t.AssignedToUser.WorkspaceId == workspaceId);
+                .Where(t => t.AssignedToUser != null && t.AssignedToUser.CurrentWorkspaceId == workspaceId);
 
             var firstDayOfMonth = new DateTime(now.Year, now.Month, 1);
 
@@ -591,7 +591,7 @@ namespace SyncVerse.Application.Services.Dashboard
                 .ToListAsync();
 
             var myTaskIds = myTasksQuery.Select(t => t.Id);
-            
+
             var recentComments = await _unitOfWork.Repository<TaskComment>()
                 .Query()
                 .Include(c => c.User)
@@ -638,7 +638,7 @@ namespace SyncVerse.Application.Services.Dashboard
                 .Query()
                 .Where(pm => pm.UserId == userId && pm.IsActive)
                 .Select(pm => new { pm.ProjectId, pm.Role });
-            
+
             var userRoles = await myRolesQuery.ToListAsync();
 
             var reviewerProjectIds = userRoles.Where(r => r.Role == ProjectRole.Reviewer).Select(r => r.ProjectId).ToList();
@@ -664,9 +664,9 @@ namespace SyncVerse.Application.Services.Dashboard
             var bugsToVerify = new List<DailyTaskDto>();
             if (qaProjectIds.Any())
             {
-                 // Assuming Rejected tasks or a specific Bug category means it needs QA verification. 
-                 // For now, looking for tasks that might need QA attention (e.g., recently submitted or rejected for verification).
-                 // Adjust this query based on exact workflow for QA.
+                // Assuming Rejected tasks or a specific Bug category means it needs QA verification. 
+                // For now, looking for tasks that might need QA attention (e.g., recently submitted or rejected for verification).
+                // Adjust this query based on exact workflow for QA.
                 bugsToVerify = await _unitOfWork.Repository<TaskItem>()
                     .Query()
                     .Where(t => qaProjectIds.Contains(t.ProjectId ?? string.Empty) && (t.Status == TaskStatus.Submitted || t.Status == TaskStatus.Rejected))
@@ -711,7 +711,7 @@ namespace SyncVerse.Application.Services.Dashboard
                 TodayTasks = todayTasks,
                 RecentComments = recentComments,
                 UpcomingMilestones = upcomingMilestones,
-                
+
                 TasksPendingMyApproval = tasksPendingMyApproval,
                 BugsToVerify = bugsToVerify
             };
@@ -722,10 +722,10 @@ namespace SyncVerse.Application.Services.Dashboard
         public async Task<Result<ManagerTaskDashboardDto>> GetManagerTaskDashboardAsync(string managerId)
         {
             var manager = await _userManager.FindByIdAsync(managerId);
-            if (manager == null || string.IsNullOrEmpty(manager.WorkspaceId))
+            if (manager == null || string.IsNullOrEmpty(manager.CurrentWorkspaceId))
                 return Result<ManagerTaskDashboardDto>.Failure("Manager or Workspace not found");
 
-            var workspaceId = manager.WorkspaceId;
+            var workspaceId = manager.CurrentWorkspaceId;
 
             var managerProjectIds = await _unitOfWork.Repository<SyncVerse.Domain.Entities.Project>().Query()
                 .Where(p => p.WorkspaceId == workspaceId)
@@ -735,7 +735,7 @@ namespace SyncVerse.Application.Services.Dashboard
 
             var tasks = await _unitOfWork.Repository<TaskItem>()
                 .Query()
-                .IgnoreQueryFilters() 
+                .IgnoreQueryFilters()
                 .Include(t => t.AssignedToUser)
                 .Include(t => t.Category)
                 .Where(t => t.ProjectId != null && managerProjectIds.Contains(t.ProjectId!))
@@ -773,7 +773,7 @@ namespace SyncVerse.Application.Services.Dashboard
                 StatusStats = statusStats,
                 TasksPerEmployee = tasksPerEmployee,
                 TasksPerCategory = tasks
-                    .Where(t => t.Category != null && !t.IsDeleted) 
+                    .Where(t => t.Category != null && !t.IsDeleted)
                     .GroupBy(t => t.Category!.Name)
                     .Select(g => new CategoryTaskStatsDto { CategoryName = g.Key, TasksCount = g.Count() })
                     .ToList()

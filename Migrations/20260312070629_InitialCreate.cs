@@ -576,7 +576,7 @@ namespace SyncVerse.Migrations
                     table.ForeignKey(
                         name: "FK_Tasks_Category_CategoryId",
                         column: x => x.CategoryId,
-                        principalTable: "Category",
+                        principalTable: "TaskCategories",
                         principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Tasks_Milestones_MilestoneId",

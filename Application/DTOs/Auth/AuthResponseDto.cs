@@ -6,5 +6,6 @@
         public DateTime Expiration { get; set; }
         public UserResponseDto User { get; set; } = null!;
         public string Message { get; set; } = null!;
+        public string? OrgCode { get; set; }
     }
 }

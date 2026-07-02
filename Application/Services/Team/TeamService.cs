@@ -150,7 +150,7 @@ namespace SyncVerse.Application.Services.Team
                 .Query()
                 .Include(t => t.CreatedByManager)
                 .Include(t => t.Workspace)
-                .Where(t => t.Id == teamId && t.WorkspaceId == currentUser.WorkspaceId && t.CreatedByManager.WorkspaceId == currentUser.WorkspaceId);
+                .Where(t => t.Id == teamId && t.WorkspaceId == currentUser.WorkspaceId);
 
             var team = await teamQuery.FirstOrDefaultAsync();
 

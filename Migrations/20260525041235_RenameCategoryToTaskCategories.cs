@@ -10,20 +10,7 @@ namespace SyncVerse.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Tasks_Category_CategoryId",
-                table: "Tasks");
 
-            migrationBuilder.RenameTable(
-                name: "Category",
-                newName: "TaskCategories");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Tasks_TaskCategories_CategoryId",
-                table: "Tasks",
-                column: "CategoryId",
-                principalTable: "TaskCategories",
-                principalColumn: "Id");
         }
 
         /// <inheritdoc />

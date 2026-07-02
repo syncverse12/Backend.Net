@@ -26,7 +26,8 @@ namespace SyncVerse.Application.Services.Profile
         public async Task<Result<UserProfileDto>> GetProfileAsync(string userId)
         {
             var user = await _context.Users
-                .Include(u => u.Workspace)
+                .Include(u => u.UserWorkspaces)
+                    .ThenInclude(uw => uw.Workspace)
                 .FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null) return Result<UserProfileDto>.Failure("User not found");
 
@@ -55,8 +56,8 @@ namespace SyncVerse.Application.Services.Profile
                 ProfilePictureUrl = user.ProfilePictureUrl,
                 Address = user.Address,
                 Skills = user.Skills ?? new List<string>(),
-                Department = user.Department, 
-                SeniorityLevel = user.SeniorityLevel, 
+                Department = user.Department,
+                SeniorityLevel = user.SeniorityLevel,
                 Roles = roles.ToList(),
                 JoinedDate = user.CreatedAt,
                 OrgCode = user.Workspace?.OrgCode,
@@ -82,20 +83,19 @@ namespace SyncVerse.Application.Services.Profile
             {
                 user.Gender = dto.Gender.Value;
             }
-            
+
             // updating skills
-            if (dto.Skills != null) 
+            if (dto.Skills != null)
             {
                 user.Skills = dto.Skills;
             }
 
-            // if the user uploaded a new profile picture
             if (dto.ProfilePicture != null)
             {
                 var fileExtension = Path.GetExtension(dto.ProfilePicture.FileName);
                 var fileName = $"user_{user.Id}_{Guid.NewGuid()}{fileExtension}";
                 using var stream = dto.ProfilePicture.OpenReadStream();
-                
+
                 var filePath = await _fileStorageService.UploadFileAsync(stream, fileName, "profile-pictures");
                 user.ProfilePictureUrl = filePath;
             }
@@ -104,7 +104,7 @@ namespace SyncVerse.Application.Services.Profile
             if (!result.Succeeded)
                 return Result<UserProfileDto>.Failure("Failed to update profile");
 
-            return await GetProfileAsync(userId); // returning the profile after successful update
+            return await GetProfileAsync(userId); 
         }
 
         public async Task<Result<bool>> ChangePasswordAsync(string userId, ChangePasswordDto dto)
@@ -113,7 +113,7 @@ namespace SyncVerse.Application.Services.Profile
             if (user == null) return Result<bool>.Failure("User not found");
 
             var result = await _userManager.ChangePasswordAsync(user, dto.CurrentPassword, dto.NewPassword);
-            
+
             if (!result.Succeeded)
             {
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
@@ -137,7 +137,7 @@ namespace SyncVerse.Application.Services.Profile
 
             var emailToken = await _userManager.GenerateChangeEmailTokenAsync(user, dto.NewEmail);
             var result = await _userManager.ChangeEmailAsync(user, dto.NewEmail, emailToken);
-            
+
             if (!result.Succeeded)
             {
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
@@ -145,9 +145,9 @@ namespace SyncVerse.Application.Services.Profile
             }
 
             user.UserName = dto.NewEmail;
-            user.IsEmailVerified = false; 
+            user.IsEmailVerified = false;
             user.EmailConfirmed = false;
-            
+
             await _userManager.UpdateAsync(user);
 
             return Result<bool>.Success(true, "Email changed successfully. Please verify your new email.");
@@ -216,7 +216,8 @@ namespace SyncVerse.Application.Services.Profile
         public async Task<User?> GetUserWithWorkspaceAsync(string userId)
         {
             return await _context.Users
-                .Include(u => u.Workspace)
+                .Include(u => u.UserWorkspaces)
+                    .ThenInclude(uw => uw.Workspace)
                 .FirstOrDefaultAsync(u => u.Id == userId);
         }
     }

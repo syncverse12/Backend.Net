@@ -49,15 +49,16 @@ namespace SyncVerse.Application.Services.Task.Manager
             var projectMember = await _unitOfWork.Repository<ProjectMember>().Query()
                 .FirstOrDefaultAsync(m => m.ProjectId == dto.ProjectId && m.UserId == currentUserId);
 
-            // ✅ Check: Workspace Owner OR Project Manager OR Team Leader
+            // ✅ Check permissions: Workspace Owner OR Project Creator OR ProjectMember(ProjectManager) OR Team Leader
             bool isWorkspaceOwner = project.Workspace?.CreatedByUserId == currentUserId;
-            bool isProjectManager = project.CreatedByUserId == currentUserId;
+            bool isProjectCreator = project.CreatedByUserId == currentUserId;
+            bool isProjectManagerMember = projectMember?.Role == ProjectRole.ProjectManager;
             bool isTeamLeader = projectMember?.Role == ProjectRole.TeamLeader;
 
-            if (!isWorkspaceOwner && !isProjectManager && !isTeamLeader)
+            if (!isWorkspaceOwner && !isProjectCreator && !isProjectManagerMember && !isTeamLeader)
             {
                 return Result<TaskResponseDto>.Failure(
-                    "Unauthorized: Only Workspace Owner, Project Manager, or Team Leader can create tasks.");
+                    "Unauthorized: Only Workspace Owner, Project Manager, Project Creator, or Team Leader can create tasks.");
             }
 
             if (!string.IsNullOrEmpty(dto.CategoryId))
@@ -792,6 +793,110 @@ namespace SyncVerse.Application.Services.Task.Manager
                 "Done" => TaskStatus.Completed,
                 _ => null
             };
+        }
+
+        public async Task<Result<List<TaskResponseDto>>> SaveExtractedTasksAsync(
+    List<SyncVerse.Application.DTOs.AI.Meeting.TaskExtraction.AiExtractedTaskDto> extractedTasks,
+    string projectId,
+    string milestoneId,
+    string currentUserId)
+        {
+
+            var project = await _unitOfWork.Repository<ProjectEntity>().Query()
+                .Include(p => p.Workspace)
+                .FirstOrDefaultAsync(p => p.Id == projectId);
+
+            if (project == null) return Result<List<TaskResponseDto>>.Failure("Project not found");
+
+            var milestone = await _unitOfWork.Repository<Milestone>().GetByIdAsync(milestoneId);
+            if (milestone == null) return Result<List<TaskResponseDto>>.Failure("Milestone not found");
+
+            var projectMember = await _unitOfWork.Repository<ProjectMember>().Query()
+                .FirstOrDefaultAsync(m => m.ProjectId == projectId && m.UserId == currentUserId);
+
+            bool isWorkspaceOwner = project.Workspace?.CreatedByUserId == currentUserId;
+            bool isProjectManager = project.CreatedByUserId == currentUserId;
+            bool isTeamLeader = projectMember?.Role == ProjectRole.TeamLeader;
+
+            if (!isWorkspaceOwner && !isProjectManager && !isTeamLeader)
+            {
+                return Result<List<TaskResponseDto>>.Failure("Unauthorized: You don't have permission to create tasks in this project.");
+            }
+
+            var members = await _unitOfWork.Repository<ProjectMember>().Query()
+                .Include(m => m.User)
+                .Where(m => m.ProjectId == projectId && m.User != null)
+                .Select(m => m.User!)
+                .ToListAsync();
+
+            var savedTasks = new List<TaskItem>();
+
+            foreach (var aiTask in extractedTasks)
+            {
+                var matchedUser = members.FirstOrDefault(u =>
+                    (!string.IsNullOrEmpty(u.FirstName) && u.FirstName.Contains(aiTask.Assignee, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(u.LastName) && u.LastName.Contains(aiTask.Assignee, StringComparison.OrdinalIgnoreCase))
+                );
+
+                var priority = TaskPriority.Medium; 
+                if (Enum.TryParse<TaskPriority>(aiTask.Priority, true, out var parsedPriority))
+                {
+                    priority = parsedPriority;
+                }
+
+                DateTime? finalDueDate = null;
+                if (!string.IsNullOrEmpty(aiTask.Deadline) && DateTime.TryParse(aiTask.Deadline, out var parsedDate))
+                {
+                    if (parsedDate >= milestone.StartDate && parsedDate <= milestone.EndDate)
+                    {
+                        finalDueDate = parsedDate;
+                    }
+                }
+
+                if (finalDueDate == null)
+                {
+                    finalDueDate = milestone.EndDate.AddDays(-1);
+                }
+
+                var taskItem = new TaskItem
+                {
+                    Title = string.IsNullOrWhiteSpace(aiTask.Title) ? "AI Extracted Task" : aiTask.Title,
+                    Description = $"{aiTask.Description}\n\n[AI Source Quote]: \"{aiTask.SourceQuote}\"",
+                    Status = TaskStatus.Pending,
+                    CreatedByUserId = currentUserId,
+                    AssignedToUserId = matchedUser != null ? matchedUser.Id : currentUserId, 
+                    ProjectId = projectId,
+                    MilestoneId = milestoneId,
+                    DueDate = finalDueDate,
+                    Priority = priority,
+                    WorkspaceId = project.WorkspaceId,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _unitOfWork.Repository<TaskItem>().AddAsync(taskItem);
+                savedTasks.Add(taskItem);
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+
+            foreach (var savedTask in savedTasks)
+            {
+                if (savedTask.AssignedToUserId != currentUserId)
+                {
+                    await _notificationService.CreateNotificationAsync(new CreateNotificationDto
+                    {
+                        UserId = savedTask.AssignedToUserId,
+                        TriggeredByUserId = currentUserId,
+                        Title = "New Task Assigned via AI",
+                        Message = $"You have been assigned a new task extracted from the meeting: {savedTask.Title}",
+                        Type = NotificationType.TaskAssigned,
+                        RelatedEntityId = savedTask.Id
+                    });
+                }
+            }
+
+            var responseDtos = _mapper.Map<List<TaskResponseDto>>(savedTasks);
+            return Result<List<TaskResponseDto>>.Success(responseDtos, $"{savedTasks.Count} tasks saved successfully from AI extraction.");
         }
 
     }

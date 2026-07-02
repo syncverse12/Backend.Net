@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using AutoMapper;
+using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -12,6 +13,9 @@ using SyncVerse.API.Hubs;
 using SyncVerse.API.JwtFeatuers;
 using SyncVerse.API.Middleware;
 using SyncVerse.Application.Interfaces;
+using SyncVerse.Application.Interfaces.AI;
+using SyncVerse.Application.Interfaces.AI.Meeting.TaskExtraction;
+using SyncVerse.Application.Interfaces.AI.Risk;
 using SyncVerse.Application.Interfaces.Attachments;
 using SyncVerse.Application.Interfaces.Dashboard;
 using SyncVerse.Application.Interfaces.Identity;
@@ -27,9 +31,12 @@ using SyncVerse.Application.Interfaces.Tasks.TimeTracking;
 using SyncVerse.Application.Interfaces.Team;
 using SyncVerse.Application.Interfaces.WorkspaceInvitation;
 using SyncVerse.Application.Interfaces.Workspaces;
+using SyncVerse.Application.Mapping;
+using SyncVerse.Application.Services.AI;
 using SyncVerse.Application.Services.Attachments;
 using SyncVerse.Application.Services.Dashboard;
 using SyncVerse.Application.Services.Identity;
+using SyncVerse.Application.Services.Meetings;
 using SyncVerse.Application.Services.Milestones;
 using SyncVerse.Application.Services.Notifications;
 using SyncVerse.Application.Services.Profile;
@@ -39,8 +46,8 @@ using SyncVerse.Application.Services.Task.Manager;
 using SyncVerse.Application.Services.Tasks.Comments;
 using SyncVerse.Application.Services.Tasks.TimeTracking;
 using SyncVerse.Application.Services.Team;
-using SyncVerse.Application.Services.Workspaces;
 using SyncVerse.Application.Services.WorkspaceInvitation;
+using SyncVerse.Application.Services.Workspaces;
 using SyncVerse.Domain.Entities;
 using SyncVerse.Infrastructure.Data;
 using SyncVerse.Infrastructure.Persistence;
@@ -49,12 +56,9 @@ using SyncVerse.Infrastructure.Realtime;
 using SyncVerse.Infrastructure.SeedConfiguration;
 using SyncVerse.Infrastructure.Services.Email;
 using SyncVerse.Infrastructure.Storage;
+using System.IO;
 using System.Text;
 using System.Text.Json.Serialization;
-using System.IO;
-using AutoMapper;
-using SyncVerse.Application.Mapping;
-using SyncVerse.Application.Services.Meetings;
 
 var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var envFileName = environmentName switch
@@ -185,7 +189,42 @@ builder.Services.AddScoped<IAuthorizationHandler, ManagerAuthorizationHandler>()
 builder.Services.AddScoped<IAuthorizationHandler, TaskOwnerAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ReviewTaskAuthorizationHandler>();
 
+builder.Services.AddScoped<IAiMeetingService, AiMeetingService>();
+builder.Services.AddScoped<IAiTaskExtractionService, AiTaskExtractionService>();
+builder.Services.AddScoped<IAiRiskService, AiRiskService>();
+
 builder.Services.AddSignalR();
+
+
+builder.Services.AddHttpClient("AI_Transcription_Server", client =>
+{
+    client.BaseAddress = new Uri("https://marwaezzat8-meet.hf.space/");
+    client.Timeout = TimeSpan.FromSeconds(60);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+
+builder.Services.AddHttpClient("AI_Meeting_Server", client =>
+{
+    client.BaseAddress = new Uri("https://marwaabuelkheir-meeting-summary-api.hf.space/");
+    client.Timeout = TimeSpan.FromSeconds(45);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+
+builder.Services.AddHttpClient("AI_Task_Extraction_Server", client =>
+{
+    client.BaseAddress = new Uri("https://marwaabuelkheir-meeting-task-extraction-api.hf.space/");
+    client.Timeout = TimeSpan.FromSeconds(45);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddHttpClient("AI_Risk_Server", client =>
+{
+    client.BaseAddress = new Uri("https://marway-risk-analysis.hf.space/");
+    client.Timeout = TimeSpan.FromSeconds(60);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -230,6 +269,21 @@ builder.Services.AddSwaggerGen(opt =>
             },
             new string[]{}
         }
+    });
+
+
+    opt.OrderActionsBy(apiDesc =>
+    {
+        var controllerName = apiDesc.ActionDescriptor.RouteValues["controller"];
+
+        return controllerName switch
+        {
+            "Auth" => "01",
+            "CompanyInvitation" => "02",
+            "AiMeeting" => "03",
+            "Meetings" => "04",
+            _ => "99" 
+        };
     });
 });
 

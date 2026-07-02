@@ -206,12 +206,21 @@ namespace SyncVerse.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Decisions")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("KeyPoints")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("OrgCode")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RoomId")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Summary")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("VivoxChannelName")
@@ -1012,6 +1021,9 @@ namespace SyncVerse.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("CurrentWorkspaceId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Department")
                         .HasColumnType("int");
 
@@ -1091,9 +1103,6 @@ namespace SyncVerse.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<string>("WorkspaceId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("Department");
@@ -1107,8 +1116,6 @@ namespace SyncVerse.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.HasIndex("SeniorityLevel");
-
-                    b.HasIndex("WorkspaceId");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -1151,6 +1158,46 @@ namespace SyncVerse.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("UserSettings", (string)null);
+                });
+
+            modelBuilder.Entity("SyncVerse.Domain.Entities.UserWorkspace", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("WorkspaceId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("WorkspaceId");
+
+                    b.ToTable("UserWorkspace");
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.Workspace", b =>
@@ -1672,15 +1719,6 @@ namespace SyncVerse.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("SyncVerse.Domain.Entities.User", b =>
-                {
-                    b.HasOne("SyncVerse.Domain.Entities.Workspace", "Workspace")
-                        .WithMany("Users")
-                        .HasForeignKey("WorkspaceId");
-
-                    b.Navigation("Workspace");
-                });
-
             modelBuilder.Entity("SyncVerse.Domain.Entities.UserSettings", b =>
                 {
                     b.HasOne("SyncVerse.Domain.Entities.User", "User")
@@ -1690,6 +1728,25 @@ namespace SyncVerse.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SyncVerse.Domain.Entities.UserWorkspace", b =>
+                {
+                    b.HasOne("SyncVerse.Domain.Entities.User", "User")
+                        .WithMany("UserWorkspaces")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SyncVerse.Domain.Entities.Workspace", "Workspace")
+                        .WithMany("UserWorkspaces")
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+
+                    b.Navigation("Workspace");
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.Workspace", b =>
@@ -1800,13 +1857,15 @@ namespace SyncVerse.Migrations
                     b.Navigation("Settings");
 
                     b.Navigation("TimeLogs");
+
+                    b.Navigation("UserWorkspaces");
                 });
 
             modelBuilder.Entity("SyncVerse.Domain.Entities.Workspace", b =>
                 {
                     b.Navigation("Projects");
 
-                    b.Navigation("Users");
+                    b.Navigation("UserWorkspaces");
                 });
 
             modelBuilder.Entity("TaskCategory", b =>
