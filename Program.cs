@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using FluentValidation;
+﻿using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -56,7 +55,6 @@ using SyncVerse.Infrastructure.Realtime;
 using SyncVerse.Infrastructure.SeedConfiguration;
 using SyncVerse.Infrastructure.Services.Email;
 using SyncVerse.Infrastructure.Storage;
-using System.IO;
 using System.Text;
 using System.Text.Json.Serialization;
 
