@@ -351,8 +351,28 @@ namespace SyncVerse.Application.Services.Dashboard
                 .Select(pm => pm.ProjectId)
                 .ToListAsync();
 
+            var myTeamMembers = await _unitOfWork.Repository<TeamMember>()
+                .Query()
+                .Include(tm => tm.Team)
+                .Include(tm => tm.User)
+                .Where(tm => tm.Team.TeamLeaderId == userId && tm.IsActive && tm.UserId != userId)
+                .Select(tm => new TeamLeaderMemberDto
+                {
+                    UserId = tm.UserId,
+                    Name = tm.User != null ? tm.User.FirstName + " " + tm.User.LastName : string.Empty,
+                    Role = tm.Role.ToString(),
+                    TeamId = tm.TeamId,
+                    TeamName = tm.Team != null ? tm.Team.Name : string.Empty
+                })
+                .ToListAsync();
+
             if (!myLeadProjectIds.Any())
-                return Result<TeamLeaderDashboardDto>.Success(new TeamLeaderDashboardDto());
+            {
+                return Result<TeamLeaderDashboardDto>.Success(new TeamLeaderDashboardDto
+                {
+                    TeamMembers = myTeamMembers
+                });
+            }
 
             var tasksQuery = _unitOfWork.Repository<TaskItem>()
                 .Query()
@@ -444,7 +464,8 @@ namespace SyncVerse.Application.Services.Dashboard
                 TeamWorkload = teamWorkload,
                 PendingReviews = pendingReviews,
                 BlockersRadar = blockers,
-                TeamVelocity = velocity
+                TeamVelocity = velocity,
+                TeamMembers = myTeamMembers
             };
 
             return Result<TeamLeaderDashboardDto>.Success(dashboard);

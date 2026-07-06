@@ -6,6 +6,7 @@ namespace SyncVerse.Application.DTOs.Dashboard
         public List<PendingReviewDto> PendingReviews { get; set; } = new List<PendingReviewDto>();
         public List<BlockerDto> BlockersRadar { get; set; } = new List<BlockerDto>();
         public TeamVelocityDto TeamVelocity { get; set; } = new TeamVelocityDto();
+        public List<TeamLeaderMemberDto> TeamMembers { get; set; } = new List<TeamLeaderMemberDto>();
     }
 
     public class TeamWorkloadDto
@@ -37,6 +38,15 @@ namespace SyncVerse.Application.DTOs.Dashboard
         public string AssignedToUserName { get; set; } = string.Empty;
         public string ProjectId { get; set; } = string.Empty;
         public string ProjectName { get; set; } = string.Empty;
+    }
+
+    public class TeamLeaderMemberDto
+    {
+        public string UserId { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public string TeamId { get; set; } = string.Empty;
+        public string TeamName { get; set; } = string.Empty;
     }
 
     public class TeamVelocityDto
