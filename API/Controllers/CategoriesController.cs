@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-[Authorize]
+//[Authorize]
 [ApiController]
 [Route("api/task-categories")]
 public class CategoriesController : ControllerBase
