@@ -29,6 +29,17 @@ namespace SyncVerse.API.Controllers.AI.Meeting
             return Ok(result);
         }
 
+        [HttpGet("meetings/{id}/transcript")]
+        public async Task<IActionResult> GetTranscriptFromCache(string id)
+        {
+            var result = await _aiMeetingService.GetTranscriptFromCacheAsync(id);
+            if (result.IsSuccess)
+            {
+                return Ok(result.Data); 
+            }
+            return NotFound(result.Message);
+        }
+
         [HttpPost("{meetingId}/save-summary")]
         public async Task<IActionResult> ProcessAndSaveSummary(string meetingId, [FromBody] SecureProcessRequestDto dto)
         {

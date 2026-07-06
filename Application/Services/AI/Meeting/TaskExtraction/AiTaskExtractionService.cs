@@ -19,7 +19,6 @@ namespace SyncVerse.Application.Services.AI
 
         public async Task<Result<AiTaskExtractionResponseDto>> ExtractTasksAsync(AiTaskExtractionRequestDto dto)
         {
-            // ❌ الـ Restriction الصارم: التحقق من التوقيع الرقمي لمنع فبركة النص!
             if (!VerifySignature(dto.MeetingId.ToString(), dto.Transcript, dto.Signature))
             {
                 return Result<AiTaskExtractionResponseDto>.Failure("Security Restriction Violation: Transcript has been altered or is not from the recorded audio!");
@@ -54,7 +53,6 @@ namespace SyncVerse.Application.Services.AI
             }
         }
 
-        // 🔒 الدالة المساعدة للتحقق من التوقيع
         private bool VerifySignature(string meetingId, string text, string providedSignature)
         {
             var rawData = $"{meetingId}:{text}";

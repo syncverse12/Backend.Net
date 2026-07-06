@@ -9,6 +9,7 @@ using SyncVerse.Application.Interfaces.Persistence;
 using System.Text;
 using System.Text.Json;
 using System.Security.Cryptography;
+using Microsoft.Extensions.Caching.Memory; 
 
 namespace SyncVerse.Application.Services.AI
 {
@@ -17,17 +18,63 @@ namespace SyncVerse.Application.Services.AI
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IMeetingService _meetingService;
         private readonly IUnitOfWork _unitOfWork;
-        private const string SecretKey = "SyncVerse_Super_Secret_Key_For_Audio_Verification_2026"; // مفتاح تشفير خاص بالسيرفر
+        private readonly IMemoryCache _cache; 
+        private const string SecretKey = "SyncVerse_Super_Secret_Key_For_Audio_Verification_2026";
 
         public AiMeetingService(
             IHttpClientFactory httpClientFactory,
             IMeetingService meetingService,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IMemoryCache cache) 
         {
             _httpClientFactory = httpClientFactory;
             _meetingService = meetingService;
             _unitOfWork = unitOfWork;
+            _cache = cache;
         }
+
+        public async Task<Result<bool>> SaveTranscriptToCacheAsync(string meetingId, TranscriptionSecureResponseDto dto)
+        {
+            try
+            {
+                if (dto == null || string.IsNullOrEmpty(dto.Transcript))
+                    return Result<bool>.Failure("Transcript data cannot be empty.");
+
+                var cacheKey = $"meeting_transcript_{meetingId}";
+
+                var cacheOptions = new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
+                };
+
+                _cache.Set(cacheKey, dto, cacheOptions);
+
+                return Result<bool>.Success(true, "Transcript temporary cached successfully for 1 hour.");
+            }
+            catch (Exception ex)
+            {
+                return Result<bool>.Failure($"Failed to cache transcript: {ex.Message}");
+            }
+        }
+
+        public async Task<Result<TranscriptionSecureResponseDto>> GetTranscriptFromCacheAsync(string meetingId)
+        {
+            try
+            {
+                var cacheKey = $"meeting_transcript_{meetingId}";
+                if (_cache.TryGetValue(cacheKey, out TranscriptionSecureResponseDto? cachedData) && cachedData != null)
+                {
+                    return Result<TranscriptionSecureResponseDto>.Success(cachedData, "Transcript retrieved from cache successfully.");
+                }
+
+                return Result<TranscriptionSecureResponseDto>.Failure("Transcript not found or expired from temporary storage.");
+            }
+            catch (Exception ex)
+            {
+                return Result<TranscriptionSecureResponseDto>.Failure($"Error retrieving from cache: {ex.Message}");
+            }
+        }
+
 
         public async Task<Result<TranscriptionSecureResponseDto>> TranscribeAudioSecureAsync(IFormFile audioFile, string meetingId)
         {
@@ -37,7 +84,6 @@ namespace SyncVerse.Application.Services.AI
             try
             {
                 var client = _httpClientFactory.CreateClient("AI_Transcription_Server");
-
                 var content = new MultipartFormDataContent();
                 var stream = audioFile.OpenReadStream();
                 var streamContent = new StreamContent(stream);
@@ -57,14 +103,17 @@ namespace SyncVerse.Application.Services.AI
                     return Result<TranscriptionSecureResponseDto>.Failure("Failed to extract text from audio.");
 
                 var cleanText = rawText.Trim('"').Trim();
-
                 var signature = GenerateSignature(meetingId, cleanText);
 
-                return Result<TranscriptionSecureResponseDto>.Success(new TranscriptionSecureResponseDto
+                var resultDto = new TranscriptionSecureResponseDto
                 {
                     Transcript = cleanText,
                     Signature = signature
-                }, "Audio transcribed and verified successfully.");
+                };
+
+                await SaveTranscriptToCacheAsync(meetingId, resultDto);
+
+                return Result<TranscriptionSecureResponseDto>.Success(resultDto, "Audio transcribed and verified successfully.");
             }
             catch (Exception ex)
             {
@@ -125,6 +174,7 @@ namespace SyncVerse.Application.Services.AI
                 return Result<bool>.Failure($"Task extraction failed: {ex.Message}");
             }
         }
+
         public async Task<Result<AiMeetingSummaryResponseDto>> GenerateSummaryAsync(AiMeetingSummaryRequestDto dto)
         {
             try
@@ -142,8 +192,8 @@ namespace SyncVerse.Application.Services.AI
 
                     if (result != null)
                     {
-                        result.MeetingId = dto.MeetingId;      
-                        result.MeetingTitle = dto.MeetingTitle;  
+                        result.MeetingId = dto.MeetingId;
+                        result.MeetingTitle = dto.MeetingTitle;
 
                         return Result<AiMeetingSummaryResponseDto>.Success(result);
                     }

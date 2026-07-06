@@ -155,6 +155,7 @@ builder.Services.AddCors(options =>
 });
 
 // (Dependency Injection)
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
