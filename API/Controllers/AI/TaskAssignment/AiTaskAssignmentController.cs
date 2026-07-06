@@ -52,5 +52,72 @@ namespace SyncVerse.API.Controllers.AI.TaskAssignment
 
             return Ok(result);
         }
+
+        [HttpGet("employees")]
+        public async Task<IActionResult> GetEmployees()
+        {
+            var result = await _aiTaskAssignmentService.GetEmployeesAsync();
+
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Message);
+            }
+
+            return Ok(result);
+        }
+
+        [HttpPost("add-employee")]
+        public async Task<IActionResult> AddEmployee([FromBody] AiAddEmployeeRequestDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = await _aiTaskAssignmentService.AddEmployeeAsync(dto);
+
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Message);
+            }
+
+            return StatusCode(201, result);
+        }
+
+        [HttpPost("update-employee-status")]
+        public async Task<IActionResult> UpdateEmployeeStatus([FromBody] AiUpdateEmployeeStatusRequestDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = await _aiTaskAssignmentService.UpdateEmployeeStatusAsync(dto);
+
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Message);
+            }
+
+            return Ok(result);
+        }
+
+        [HttpGet("root")]
+        [AllowAnonymous]
+        public async Task<IActionResult> CheckRoot()
+        {
+            var result = await _aiTaskAssignmentService.CheckRootAsync();
+            if (!result.IsSuccess) return BadRequest(result.Message);
+            return Ok(result);
+        }
+
+        [HttpGet("health")]
+        [AllowAnonymous]
+        public async Task<IActionResult> CheckHealth()
+        {
+            var result = await _aiTaskAssignmentService.CheckHealthAsync();
+            if (!result.IsSuccess) return BadRequest(result.Message);
+            return Ok(result);
+        }
     }
 }
