@@ -2,9 +2,9 @@
 {
     public class RiskScoresDto
     {
-        public double Overall { get; set; } 
+        public double Overall { get; set; }
         public string Severity { get; set; } = string.Empty;
-        public List<RiskCategoryDto> Categories { get; set; } = new();
+        public List<RiskCategoryScoreDto> Categories { get; set; } = new();
         public double Confidence { get; set; }
     }
 }

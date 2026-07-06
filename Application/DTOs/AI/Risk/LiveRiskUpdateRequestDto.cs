@@ -12,10 +12,10 @@ namespace SyncVerse.Application.DTOs.AI.Risk
         public string SnapshotAt { get; set; } = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
 
         [JsonPropertyName("sprint_velocity")]
-        public int SprintVelocity { get; set; }
+        public double SprintVelocity { get; set; }
 
         [JsonPropertyName("planned_velocity")]
-        public int PlannedVelocity { get; set; }
+        public double PlannedVelocity { get; set; }
 
         [JsonPropertyName("sprint_completion_rate")]
         public double SprintCompletionRate { get; set; }
@@ -57,7 +57,7 @@ namespace SyncVerse.Application.DTOs.AI.Risk
         public double NegativeSentimentScore { get; set; }
 
         [JsonPropertyName("client_alignment_score")]
-        public double ClientAlignmentScore { get; set; }
+        public int ClientAlignmentScore { get; set; }
 
         [JsonPropertyName("client_response_delay_hours")]
         public double ClientResponseDelayHours { get; set; }

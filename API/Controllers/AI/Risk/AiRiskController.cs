@@ -1,15 +1,15 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SyncVerse.Application.DTOs.AI.Risk;
-using SyncVerse.Application.Interfaces.AI;
 using SyncVerse.Application.Interfaces.AI.Risk;
+using System;
 using System.Threading.Tasks;
 
 namespace SyncVerse.API.Controllers.AI
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] 
+    [Authorize]
     public class AiRiskController : ControllerBase
     {
         private readonly IAiRiskService _aiRiskService;
@@ -19,10 +19,23 @@ namespace SyncVerse.API.Controllers.AI
             _aiRiskService = aiRiskService;
         }
 
-        [HttpPost("analyze-project")]
-        public async Task<IActionResult> AnalyzeProject([FromBody] ProjectRiskRequestDto dto)
+        [HttpPut("project-profile/{projectId}")]
+        public async Task<IActionResult> SaveProjectProfile(Guid projectId, [FromBody] ProjectRiskProfileEnrichmentDto enrichmentData)
         {
-            var result = await _aiRiskService.AnalyzeProjectRisksAsync(dto);
+            var result = await _aiRiskService.SaveProjectRiskProfileAsync(projectId, enrichmentData);
+
+            if (result.IsSuccess)
+            {
+                return Ok(new { message = result.Message });
+            }
+
+            return BadRequest(result.Message);
+        }
+
+        [HttpPost("analyze-project/{projectId}")]
+        public async Task<IActionResult> AnalyzeProject(Guid projectId)
+        {
+            var result = await _aiRiskService.AnalyzeProjectRisksAsync(projectId);
 
             if (!result.IsSuccess)
             {
@@ -33,16 +46,16 @@ namespace SyncVerse.API.Controllers.AI
         }
 
         [HttpPost("live-update")]
-        public async Task<IActionResult> UpdateLiveRisks([FromBody] LiveRiskUpdateRequestDto dto)
+        public async Task<IActionResult> UpdateLiveMetrics([FromBody] LiveRiskUpdateRequestDto dto)
         {
             var result = await _aiRiskService.UpdateLiveRisksAsync(dto);
 
-            if (!result.IsSuccess)
+            if (result.IsSuccess)
             {
-                return BadRequest(result.Message);
+                return Ok(result.Data); 
             }
 
-            return Ok(result);
+            return BadRequest(result.Message);
         }
     }
 }
