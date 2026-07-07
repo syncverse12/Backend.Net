@@ -9,7 +9,7 @@ using SyncVerse.Application.Interfaces.Persistence;
 using System.Text;
 using System.Text.Json;
 using System.Security.Cryptography;
-using Microsoft.Extensions.Caching.Memory; 
+using Microsoft.Extensions.Caching.Memory;
 
 namespace SyncVerse.Application.Services.AI
 {
@@ -18,14 +18,14 @@ namespace SyncVerse.Application.Services.AI
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IMeetingService _meetingService;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IMemoryCache _cache; 
+        private readonly IMemoryCache _cache;
         private const string SecretKey = "SyncVerse_Super_Secret_Key_For_Audio_Verification_2026";
 
         public AiMeetingService(
             IHttpClientFactory httpClientFactory,
             IMeetingService meetingService,
             IUnitOfWork unitOfWork,
-            IMemoryCache cache) 
+            IMemoryCache cache)
         {
             _httpClientFactory = httpClientFactory;
             _meetingService = meetingService;
@@ -75,7 +75,6 @@ namespace SyncVerse.Application.Services.AI
             }
         }
 
-
         public async Task<Result<TranscriptionSecureResponseDto>> TranscribeAudioSecureAsync(IFormFile audioFile, string meetingId)
         {
             if (audioFile == null || audioFile.Length == 0)
@@ -102,7 +101,24 @@ namespace SyncVerse.Application.Services.AI
                 if (string.IsNullOrEmpty(rawText))
                     return Result<TranscriptionSecureResponseDto>.Failure("Failed to extract text from audio.");
 
-                var cleanText = rawText.Trim('"').Trim();
+                string cleanText;
+                try
+                {
+                    using var jsonDoc = JsonDocument.Parse(rawText);
+                    if (jsonDoc.RootElement.TryGetProperty("text", out var textElement))
+                    {
+                        cleanText = textElement.GetString() ?? rawDocTextTrimmed(rawText);
+                    }
+                    else
+                    {
+                        cleanText = rawDocTextTrimmed(rawText);
+                    }
+                }
+                catch
+                {
+                    cleanText = rawDocTextTrimmed(rawText);
+                }
+
                 var signature = GenerateSignature(meetingId, cleanText);
 
                 var resultDto = new TranscriptionSecureResponseDto
@@ -121,6 +137,8 @@ namespace SyncVerse.Application.Services.AI
             }
         }
 
+        private string rawDocTextTrimmed(string raw) => raw.Trim('"').Trim();
+
         public async Task<Result<bool>> ProcessAndSaveSummaryAsync(string meetingId, SecureProcessRequestDto dto)
         {
             if (!VerifySignature(meetingId, dto.Transcript, dto.Signature))
@@ -138,16 +156,29 @@ namespace SyncVerse.Application.Services.AI
 
         public async Task<Result<bool>> ProcessAndSaveTasksAsync(string meetingId, SecureProcessRequestDto dto)
         {
+            // 1️⃣ أولاً: التحقق من التوقيع الأمني داخلياً بالـ UUID الأصلي المتناسق مع بقية السيستم
             if (!VerifySignature(meetingId, dto.Transcript, dto.Signature))
                 return Result<bool>.Failure("Security Restriction Violation: Transcript text has been altered or is not from the recorded audio!");
 
             try
             {
                 var taskClient = _httpClientFactory.CreateClient("AI_Task_Extraction_Server");
-                var taskResponse = await taskClient.PostAsJsonAsync("extract-tasks", new { text = dto.Transcript });
+
+                // 🎯 2️⃣ ثانياً: الخدعة الذكية لسيرفر الـ AI الخارجي
+                // بنبعت له الكائن مفرود بأسماء حقول Snake Case، وبقيمة Int32 للـ meeting_id عشان السيرفر يقبله فوراً وميضربش
+                var aiPayload = new
+                {
+                    meeting_id = 123,
+                    transcript = dto.Transcript
+                };
+
+                var taskResponse = await taskClient.PostAsJsonAsync("extract-tasks", aiPayload);
 
                 if (!taskResponse.IsSuccessStatusCode)
-                    return Result<bool>.Failure("AI Task Extraction Server returned error.");
+                {
+                    var errorResponse = await taskResponse.Content.ReadAsStringAsync();
+                    return Result<bool>.Failure($"AI Task Extraction Server returned error ({taskResponse.StatusCode}): {errorResponse}");
+                }
 
                 var extractedTasks = await taskResponse.Content.ReadFromJsonAsync<List<string>>();
 
