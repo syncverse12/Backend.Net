@@ -13,6 +13,7 @@ using SyncVerse.API.JwtFeatuers;
 using SyncVerse.API.Middleware;
 using SyncVerse.Application.Interfaces;
 using SyncVerse.Application.Interfaces.AI;
+using SyncVerse.Application.Interfaces.AI.Echo;
 using SyncVerse.Application.Interfaces.AI.Meeting.TaskExtraction;
 using SyncVerse.Application.Interfaces.AI.Risk;
 using SyncVerse.Application.Interfaces.Attachments;
@@ -32,6 +33,7 @@ using SyncVerse.Application.Interfaces.WorkspaceInvitation;
 using SyncVerse.Application.Interfaces.Workspaces;
 using SyncVerse.Application.Mapping;
 using SyncVerse.Application.Services.AI;
+using SyncVerse.Application.Services.AI.Echo;
 using SyncVerse.Application.Services.Attachments;
 using SyncVerse.Application.Services.Dashboard;
 using SyncVerse.Application.Services.Identity;
@@ -191,6 +193,7 @@ builder.Services.AddScoped<IAuthorizationHandler, ReviewTaskAuthorizationHandler
 builder.Services.AddScoped<IAiMeetingService, AiMeetingService>();
 builder.Services.AddScoped<IAiTaskExtractionService, AiTaskExtractionService>();
 builder.Services.AddScoped<IAiRiskService, AiRiskService>();
+builder.Services.AddScoped<IAiEchoService, AiEchoService>();
 
 builder.Services.AddSignalR();
 
@@ -222,6 +225,11 @@ builder.Services.AddHttpClient("AI_Risk_Server", client =>
 {
     client.BaseAddress = new Uri("https://marawy-riskoy.hf.space/");
     client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddHttpClient("AI_Echo_Server", client =>
+{
+    client.BaseAddress = new Uri("https://marawy-echo.hf.space");
 });
 
 builder.Services.AddControllers()
