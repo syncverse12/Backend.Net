@@ -28,6 +28,7 @@ namespace SyncVerse.Application.DTOs.Dashboard
         public string TeamId { get; set; } = string.Empty;
         public string TeamName { get; set; } = string.Empty;
         public string TeamLeaderName { get; set; } = string.Empty;
+        public int MembersCount { get; set; }
     }
 
     public class HierarchyNodeDto

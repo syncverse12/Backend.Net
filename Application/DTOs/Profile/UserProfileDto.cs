@@ -25,7 +25,6 @@ namespace SyncVerse.Application.DTOs.Profile
         public string? OrgCode { get; set; }
         public Gender? Gender { get; set; }
 
-        public List<string> TeamNames { get; set; } = new();
-        public List<string> TeamIds { get; set; } = new();
+        public List<UserTeamDto> Teams { get; set; } = new();
     }
 }

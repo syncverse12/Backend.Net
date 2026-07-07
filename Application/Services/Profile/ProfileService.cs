@@ -33,18 +33,29 @@ namespace SyncVerse.Application.Services.Profile
 
             var roles = await _userManager.GetRolesAsync(user);
 
-            var teamNames = await _context.TeamMembers
+            var teams = await _context.TeamMembers
                 .Where(tm => tm.UserId == userId && tm.IsActive)
                 .Include(tm => tm.Team)
-                .Select(tm => tm.Team.Name)
+                .Select(tm => tm.Team)
                 .Distinct()
                 .ToListAsync();
 
-            var teamIds = await _context.TeamMembers
-                .Where(tm => tm.UserId == userId && tm.IsActive)
-                .Select(tm => tm.TeamId)
-                .Distinct()
-                .ToListAsync();
+            var userTeams = new List<UserTeamDto>();
+            foreach (var team in teams)
+            {
+                var memberCount = await _context.TeamMembers
+                    .CountAsync(tm => tm.TeamId == team.Id && tm.IsActive);
+
+                userTeams.Add(new UserTeamDto
+                {
+                    Id = team.Id,
+                    Name = team.Name,
+                    Description = team.Description,
+                    Department = team.Department,
+                    Specialization = team.Specialization,
+                    MembersCount = memberCount
+                });
+            }
 
             var profile = new UserProfileDto
             {
@@ -62,8 +73,7 @@ namespace SyncVerse.Application.Services.Profile
                 JoinedDate = user.CreatedAt,
                 OrgCode = user.Workspace?.OrgCode,
                 Gender = user.Gender,
-                TeamNames = teamNames,
-                TeamIds = teamIds
+                Teams = userTeams
             };
 
             return Result<UserProfileDto>.Success(profile);

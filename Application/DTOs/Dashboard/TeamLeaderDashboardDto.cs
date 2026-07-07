@@ -47,6 +47,7 @@ namespace SyncVerse.Application.DTOs.Dashboard
         public string Role { get; set; } = string.Empty;
         public string TeamId { get; set; } = string.Empty;
         public string TeamName { get; set; } = string.Empty;
+        public int TeamMembersCount { get; set; }
     }
 
     public class TeamVelocityDto

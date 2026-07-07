@@ -84,17 +84,20 @@ namespace SyncVerse.Application.Services.Dashboard
                 .ToListAsync();
 
             // Managed Teams (Assuming created by the manager for now, ideally by workspaceId)
-            var managedTeams = await _unitOfWork.Repository<SyncVerse.Domain.Entities.Team>()
+            var managedTeamsWithMembers = await _unitOfWork.Repository<SyncVerse.Domain.Entities.Team>()
                 .Query()
                 .Where(t => t.CreatedByManagerId == userId || t.CreatedByManager.CurrentWorkspaceId == workspaceId)
                 .Include(t => t.TeamLeader)
-                .Select(t => new ManagedTeamDto
-                {
-                    TeamId = t.Id,
-                    TeamName = t.Name,
-                    TeamLeaderName = t.TeamLeader != null ? t.TeamLeader.FirstName + " " + t.TeamLeader.LastName : "Unassigned"
-                })
+                .Include(t => t.TeamMembers)
                 .ToListAsync();
+
+            var managedTeams = managedTeamsWithMembers.Select(t => new ManagedTeamDto
+            {
+                TeamId = t.Id,
+                TeamName = t.Name,
+                TeamLeaderName = t.TeamLeader != null ? t.TeamLeader.FirstName + " " + t.TeamLeader.LastName : "Unassigned",
+                MembersCount = t.TeamMembers.Count(tm => tm.IsActive)
+            }).ToList();
 
             // Hierarchy (Role counts)
             var hierarchy = new List<HierarchyNodeDto>();
@@ -354,6 +357,7 @@ namespace SyncVerse.Application.Services.Dashboard
             var myTeamMembers = await _unitOfWork.Repository<TeamMember>()
                 .Query()
                 .Include(tm => tm.Team)
+                .ThenInclude(t => t.TeamMembers)
                 .Include(tm => tm.User)
                 .Where(tm => tm.Team.TeamLeaderId == userId && tm.IsActive && tm.UserId != userId)
                 .Select(tm => new TeamLeaderMemberDto
@@ -362,7 +366,8 @@ namespace SyncVerse.Application.Services.Dashboard
                     Name = tm.User != null ? tm.User.FirstName + " " + tm.User.LastName : string.Empty,
                     Role = tm.Role.ToString(),
                     TeamId = tm.TeamId,
-                    TeamName = tm.Team != null ? tm.Team.Name : string.Empty
+                    TeamName = tm.Team != null ? tm.Team.Name : string.Empty,
+                    TeamMembersCount = tm.Team != null ? tm.Team.TeamMembers.Count(tmb => tmb.IsActive) : 0
                 })
                 .ToListAsync();
 
