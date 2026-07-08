@@ -57,6 +57,7 @@ using SyncVerse.Infrastructure.Realtime;
 using SyncVerse.Infrastructure.SeedConfiguration;
 using SyncVerse.Infrastructure.Services.Email;
 using SyncVerse.Infrastructure.Storage;
+using SyncVerse.Persistence.Interceptors;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -153,6 +154,16 @@ builder.Services.AddCors(options =>
               .WithExposedHeaders("Content-Disposition");
     });
 });
+builder.Services.AddSingleton<AiMemoryInterceptor>();
+
+builder.Services.AddDbContext<DatabaseDbContext>((sp, options) =>
+{
+    var interceptor = sp.GetRequiredService<AiMemoryInterceptor>();
+
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+           .AddInterceptors(interceptor); 
+});
+builder.Services.AddHttpContextAccessor();
 
 // (Dependency Injection)
 builder.Services.AddMemoryCache();
@@ -192,8 +203,9 @@ builder.Services.AddScoped<IAuthorizationHandler, ReviewTaskAuthorizationHandler
 
 builder.Services.AddScoped<IAiMeetingService, AiMeetingService>();
 builder.Services.AddScoped<IAiTaskExtractionService, AiTaskExtractionService>();
-builder.Services.AddScoped<IAiRiskService, AiRiskService>();
+builder.Services.AddScoped<IAiRiskAssessmentService, AiRiskAssessmentService>();
 builder.Services.AddScoped<IAiEchoService, AiEchoService>();
+builder.Services.AddScoped<IAiBulkSyncService, AiBulkSyncService>();
 
 builder.Services.AddSignalR();
 
@@ -223,13 +235,12 @@ builder.Services.AddHttpClient("AI_Task_Extraction_Server", client =>
 
 builder.Services.AddHttpClient("AI_Risk_Server", client =>
 {
-    client.BaseAddress = new Uri("https://marawy-riskoy.hf.space/");
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.BaseAddress = new Uri("https://mariama22-risk-edited.hf.space");
 });
 
 builder.Services.AddHttpClient("AI_Echo_Server", client =>
 {
-    client.BaseAddress = new Uri("https://marawy-echo.hf.space");
+    client.BaseAddress = new Uri("https://mariama22-echo.hf.space");
 });
 
 builder.Services.AddControllers()

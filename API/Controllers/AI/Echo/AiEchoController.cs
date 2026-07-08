@@ -25,5 +25,22 @@ namespace SyncVerse.Api.Controllers
             }
             return BadRequest(result.Message);
         }
+
+        [HttpGet("project/{projectId}/timeline")]
+        public async Task<IActionResult> GetProjectTimeline([FromRoute] Guid projectId,[FromQuery] int limit = 100,
+           [FromQuery] int offset = 0,
+           [FromQuery] string? memoryType = null,
+           [FromQuery] string? teamName = null)
+        {
+            var timeline = await _echoService.GetProjectTimelineAsync(projectId, limit, offset, memoryType, teamName);
+            return Ok(timeline);
+        }
+
+        [HttpGet("project/{projectId}/weekly-summary")]
+        public async Task<IActionResult> GetWeeklySummary([FromRoute] Guid projectId)
+        {
+            var summary = await _echoService.GetWeeklySummaryAsync(projectId);
+            return Ok(summary);
+        }
     }
 }
