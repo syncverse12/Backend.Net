@@ -35,5 +35,31 @@ namespace SyncVerse.API.Controllers.AI.ProjectPlanner
 
             return StatusCode(201, result);
         }
+
+        [HttpGet("plan/{projectId}")]
+        public async Task<IActionResult> GetPlan(string projectId)
+        {
+            var result = await _aiProjectPlannerService.GetProjectPlanAsync(projectId);
+
+            if (!result.IsSuccess)
+            {
+                return NotFound(result.Message); // Or BadRequest depending on how you want to handle it
+            }
+
+            return Ok(result);
+        }
+
+        [HttpDelete("plan/{projectId}")]
+        public async Task<IActionResult> DeletePlan(string projectId)
+        {
+            var result = await _aiProjectPlannerService.DeleteProjectPlanAsync(projectId);
+
+            if (!result.IsSuccess)
+            {
+                return NotFound(result.Message);
+            }
+
+            return NoContent();
+        }
     }
 }
