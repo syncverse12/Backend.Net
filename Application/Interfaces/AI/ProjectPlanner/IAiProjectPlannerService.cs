@@ -13,5 +13,6 @@ namespace SyncVerse.Application.Interfaces.AI.ProjectPlanner
         Task<Result<object>> ReplanProjectAsync(string projectId, AiReplanRequestDto requestDto);
         Task<Result<object>> GetAllProjectPlansAsync();
         Task<Result<object>> CheckHealthAsync();
+        Task<Result<object>> GenerateScheduleForProjectAsync(string projectId);
     }
 }

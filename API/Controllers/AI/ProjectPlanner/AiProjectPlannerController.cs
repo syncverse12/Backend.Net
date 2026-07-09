@@ -123,5 +123,22 @@ namespace SyncVerse.API.Controllers.AI.ProjectPlanner
 
             return Ok(result);
         }
+
+        [HttpPost("projects/{projectId}/generate-schedule")]
+        public async Task<IActionResult> GenerateScheduleForProject(string projectId)
+        {
+            var result = await _aiProjectPlannerService.GenerateScheduleForProjectAsync(projectId);
+
+            if (!result.IsSuccess)
+            {
+                if (result.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
+                {
+                    return NotFound(result.Message);
+                }
+                return BadRequest(result.Message);
+            }
+
+            return Ok(result);
+        }
     }
 }
