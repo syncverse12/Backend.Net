@@ -61,5 +61,67 @@ namespace SyncVerse.API.Controllers.AI.ProjectPlanner
 
             return NoContent();
         }
+
+        [HttpGet("plan/{projectId}/summary")]
+        public async Task<IActionResult> GetPlanSummary(string projectId)
+        {
+            var result = await _aiProjectPlannerService.GetProjectPlanSummaryAsync(projectId);
+
+            if (!result.IsSuccess)
+            {
+                return NotFound(result.Message);
+            }
+
+            return Ok(result);
+        }
+
+        [HttpPost("plan/{projectId}/replan")]
+        public async Task<IActionResult> Replan(string projectId, [FromBody] AiReplanRequestDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = await _aiProjectPlannerService.ReplanProjectAsync(projectId, dto);
+
+            if (!result.IsSuccess)
+            {
+                if (result.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
+                {
+                    return NotFound(result.Message);
+                }
+                return BadRequest(result.Message);
+            }
+
+            return Ok(result);
+        }
+
+        [HttpGet("plans")]
+        public async Task<IActionResult> GetAllPlans()
+        {
+            var result = await _aiProjectPlannerService.GetAllProjectPlansAsync();
+
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Message);
+            }
+
+            return Ok(result);
+        }
+
+        [HttpGet("health")]
+        [AllowAnonymous]
+        public async Task<IActionResult> CheckHealth()
+        {
+            var result = await _aiProjectPlannerService.CheckHealthAsync();
+
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Message);
+            }
+
+            return Ok(result);
+        }
     }
 }

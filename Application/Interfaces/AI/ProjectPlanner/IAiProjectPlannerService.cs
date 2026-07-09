@@ -9,5 +9,9 @@ namespace SyncVerse.Application.Interfaces.AI.ProjectPlanner
         Task<Result<object>> CreateProjectPlanAsync(AiProjectPlanRequestDto requestDto);
         Task<Result<object>> GetProjectPlanAsync(string projectId);
         Task<Result<bool>> DeleteProjectPlanAsync(string projectId);
+        Task<Result<object>> GetProjectPlanSummaryAsync(string projectId);
+        Task<Result<object>> ReplanProjectAsync(string projectId, AiReplanRequestDto requestDto);
+        Task<Result<object>> GetAllProjectPlansAsync();
+        Task<Result<object>> CheckHealthAsync();
     }
 }

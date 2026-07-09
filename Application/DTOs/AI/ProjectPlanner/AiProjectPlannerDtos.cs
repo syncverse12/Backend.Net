@@ -35,4 +35,12 @@ namespace SyncVerse.Application.DTOs.AI.ProjectPlanner
         public string Available_from { get; set; } = string.Empty;
         public string Available_until { get; set; } = string.Empty;
     }
+
+    public class AiReplanRequestDto
+    {
+        public string Event_type { get; set; } = string.Empty;
+        public string? Task_id { get; set; }
+        public string? Resource_id { get; set; }
+        public object? New_value { get; set; }
+    }
 }
