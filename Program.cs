@@ -16,6 +16,7 @@ using SyncVerse.Application.Interfaces;
 using SyncVerse.Application.Interfaces.AI;
 using SyncVerse.Application.Interfaces.AI.Meeting.TaskExtraction;
 using SyncVerse.Application.Interfaces.AI.Risk;
+using SyncVerse.Application.Interfaces.AI.ProjectPlanner;
 using SyncVerse.Application.Interfaces.AI.TaskAssignment;
 using SyncVerse.Application.Interfaces.Attachments;
 using SyncVerse.Application.Interfaces.Dashboard;
@@ -34,6 +35,7 @@ using SyncVerse.Application.Interfaces.WorkspaceInvitation;
 using SyncVerse.Application.Interfaces.Workspaces;
 using SyncVerse.Application.Mapping;
 using SyncVerse.Application.Services.AI;
+using SyncVerse.Application.Services.AI.ProjectPlanner;
 using SyncVerse.Application.Services.AI.TaskAssignment;
 using SyncVerse.Application.Services.Attachments;
 using SyncVerse.Application.Services.Dashboard;
@@ -196,6 +198,7 @@ builder.Services.AddScoped<IAiMeetingService, AiMeetingService>();
 builder.Services.AddScoped<IAiTaskExtractionService, AiTaskExtractionService>();
 builder.Services.AddScoped<IAiRiskService, AiRiskService>();
 builder.Services.AddScoped<IAiTaskAssignmentService, AiTaskAssignmentService>();
+builder.Services.AddScoped<IAiProjectPlannerService, AiProjectPlannerService>();
 
 builder.Services.AddSignalR();
 
@@ -240,6 +243,13 @@ builder.Services.AddHttpClient("AI_Attrition_Server", client =>
 builder.Services.AddHttpClient("AI_Smart_Task_Assignment", client =>
 {
     client.BaseAddress = new Uri("https://omnia0-smart-task-assignment.hf.space/");
+    client.Timeout = TimeSpan.FromSeconds(60);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddHttpClient("AI_Project_Planner_Server", client =>
+{
+    client.BaseAddress = new Uri("https://aiplanner-production-041c.up.railway.app/");
     client.Timeout = TimeSpan.FromSeconds(60);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
