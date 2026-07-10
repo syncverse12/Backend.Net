@@ -34,6 +34,7 @@ using SyncVerse.Application.Interfaces.Workspaces;
 using SyncVerse.Application.Mapping;
 using SyncVerse.Application.Services.AI;
 using SyncVerse.Application.Services.AI.Echo;
+using SyncVerse.Application.Services.AI.Risk;
 using SyncVerse.Application.Services.Attachments;
 using SyncVerse.Application.Services.Dashboard;
 using SyncVerse.Application.Services.Identity;
@@ -79,9 +80,6 @@ builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile<MappingProfile>();
 }, typeof(MappingProfile).Assembly);
-
-builder.Services.AddDbContext<DatabaseDbContext>(opts =>
-        opts.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddIdentity<User, Role>(options =>
 {
@@ -154,15 +152,15 @@ builder.Services.AddCors(options =>
               .WithExposedHeaders("Content-Disposition");
     });
 });
-builder.Services.AddSingleton<AiMemoryInterceptor>();
 
+builder.Services.AddSingleton<AiMemoryInterceptor>();
 builder.Services.AddDbContext<DatabaseDbContext>((sp, options) =>
 {
     var interceptor = sp.GetRequiredService<AiMemoryInterceptor>();
-
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-           .AddInterceptors(interceptor); 
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Default"))
+           .AddInterceptors(interceptor);
 });
+
 builder.Services.AddHttpContextAccessor();
 
 // (Dependency Injection)
@@ -171,7 +169,6 @@ builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<JwtHandler>();
-builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
@@ -203,13 +200,13 @@ builder.Services.AddScoped<IAuthorizationHandler, ReviewTaskAuthorizationHandler
 
 builder.Services.AddScoped<IAiMeetingService, AiMeetingService>();
 builder.Services.AddScoped<IAiTaskExtractionService, AiTaskExtractionService>();
-builder.Services.AddScoped<IAiRiskAssessmentService, AiRiskAssessmentService>();
 builder.Services.AddScoped<IAiEchoService, AiEchoService>();
 builder.Services.AddScoped<IAiBulkSyncService, AiBulkSyncService>();
+builder.Services.AddScoped<IAiRiskService, AiRiskService>();
 
 builder.Services.AddSignalR();
 
-
+// AI Servers HttpClients
 builder.Services.AddHttpClient("AI_Transcription_Server", client =>
 {
     client.BaseAddress = new Uri("https://marwaezzat8-meet.hf.space/");
@@ -217,14 +214,12 @@ builder.Services.AddHttpClient("AI_Transcription_Server", client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
-
 builder.Services.AddHttpClient("AI_Meeting_Server", client =>
 {
     client.BaseAddress = new Uri("https://marwaabuelkheir-meeting-summary-api.hf.space/");
     client.Timeout = TimeSpan.FromSeconds(45);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
-
 
 builder.Services.AddHttpClient("AI_Task_Extraction_Server", client =>
 {
@@ -235,12 +230,13 @@ builder.Services.AddHttpClient("AI_Task_Extraction_Server", client =>
 
 builder.Services.AddHttpClient("AI_Risk_Server", client =>
 {
-    client.BaseAddress = new Uri("https://mariama22-risk-edited.hf.space");
+    client.BaseAddress = new Uri("https://mariama22-echo.hf.space/");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
 builder.Services.AddHttpClient("AI_Echo_Server", client =>
 {
-    client.BaseAddress = new Uri("https://mariama22-echo.hf.space");
+    client.BaseAddress = new Uri("https://echo-production-9fa5.up.railway.app/");
 });
 
 builder.Services.AddControllers()
@@ -288,30 +284,29 @@ builder.Services.AddSwaggerGen(opt =>
         }
     });
 
-
     opt.OrderActionsBy(apiDesc =>
     {
         var controllerName = apiDesc.ActionDescriptor.RouteValues["controller"];
-
         return controllerName switch
         {
             "Auth" => "01",
             "CompanyInvitation" => "02",
             "AiMeeting" => "03",
             "Meetings" => "04",
-            _ => "99" 
+            _ => "99"
         };
     });
 });
 
 var app = builder.Build();
 
-// --- 2. الـ Middleware Pipeline ---
-
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Local"))
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.DefaultModelsExpandDepth(-1);
+    });
     app.UseCors("AllowAll");
 }
 else
@@ -326,8 +321,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
-
-// --- 3. Database Migration & Seeding ---
 
 using (var scope = app.Services.CreateScope())
 {
@@ -350,24 +343,15 @@ await app.RunAsync();
 
 static void LoadEnvFile(string filePath)
 {
-    if (!File.Exists(filePath))
-    {
-        return;
-    }
+    if (!File.Exists(filePath)) return;
 
     foreach (var line in File.ReadAllLines(filePath))
     {
         var trimmedLine = line.Trim();
-        if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith("#"))
-        {
-            continue;
-        }
+        if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith("#")) continue;
 
         var separatorIndex = trimmedLine.IndexOf('=');
-        if (separatorIndex <= 0)
-        {
-            continue;
-        }
+        if (separatorIndex <= 0) continue;
 
         var key = trimmedLine.Substring(0, separatorIndex).Trim();
         var value = trimmedLine.Substring(separatorIndex + 1).Trim();
