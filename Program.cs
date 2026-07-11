@@ -252,7 +252,7 @@ builder.Services.AddHttpClient("AI_Task_Extraction_Server", client =>
 
 builder.Services.AddHttpClient("AI_Risk_Server", client =>
 {
-    client.BaseAddress = new Uri("https://mariama22-echo.hf.space/");
+    client.BaseAddress = new Uri("https://riskforecast-production.up.railway.app/");
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
