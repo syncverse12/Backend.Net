@@ -236,7 +236,7 @@ builder.Services.AddHttpClient("AI_Risk_Server", client =>
 
 builder.Services.AddHttpClient("AI_Echo_Server", client =>
 {
-    client.BaseAddress = new Uri("https://echo-production-9fa5.up.railway.app/");
+    client.BaseAddress = new Uri("https://syncverse-echo-diagnostic-production.up.railway.app/");
 });
 
 builder.Services.AddControllers()

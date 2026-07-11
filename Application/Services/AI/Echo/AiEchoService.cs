@@ -1,10 +1,6 @@
 ﻿using SyncVerse.Application.Common.Results;
 using SyncVerse.Application.DTOs.AI.Echo;
-using SyncVerse.Application.Interfaces.AI.Echo;
-using System;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Text.Json;
+using SyncVerse.Application.Interfaces.AI.Echo;  
 
 namespace SyncVerse.Application.Services.AI.Echo
 {
@@ -17,7 +13,7 @@ namespace SyncVerse.Application.Services.AI.Echo
             _httpClientFactory = httpClientFactory;
         }
 
-        public async global::System.Threading.Tasks.Task<Result<EchoChatResponseDto>> TalkToEchoAsync(EchoChatRequestDto dto)
+        public async Task<Result<EchoChatResponseDto>> TalkToEchoAsync(EchoChatRequestDto dto)
         {
             try
             {
@@ -41,25 +37,28 @@ namespace SyncVerse.Application.Services.AI.Echo
             }
         }
 
-        public async global::System.Threading.Tasks.Task SaveProjectMemoryAutomatedAsync(EchoMemoryUploadDto memoryDto)
+        public async System.Threading.Tasks.Task SaveProjectMemoryAutomatedAsync(EchoMemoryUploadDto memoryDto)
         {
             try
             {
                 var client = _httpClientFactory.CreateClient("AI_Echo_Server");
-                var response = await client.PostAsJsonAsync("echo/project/memory", memoryDto);
+
+                var response = await client.PostAsJsonAsync("echo/memory", memoryDto);
+
                 response.EnsureSuccessStatusCode();
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"[AiEchoService Error] SaveProjectMemoryAutomatedAsync failed! Reason: {ex.Message}");
+                throw;
             }
         }
 
-        public async global::System.Threading.Tasks.Task<EchoTimelineResponseDto> GetProjectTimelineAsync(Guid projectId, int limit = 100, int offset = 0, string? memoryType = null, string? teamName = null)
+        public async Task<EchoTimelineResponseDto> GetProjectTimelineAsync(Guid projectId, int limit = 100, int offset = 0, string? memoryType = null, string? teamName = null)
         {
             try
             {
                 var client = _httpClientFactory.CreateClient("AI_Echo_Server");
-
                 var url = $"echo/project/{projectId}/timeline?limit={limit}&offset={offset}";
 
                 if (!string.IsNullOrEmpty(memoryType)) url += $"&memory_type={memoryType}";
@@ -72,9 +71,13 @@ namespace SyncVerse.Application.Services.AI.Echo
                     var result = await response.Content.ReadFromJsonAsync<EchoTimelineResponseDto>();
                     return result ?? new EchoTimelineResponseDto { ProjectId = projectId.ToString() };
                 }
+
+                var err = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[AiEchoService Error] GetProjectTimelineAsync status: {response.StatusCode}, Content: {err}");
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"[AiEchoService Exception] Timeline communication failed: {ex.Message}");
             }
 
             return new EchoTimelineResponseDto { ProjectId = projectId.ToString(), Items = new() };
@@ -87,7 +90,6 @@ namespace SyncVerse.Application.Services.AI.Echo
                 var client = _httpClientFactory.CreateClient("AI_Echo_Server");
 
                 var url = $"echo/summary/week?project_id={projectId}";
-
                 var response = await client.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
@@ -95,9 +97,13 @@ namespace SyncVerse.Application.Services.AI.Echo
                     var result = await response.Content.ReadFromJsonAsync<EchoWeeklySummaryResponseDto>();
                     return result ?? new EchoWeeklySummaryResponseDto { ProjectId = projectId.ToString() };
                 }
+
+                var err = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[AiEchoService Error] GetWeeklySummaryAsync status: {response.StatusCode}, Content: {err}");
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"[AiEchoService Exception] Weekly Summary communication failed: {ex.Message}");
             }
 
             return new EchoWeeklySummaryResponseDto { ProjectId = projectId.ToString(), HighlightedMemories = new() };

@@ -1,12 +1,10 @@
-﻿using System;
-using System.Linq;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.EntityFrameworkCore;
 using SyncVerse.Application.Common.Results;
 using SyncVerse.Application.DTOs.AI.Echo;
 using SyncVerse.Application.Interfaces.AI.Echo;
 using SyncVerse.Domain.Entities;
 using SyncVerse.Infrastructure.Data;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace SyncVerse.Application.Services.AI.Echo
 {
@@ -21,7 +19,6 @@ namespace SyncVerse.Application.Services.AI.Echo
             _serviceProvider = serviceProvider;
         }
 
-        // 🎯 مطابقة التوقيع بالكامل مع الـ Interface بالمسار الصريح
         public async System.Threading.Tasks.Task SyncSingleChangeToEchoAsync(Guid projectId, string title, string content, string type, string teamName = "")
         {
             try
@@ -36,15 +33,17 @@ namespace SyncVerse.Application.Services.AI.Echo
                     Author = "Backend_System",
                     Metadata = new { }
                 };
+
                 await _echoService.SaveProjectMemoryAutomatedAsync(memoryDto);
             }
-            catch
+            catch (Exception ex)
             {
-                // Suppress exceptions to safeguard core application workflows
+                Console.WriteLine($"[BulkSync Error] Failed to sync memory '{title}' for project {projectId}. Reason: {ex.Message}");
+                throw;
             }
         }
 
-        public async System.Threading.Tasks.Task<Result<int>> SyncAllApplicationDataToEchoAsync(Guid projectId)
+        public async Task<Result<int>> SyncAllApplicationDataToEchoAsync(Guid projectId)
         {
             try
             {
@@ -66,6 +65,7 @@ namespace SyncVerse.Application.Services.AI.Echo
                                         $"The project officially starts on {project.StartDate:yyyy-MM-dd} " +
                                         $"and is scheduled to end on {project.EndDate:yyyy-MM-dd}.";
 
+                // 🎯 استخدام "documentation"
                 await SyncSingleChangeToEchoAsync(projectId, $"Project Configuration Sync: {project.Name}", projectContent, "documentation", "Management_Team");
                 syncedRecordsCount++;
 
@@ -78,7 +78,8 @@ namespace SyncVerse.Application.Services.AI.Echo
                     if (workspace != null)
                     {
                         string workspaceContent = $"Workspace '{workspace.Name}' Seed State: OrgCode: '{workspace.OrgCode}', Industry Sector: '{workspace.Industry ?? "General"}', Managed by User ID: '{workspace.CreatedByUserId}'.";
-                        await SyncSingleChangeToEchoAsync(projectId, "Workspace Root Matrix Modified", workspaceContent, "architecture", "Management_Team");
+                        // 🎯 استخدام "documentation"
+                        await SyncSingleChangeToEchoAsync(projectId, "Workspace Root Matrix Modified", workspaceContent, "documentation", "Management_Team");
                         syncedRecordsCount++;
 
                         // 3. Sync User-Workspace Bonds
@@ -86,7 +87,8 @@ namespace SyncVerse.Application.Services.AI.Echo
                         foreach (var uw in userWorkspaces)
                         {
                             string uwContent = $"User Workspace Bond Seed: User ID '{uw.UserId}' joined Workspace ID '{uw.WorkspaceId}' on {uw.JoinedAt:yyyy-MM-dd}.";
-                            await SyncSingleChangeToEchoAsync(projectId, "Corporate Workspace Directory Update", uwContent, "management", "Management_Team");
+                            // 🎯 استخدام "documentation"
+                            await SyncSingleChangeToEchoAsync(projectId, "Corporate Workspace Directory Update", uwContent, "documentation", "Management_Team");
                             syncedRecordsCount++;
                         }
 
@@ -97,7 +99,8 @@ namespace SyncVerse.Application.Services.AI.Echo
                             string dynamicTeamName = $"{team.Name ?? "Unknown"}_Team";
 
                             string teamContent = $"Team '{team.Name}' Baseline Data within Workspace ID '{team.WorkspaceId}'. Specialization: {team.Specialization}, Department: {team.Department}. Lead by: {team.TeamLeaderId ?? "None"}.";
-                            await SyncSingleChangeToEchoAsync(projectId, "Workspace Department Team Created/Updated", teamContent, "architecture", dynamicTeamName);
+                            // 🎯 استخدام "documentation"
+                            await SyncSingleChangeToEchoAsync(projectId, "Workspace Department Team Created/Updated", teamContent, "documentation", dynamicTeamName);
                             syncedRecordsCount++;
 
                             // 5. Sync Department Team Members
@@ -105,7 +108,8 @@ namespace SyncVerse.Application.Services.AI.Echo
                             foreach (var tm in teamMembers)
                             {
                                 string tmContent = $"Team Member Seed: User ID '{tm.UserId}' assigned to Department Team ID '{tm.TeamId}' with Role: {tm.Role}. Active Status: {tm.IsActive}.";
-                                await SyncSingleChangeToEchoAsync(projectId, "Department Team Membership Change", tmContent, "management", dynamicTeamName);
+                                // 🎯 استخدام "documentation"
+                                await SyncSingleChangeToEchoAsync(projectId, "Department Team Membership Change", tmContent, "documentation", dynamicTeamName);
                                 syncedRecordsCount++;
                             }
                         }
@@ -117,7 +121,8 @@ namespace SyncVerse.Application.Services.AI.Echo
                             foreach (var meeting in meetings)
                             {
                                 string meetingContent = $"Meeting Hosted: Room '{meeting.RoomId}' under Organization Code '{meeting.OrgCode}'. Vivox Audio Channel: '{meeting.VivoxChannelName}'. Summary Notes: {meeting.Summary ?? "N/A"}. Decisions made: {meeting.Decisions ?? "N/A"}. Key Points: {meeting.KeyPoints ?? "N/A"}.";
-                                await SyncSingleChangeToEchoAsync(projectId, "Virtual Sync Meeting Activity Log", meetingContent, "meeting", "Collaboration_Team");
+                                // 🎯 استخدام "documentation"
+                                await SyncSingleChangeToEchoAsync(projectId, "Virtual Sync Meeting Activity Log", meetingContent, "documentation", "Collaboration_Team");
                                 syncedRecordsCount++;
                             }
                         }
@@ -129,7 +134,8 @@ namespace SyncVerse.Application.Services.AI.Echo
                 foreach (var cat in categories)
                 {
                     string catContent = $"Task Category '{cat.Name}' Seed State by Owner User ID '{cat.UserId}'.";
-                    await SyncSingleChangeToEchoAsync(projectId, "Task Board Taxonomy Changed", catContent, "task", "Product_Team");
+                    // 🎯 استخدام "documentation"
+                    await SyncSingleChangeToEchoAsync(projectId, "Task Board Taxonomy Changed", catContent, "documentation", "Product_Team");
                     syncedRecordsCount++;
                 }
 
@@ -138,7 +144,8 @@ namespace SyncVerse.Application.Services.AI.Echo
                 foreach (var task in tasks)
                 {
                     string taskContent = $"Task Seed Status: Title is '{task.Title}', Status: ({task.Status}), Due Date: {task.DueDate:yyyy-MM-dd}.";
-                    await SyncSingleChangeToEchoAsync(projectId, "Task Board Synchronizer", taskContent, "task", "Development_Team");
+                    // 🎯 استخدام "documentation"
+                    await SyncSingleChangeToEchoAsync(projectId, "Task Board Synchronizer", taskContent, "documentation", "Development_Team");
                     syncedRecordsCount++;
 
                     // 9. Sync Task Attachments
@@ -146,7 +153,8 @@ namespace SyncVerse.Application.Services.AI.Echo
                     foreach (var attachment in attachments)
                     {
                         string attachContent = $"Attachment Seed: File '{attachment.FileName}' ({attachment.FileSize} bytes) associated with Task ID '{attachment.TaskId}'. Uploaded by User ID '{attachment.UploadedByUserId}' at {attachment.UploadedAt:yyyy-MM-dd HH:mm:ss}.";
-                        await SyncSingleChangeToEchoAsync(projectId, "Task Asset Uploaded", attachContent, "task", "Development_Team");
+                        // 🎯 استخدام "documentation"
+                        await SyncSingleChangeToEchoAsync(projectId, "Task Asset Uploaded", attachContent, "documentation", "Development_Team");
                         syncedRecordsCount++;
                     }
 
@@ -155,7 +163,8 @@ namespace SyncVerse.Application.Services.AI.Echo
                     foreach (var dependency in dependencies)
                     {
                         string depContent = $"Dependency Seed Mapping: Task ID '{dependency.TaskId}' now strictly depends on the completion of Task ID '{dependency.DependsOnTaskId}'.";
-                        await SyncSingleChangeToEchoAsync(projectId, "Task Dependency Mapping", depContent, "task", "Development_Team");
+                        // 🎯 استخدام "documentation"
+                        await SyncSingleChangeToEchoAsync(projectId, "Task Dependency Mapping", depContent, "documentation", "Development_Team");
                         syncedRecordsCount++;
                     }
                 }
@@ -165,6 +174,7 @@ namespace SyncVerse.Application.Services.AI.Echo
                 foreach (var milestone in milestones)
                 {
                     string milestoneContent = $"Milestone Seed Status: Status details updated for Milestone ID {milestone.Id} on target project timeline.";
+                    // 🎯 استخدام "documentation"
                     await SyncSingleChangeToEchoAsync(projectId, "Project Milestone Sync", milestoneContent, "documentation", "Management_Team");
                     syncedRecordsCount++;
                 }
@@ -174,7 +184,8 @@ namespace SyncVerse.Application.Services.AI.Echo
                 foreach (var pm in projectMembers)
                 {
                     string pmContent = $"Project Member Seed Status: User ID '{pm.UserId}' is linked to this project holding the Role code of '{pm.Role}'. Active Status: {pm.IsActive}. Permissions - Assign Tasks: {pm.CanAssignTasks}, Review Tasks: {pm.CanReviewTasks}, Edit Project: {pm.CanEditProject}.";
-                    await SyncSingleChangeToEchoAsync(projectId, "Project Team Roster Update", pmContent, "management", "Management_Team");
+                    // 🎯 استخدام "documentation"
+                    await SyncSingleChangeToEchoAsync(projectId, "Project Team Roster Update", pmContent, "documentation", "Management_Team");
                     syncedRecordsCount++;
                 }
 
