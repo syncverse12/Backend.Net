@@ -242,7 +242,7 @@ builder.Services.AddHttpClient("AI_Attrition_Server", client =>
 
 builder.Services.AddHttpClient("AI_Smart_Task_Assignment", client =>
 {
-    client.BaseAddress = new Uri("https://omnia0-smart-task-assignment.hf.space/");
+    client.BaseAddress = new Uri("https://smarttaskassignment-production.up.railway.app/");
     client.Timeout = TimeSpan.FromSeconds(60);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });

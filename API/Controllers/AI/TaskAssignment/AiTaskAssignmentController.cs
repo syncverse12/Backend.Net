@@ -8,7 +8,7 @@ namespace SyncVerse.API.Controllers.AI.TaskAssignment
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    //[Authorize]
     public class AiTaskAssignmentController : ControllerBase
     {
         private readonly IAiTaskAssignmentService _aiTaskAssignmentService;
@@ -67,7 +67,7 @@ namespace SyncVerse.API.Controllers.AI.TaskAssignment
         }
 
         [HttpPost("add-employee")]
-        public async Task<IActionResult> AddEmployee([FromBody] AiAddEmployeeRequestDto dto)
+        public async Task<IActionResult> AddEmployee([FromBody] AiAddProjectEmployeesRequestDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -85,7 +85,7 @@ namespace SyncVerse.API.Controllers.AI.TaskAssignment
         }
 
         [HttpPost("update-employee-status")]
-        public async Task<IActionResult> UpdateEmployeeStatus([FromBody] AiUpdateEmployeeStatusRequestDto dto)
+        public async Task<IActionResult> UpdateEmployeeStatus([FromBody] AiUpdateEmployeeStatusFrontendRequestDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -118,6 +118,20 @@ namespace SyncVerse.API.Controllers.AI.TaskAssignment
             var result = await _aiTaskAssignmentService.CheckHealthAsync();
             if (!result.IsSuccess) return BadRequest(result.Message);
             return Ok(result);
+        }
+
+        [HttpGet("calculate-availability/{userId}")]
+        public async Task<IActionResult> CalculateAvailability(string userId)
+        {
+            var result = await _aiTaskAssignmentService.CalculateAvailabilityAsync(userId);
+            if (!result.IsSuccess) return BadRequest(result.Message);
+            
+            return Ok(new 
+            {
+                UserId = userId,
+                ActiveTasks = result.Data.ActiveTasks,
+                AvailabilityScore = result.Data.AvailabilityScore
+            });
         }
     }
 }
