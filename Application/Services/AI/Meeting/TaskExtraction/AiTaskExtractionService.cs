@@ -10,7 +10,7 @@ namespace SyncVerse.Application.Services.AI
     public class AiTaskExtractionService : IAiTaskExtractionService
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private const string SecretKey = "SyncVerse_Super_Secret_Key_For_Audio_Verification_2026"; 
+        private const string SecretKey = "SyncVerse_Super_Secret_Key_For_Audio_Verification_2026";
 
         public AiTaskExtractionService(IHttpClientFactory httpClientFactory)
         {
@@ -19,7 +19,7 @@ namespace SyncVerse.Application.Services.AI
 
         public async Task<Result<AiTaskExtractionResponseDto>> ExtractTasksAsync(AiTaskExtractionRequestDto dto)
         {
-            // ❌ الـ Restriction الصارم: التحقق من التوقيع الرقمي لمنع فبركة النص!
+            // 1️⃣ أولاً: التحقق من التوقيع الأمني داخلياً بالـ UUID الـ string الأصلي عشان يطابق الـ Signature
             if (!VerifySignature(dto.MeetingId.ToString(), dto.Transcript, dto.Signature))
             {
                 return Result<AiTaskExtractionResponseDto>.Failure("Security Restriction Violation: Transcript has been altered or is not from the recorded audio!");
@@ -28,9 +28,23 @@ namespace SyncVerse.Application.Services.AI
             try
             {
                 var client = _httpClientFactory.CreateClient("AI_Task_Extraction_Server");
-                var jsonPayload = JsonSerializer.Serialize(dto);
+
+                // 🎯 2️⃣ ثانياً: حل مشكلة الـ Python الخارجي بشكل Dynamic
+                // بناخد الـ UUID النصي ونعمله Hash عشان نطلع منه رقم فريد وثابت (int) خاص بالاجتماع ده بس
+                int dynamicNumericId = Math.Abs(dto.MeetingId.GetHashCode());
+
+                // بنعمل Anonymous Object بأسامي الحقول المطلوبة بالظبط (snake_case) والرقم الصحيح
+                var aiPayload = new
+                {
+                    meeting_id = dynamicNumericId,
+                    transcript = dto.Transcript
+                };
+
+                // تحويل الـ Payload الجديد لـ JSON
+                var jsonPayload = JsonSerializer.Serialize(aiPayload);
                 var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
+                // إرسال الـ Request للسيرفر الخارجي
                 var response = await client.PostAsync("extract-tasks", content);
 
                 if (response.IsSuccessStatusCode)
@@ -54,7 +68,6 @@ namespace SyncVerse.Application.Services.AI
             }
         }
 
-        // 🔒 الدالة المساعدة للتحقق من التوقيع
         private bool VerifySignature(string meetingId, string text, string providedSignature)
         {
             var rawData = $"{meetingId}:{text}";
