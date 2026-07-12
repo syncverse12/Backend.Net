@@ -300,20 +300,31 @@ namespace SyncVerse.Application.Services.WorkspaceInvitation
                 .Query()
                 .FirstOrDefaultAsync(tm => tm.TeamId == invitation.TeamId && tm.UserId == user.Id);
 
+            var memberRole = invitation.Role == ProjectRole.TeamLeader
+                ? ProjectRole.TeamLeader
+                : ProjectRole.TeamMember;
+
             if (existingTeamMember == null)
             {
                 await _unitOfWork.Repository<TeamMember>().AddAsync(new TeamMember
                 {
                     TeamId = invitation.TeamId,
                     UserId = user.Id,
-                    Role = ProjectRole.TeamMember,
+                    Role = memberRole,
                     IsActive = true
                 });
             }
             else
             {
+                existingTeamMember.Role = memberRole;
                 existingTeamMember.IsActive = true;
                 _unitOfWork.Repository<TeamMember>().Update(existingTeamMember);
+            }
+
+            if (invitation.Role == ProjectRole.TeamLeader && invitation.Team != null)
+            {
+                invitation.Team.TeamLeaderId = user.Id;
+                _unitOfWork.Repository<Domain.Entities.Team>().Update(invitation.Team);
             }
 
             invitation.Status = InvitationStatus.Accepted;

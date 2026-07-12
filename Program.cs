@@ -1,4 +1,3 @@
-using AutoMapper;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -14,6 +13,7 @@ using SyncVerse.API.JwtFeatuers;
 using SyncVerse.API.Middleware;
 using SyncVerse.Application.Interfaces;
 using SyncVerse.Application.Interfaces.AI;
+using SyncVerse.Application.Interfaces.AI.Echo;
 using SyncVerse.Application.Interfaces.AI.Meeting.TaskExtraction;
 using SyncVerse.Application.Interfaces.AI.Risk;
 using SyncVerse.Application.Interfaces.AI.ProjectPlanner;
@@ -36,6 +36,8 @@ using SyncVerse.Application.Interfaces.Workspaces;
 using SyncVerse.Application.Mapping;
 using SyncVerse.Application.Services.AI;
 using SyncVerse.Application.Services.AI.ProjectPlanner;
+using SyncVerse.Application.Services.AI.Echo;
+using SyncVerse.Application.Services.AI.Risk;
 using SyncVerse.Application.Services.AI.TaskAssignment;
 using SyncVerse.Application.Services.Attachments;
 using SyncVerse.Application.Services.Dashboard;
@@ -61,9 +63,27 @@ using SyncVerse.Infrastructure.SeedConfiguration;
 using SyncVerse.Infrastructure.Services.AI;
 using SyncVerse.Infrastructure.Services.Email;
 using SyncVerse.Infrastructure.Storage;
-using System.IO;
+using SyncVerse.Persistence.Interceptors;
 using System.Text;
 using System.Text.Json.Serialization;
+
+static void LoadEnvFile(string filePath)
+{
+    if (!File.Exists(filePath)) return;
+
+    foreach (var line in File.ReadAllLines(filePath))
+    {
+        var trimmedLine = line.Trim();
+        if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith("#")) continue;
+
+        var separatorIndex = trimmedLine.IndexOf('=');
+        if (separatorIndex <= 0) continue;
+
+        var key = trimmedLine.Substring(0, separatorIndex).Trim();
+        var value = trimmedLine.Substring(separatorIndex + 1).Trim();
+        Environment.SetEnvironmentVariable(key, value);
+    }
+}
 
 var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var envFileName = environmentName switch
@@ -83,9 +103,6 @@ builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile<MappingProfile>();
 }, typeof(MappingProfile).Assembly);
-
-builder.Services.AddDbContext<DatabaseDbContext>(opts =>
-        opts.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddIdentity<User, Role>(options =>
 {
@@ -159,12 +176,22 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddSingleton<AiMemoryInterceptor>();
+builder.Services.AddDbContext<DatabaseDbContext>((sp, options) =>
+{
+    var interceptor = sp.GetRequiredService<AiMemoryInterceptor>();
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Default"))
+           .AddInterceptors(interceptor);
+});
+
+builder.Services.AddHttpContextAccessor();
+
 // (Dependency Injection)
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<JwtHandler>();
-builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
@@ -196,13 +223,15 @@ builder.Services.AddScoped<IAuthorizationHandler, ReviewTaskAuthorizationHandler
 
 builder.Services.AddScoped<IAiMeetingService, AiMeetingService>();
 builder.Services.AddScoped<IAiTaskExtractionService, AiTaskExtractionService>();
+builder.Services.AddScoped<IAiEchoService, AiEchoService>();
+builder.Services.AddScoped<IAiBulkSyncService, AiBulkSyncService>();
 builder.Services.AddScoped<IAiRiskService, AiRiskService>();
 builder.Services.AddScoped<IAiTaskAssignmentService, AiTaskAssignmentService>();
 builder.Services.AddScoped<IAiProjectPlannerService, AiProjectPlannerService>();
 
 builder.Services.AddSignalR();
 
-
+// AI Servers HttpClients
 builder.Services.AddHttpClient("AI_Transcription_Server", client =>
 {
     client.BaseAddress = new Uri("https://marwaezzat8-meet.hf.space/");
@@ -210,14 +239,12 @@ builder.Services.AddHttpClient("AI_Transcription_Server", client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
-
 builder.Services.AddHttpClient("AI_Meeting_Server", client =>
 {
     client.BaseAddress = new Uri("https://marwaabuelkheir-meeting-summary-api.hf.space/");
     client.Timeout = TimeSpan.FromSeconds(45);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
-
 
 builder.Services.AddHttpClient("AI_Task_Extraction_Server", client =>
 {
@@ -228,19 +255,11 @@ builder.Services.AddHttpClient("AI_Task_Extraction_Server", client =>
 
 builder.Services.AddHttpClient("AI_Risk_Server", client =>
 {
-    client.BaseAddress = new Uri("https://marway-risk-analysis.hf.space/");
-    client.Timeout = TimeSpan.FromSeconds(60);
+    client.BaseAddress = new Uri("https://riskforecast-production.up.railway.app/");
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
-builder.Services.AddHttpClient("AI_Attrition_Server", client =>
-{
-    client.BaseAddress = new Uri("https://omnia0-employee-attrition.hf.space/");
-    client.Timeout = TimeSpan.FromSeconds(60);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
-
-builder.Services.AddHttpClient("AI_Smart_Task_Assignment", client =>
+builder.Services.AddHttpClient("AI_Echo_Server", client =>
 {
     client.BaseAddress = new Uri("https://smarttaskassignment-production.up.railway.app/");
     client.Timeout = TimeSpan.FromSeconds(60);
@@ -252,9 +271,8 @@ builder.Services.AddHttpClient("AI_Project_Planner_Server", client =>
     client.BaseAddress = new Uri("https://aiplanner-production-041c.up.railway.app/");
     client.Timeout = TimeSpan.FromSeconds(60);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.BaseAddress = new Uri("https://syncverse-echo-diagnostic-production.up.railway.app/");
 });
-
-builder.Services.AddScoped<IAttritionPredictionService, AttritionPredictionService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -301,85 +319,57 @@ builder.Services.AddSwaggerGen(opt =>
         }
     });
 
-
     opt.OrderActionsBy(apiDesc =>
     {
         var controllerName = apiDesc.ActionDescriptor.RouteValues["controller"];
-
         return controllerName switch
         {
             "Auth" => "01",
             "CompanyInvitation" => "02",
             "AiMeeting" => "03",
             "Meetings" => "04",
-            _ => "99" 
+            _ => "99"
         };
     });
 });
 
 var app = builder.Build();
 
-// --- 2. الـ Middleware Pipeline ---
-
-
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Local"))
+{
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.DefaultModelsExpandDepth(-1);
+    });
     app.UseCors("AllowAll");
 
     //app.UseCors("ProductionPolicy");
 
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseMiddleware<ExceptionMiddleware>();
-app.UseAuthentication();
-app.UseAuthorization();
-app.MapControllers();
-app.MapHub<NotificationHub>("/hubs/notifications");
+    app.UseHttpsRedirection();
+    app.UseStaticFiles();
+    app.UseMiddleware<ExceptionMiddleware>();
+    app.UseAuthentication();
+    app.UseAuthorization();
+    app.MapControllers();
+    app.MapHub<NotificationHub>("/hubs/notifications");
 
-// --- 3. Database Migration & Seeding ---
-
-using (var scope = app.Services.CreateScope())
-{
-    try
+    using (var scope = app.Services.CreateScope())
     {
-        var context = scope.ServiceProvider.GetRequiredService<DatabaseDbContext>();
-        await context.Database.MigrateAsync();
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
-        await DefaultAdminSeeder.SeedAsync(userManager, roleManager);
-        Console.WriteLine("✅ SyncVerse Database is ready and seeded!");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"❌ Critical Error during startup: {ex.Message}");
-    }
-}
-
-await app.RunAsync();
-
-static void LoadEnvFile(string filePath)
-{
-    if (!File.Exists(filePath))
-    {
-        return;
-    }
-
-    foreach (var line in File.ReadAllLines(filePath))
-    {
-        var trimmedLine = line.Trim();
-        if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith("#"))
+        try
         {
-            continue;
+            var context = scope.ServiceProvider.GetRequiredService<DatabaseDbContext>();
+            await context.Database.MigrateAsync();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
+            await DefaultAdminSeeder.SeedAsync(userManager, roleManager);
+            Console.WriteLine("✅ SyncVerse Database is ready and seeded!");
         }
-
-        var separatorIndex = trimmedLine.IndexOf('=');
-        if (separatorIndex <= 0)
+        catch (Exception ex)
         {
-            continue;
+            Console.WriteLine($"❌ Critical Error during startup: {ex.Message}");
         }
-
-        var key = trimmedLine.Substring(0, separatorIndex).Trim();
-        var value = trimmedLine.Substring(separatorIndex + 1).Trim();
-        Environment.SetEnvironmentVariable(key, value);
     }
+
+    await app.RunAsync();
 }

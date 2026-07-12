@@ -11,10 +11,8 @@ namespace SyncVerse.Application.DTOs.Dashboard
         public List<ManagedTeamDto> ManagedTeams { get; set; } = new List<ManagedTeamDto>();
         public List<HierarchyNodeDto> Hierarchy { get; set; } = new List<HierarchyNodeDto>();
 
-        // 4. Quick Actions
         public List<QuickActionDto> QuickActions { get; set; } = new List<QuickActionDto>();
 
-        // 5. Project Teams
         public List<ProjectTeamDto> ProjectTeams { get; set; } = new List<ProjectTeamDto>();
     }
 
@@ -22,7 +20,7 @@ namespace SyncVerse.Application.DTOs.Dashboard
     {
         public string ActionName { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string ActionType { get; set; } = string.Empty; // e.g., "AddNewManager", "CreateDepartment", "InviteMember"
+        public string ActionType { get; set; } = string.Empty; 
     }
 
     public class ManagedTeamDto
@@ -30,6 +28,7 @@ namespace SyncVerse.Application.DTOs.Dashboard
         public string TeamId { get; set; } = string.Empty;
         public string TeamName { get; set; } = string.Empty;
         public string TeamLeaderName { get; set; } = string.Empty;
+        public int MembersCount { get; set; }
     }
 
     public class HierarchyNodeDto

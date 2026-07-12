@@ -1,11 +1,11 @@
-﻿using SyncVerse.Application.Common.Results;
-using SyncVerse.Application.DTOs.AI.Risk;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace SyncVerse.Application.Interfaces.AI.Risk
 {
     public interface IAiRiskService
     {
-        Task<Result<ProjectRiskResponseDto>> AnalyzeProjectRisksAsync(ProjectRiskRequestDto dto);
-        Task<Result<ProjectRiskResponseDto>> UpdateLiveRisksAsync(LiveRiskUpdateRequestDto dto);
+        Task<object> AnalyzeProjectRisksAsync(Guid projectId);
+        Task<object> GetProjectRiskHistoryAsync(Guid projectId, int limit = 20);
     }
 }

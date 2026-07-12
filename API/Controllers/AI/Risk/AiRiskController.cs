@@ -1,48 +1,37 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using SyncVerse.Application.DTOs.AI.Risk;
-using SyncVerse.Application.Interfaces.AI;
+﻿using Microsoft.AspNetCore.Mvc;
 using SyncVerse.Application.Interfaces.AI.Risk;
-using System.Threading.Tasks;
 
-namespace SyncVerse.API.Controllers.AI
+
+namespace SyncVerse.Api.Controllers.AI
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] 
     public class AiRiskController : ControllerBase
     {
-        private readonly IAiRiskService _aiRiskService;
+        private readonly IAiRiskService _riskService;
 
-        public AiRiskController(IAiRiskService aiRiskService)
+        public AiRiskController(IAiRiskService riskService)
         {
-            _aiRiskService = aiRiskService;
+            _riskService = riskService;
         }
 
-        [HttpPost("analyze-project")]
-        public async Task<IActionResult> AnalyzeProject([FromBody] ProjectRiskRequestDto dto)
+        [HttpPost("project/{projectId}/analyze-risks")]
+        public async Task<IActionResult> AnalyzeProjectRisks([FromRoute] Guid projectId)
         {
-            var result = await _aiRiskService.AnalyzeProjectRisksAsync(dto);
-
-            if (!result.IsSuccess)
-            {
-                return BadRequest(result.Message);
-            }
-
-            return Ok(result);
+            var analysisResult = await _riskService.AnalyzeProjectRisksAsync(projectId);
+            return Ok(analysisResult);
         }
 
-        [HttpPost("live-update")]
-        public async Task<IActionResult> UpdateLiveRisks([FromBody] LiveRiskUpdateRequestDto dto)
+        [HttpGet("project/{projectId}/risk-history")]
+        public async Task<IActionResult> GetProjectRiskHistory([FromRoute] Guid projectId, [FromQuery] int limit = 20)
         {
-            var result = await _aiRiskService.UpdateLiveRisksAsync(dto);
-
-            if (!result.IsSuccess)
+            if (projectId == Guid.Empty)
             {
-                return BadRequest(result.Message);
+                return BadRequest(new { message = "Invalid Project ID." });
             }
 
-            return Ok(result);
+            var historyResult = await _riskService.GetProjectRiskHistoryAsync(projectId, limit);
+            return Ok(historyResult);
         }
     }
 }
