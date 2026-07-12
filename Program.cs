@@ -16,6 +16,7 @@ using SyncVerse.Application.Interfaces.AI;
 using SyncVerse.Application.Interfaces.AI.Echo;
 using SyncVerse.Application.Interfaces.AI.Meeting.TaskExtraction;
 using SyncVerse.Application.Interfaces.AI.Risk;
+using SyncVerse.Application.Interfaces.AI.ProjectPlanner;
 using SyncVerse.Application.Interfaces.AI.TaskAssignment;
 using SyncVerse.Application.Interfaces.Attachments;
 using SyncVerse.Application.Interfaces.Dashboard;
@@ -34,6 +35,7 @@ using SyncVerse.Application.Interfaces.WorkspaceInvitation;
 using SyncVerse.Application.Interfaces.Workspaces;
 using SyncVerse.Application.Mapping;
 using SyncVerse.Application.Services.AI;
+using SyncVerse.Application.Services.AI.ProjectPlanner;
 using SyncVerse.Application.Services.AI.Echo;
 using SyncVerse.Application.Services.AI.Risk;
 using SyncVerse.Application.Services.AI.TaskAssignment;
@@ -225,6 +227,7 @@ builder.Services.AddScoped<IAiEchoService, AiEchoService>();
 builder.Services.AddScoped<IAiBulkSyncService, AiBulkSyncService>();
 builder.Services.AddScoped<IAiRiskService, AiRiskService>();
 builder.Services.AddScoped<IAiTaskAssignmentService, AiTaskAssignmentService>();
+builder.Services.AddScoped<IAiProjectPlannerService, AiProjectPlannerService>();
 
 builder.Services.AddSignalR();
 
@@ -258,6 +261,16 @@ builder.Services.AddHttpClient("AI_Risk_Server", client =>
 
 builder.Services.AddHttpClient("AI_Echo_Server", client =>
 {
+    client.BaseAddress = new Uri("https://smarttaskassignment-production.up.railway.app/");
+    client.Timeout = TimeSpan.FromSeconds(60);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddHttpClient("AI_Project_Planner_Server", client =>
+{
+    client.BaseAddress = new Uri("https://aiplanner-production-041c.up.railway.app/");
+    client.Timeout = TimeSpan.FromSeconds(60);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
     client.BaseAddress = new Uri("https://syncverse-echo-diagnostic-production.up.railway.app/");
 });
 

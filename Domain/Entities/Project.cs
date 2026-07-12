@@ -1,4 +1,4 @@
-﻿using SyncVerse.Domain.Common;
+using SyncVerse.Domain.Common;
 using SyncVerse.Domain.Enums;
 
 namespace SyncVerse.Domain.Entities
